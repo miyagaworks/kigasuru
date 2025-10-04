@@ -1,0 +1,19 @@
+<svg
+  xmlns="http://www.w3.org/2000/svg"
+  viewBox="0 0 24 24"
+  fill="none"
+  stroke="currentColor"
+  stroke-width="2"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+>
+  <!-- 不調の顔 😞 -->
+  <circle cx="12" cy="12" r="10" fill="#9E9E9E" stroke="#616161" stroke-width="2"/>
+
+  <!-- 困った目 -->
+  <circle cx="8" cy="10" r="1.5" fill="#212121" stroke="none"/>
+  <circle cx="16" cy="10" r="1.5" fill="#212121" stroke="none"/>
+
+  <!-- 下向きの口 -->
+  <path d="M 8 16 Q 12 14, 16 16" stroke="#212121" stroke-width="2" fill="none"/>
+</svg>

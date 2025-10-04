@@ -1,0 +1,73 @@
+@import "tailwindcss";
+
+/* カスタムカラーパレット */
+@theme {
+  /* プライマリ */
+  --color-primary-green: #286300;
+  --color-primary-dark: #004806;
+  --color-primary-light: #609e00;
+
+  /* セカンダリ */
+  --color-secondary-blue: #2a4987;
+  --color-secondary-orange: #F57C00;
+  --color-secondary-red: #b31630;
+
+  /* 背景色 */
+  --color-bg-main: #eadec2;
+  --color-bg-menu: #d5bd85;
+  --color-card-bg: #f7f2e7;
+
+  /* ニュートラル */
+  --color-neutral-100: #FFFCF7;
+  --color-neutral-200: #f7f2e7;
+  --color-neutral-300: #DED2B8;
+  --color-neutral-400: #CEB99A;
+  --color-neutral-600: #887D75;
+  --color-neutral-900: #312721;
+
+  /* 結果表示カラー */
+  --color-result-just: #90bc4d;
+  --color-result-short: #FFC107;
+  --color-result-big-short: #FF9800;
+  --color-result-over: #2a4987;
+  --color-result-big-over: #9C27B0;
+
+  /* ステータス背景色（渋めの色調） */
+  --color-info-bg: #d4dae3;
+  --color-info-text: #1a3a5c;
+  --color-info-border: #b8c5d4;
+
+  --color-error-bg: #e8d4d8;
+  --color-error-text: #7a1f2f;
+  --color-error-border: #d4b5bb;
+
+  --color-success-bg: #d8e4cd;
+  --color-success-text: #1f4d0c;
+  --color-success-border: #c3d4b8;
+
+  --color-muted-bg: #e5e0d5;
+  --color-muted-text: #5a5248;
+  --color-muted-border: #d0c9ba;
+}
+
+/* グローバルスタイル */
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background-color: #eadec2;
+  color: #212121;
+}
+
+/* タップエリアの最小サイズ（手袋着用時対応） */
+button, a {
+  min-height: 48px;
+  min-width: 48px;
+}
