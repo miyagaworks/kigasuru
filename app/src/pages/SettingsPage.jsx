@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Layout } from '../components/Layout';
 import { Button } from '../components/Button';
 import { Icon } from '../components/Icon';
@@ -10,6 +10,44 @@ import { setFlatThreshold } from '../sensors/gyro';
  * Settings page - App configuration and gyro calibration
  */
 const DEFAULT_CLUBS = ['DR', '3W', '5W', '7W', 'U4', 'U5', '5I', '6I', '7I', '8I', '9I', 'PW', '50', '52', '54', '56', '58'];
+
+// Club item component for optimized rendering
+const ClubItem = React.memo(({ club, index, totalClubs, onMoveUp, onMoveDown, onRemove }) => {
+  const isFirst = index === 0;
+  const isLast = index === totalClubs - 1;
+
+  const buttonBaseClass = "min-w-[48px] min-h-[48px] flex items-center justify-center text-xl font-bold rounded-lg";
+  const disabledClass = "bg-[var(--color-neutral-200)] text-[var(--color-neutral-400)] cursor-not-allowed";
+  const enabledClass = "bg-[var(--color-card-bg)] text-[var(--color-primary-green)] hover:bg-[var(--color-neutral-200)] active:bg-[var(--color-neutral-300)]";
+
+  return (
+    <div className="flex items-center justify-between bg-[var(--color-neutral-100)] rounded-lg p-4">
+      <span className="font-bold text-lg">{club}</span>
+      <div className="flex gap-2">
+        <button
+          onClick={onMoveUp}
+          disabled={isFirst}
+          className={`${buttonBaseClass} ${isFirst ? disabledClass : enabledClass}`}
+        >
+          ↑
+        </button>
+        <button
+          onClick={onMoveDown}
+          disabled={isLast}
+          className={`${buttonBaseClass} ${isLast ? disabledClass : enabledClass}`}
+        >
+          ↓
+        </button>
+        <button
+          onClick={onRemove}
+          className="min-w-[48px] min-h-[48px] flex items-center justify-center text-sm font-bold text-white bg-[var(--color-secondary-red)] hover:opacity-90 active:opacity-80 rounded-lg"
+        >
+          削除
+        </button>
+      </div>
+    </div>
+  );
+});
 
 export const SettingsPage = () => {
   const { isSupported, hasPermission, isCalibrating, gyro, requestPermission, calibrate } = useGyro();
@@ -264,28 +302,57 @@ export const SettingsPage = () => {
     await saveSetting('customClubs', newClubs);
   };
 
-  const handleRemoveClub = async (index) => {
-    const newClubs = clubs.filter((club, i) => i !== index);
-    setClubs(newClubs);
-    await saveSetting('customClubs', newClubs);
-  };
+  const handleRemoveClub = useCallback(async (index) => {
+    setClubs(prevClubs => {
+      const newClubs = prevClubs.filter((club, i) => i !== index);
+      // Save in background
+      saveSetting('customClubs', newClubs);
+      return newClubs;
+    });
+  }, []);
 
-  const handleMoveClub = async (index, direction) => {
-    const newClubs = [...clubs];
-    const targetIndex = direction === 'up' ? index - 1 : index + 1;
+  const handleMoveClub = useCallback(async (index, direction) => {
+    setClubs(prevClubs => {
+      const newClubs = [...prevClubs];
+      const targetIndex = direction === 'up' ? index - 1 : index + 1;
 
-    if (targetIndex < 0 || targetIndex >= newClubs.length) return;
+      if (targetIndex < 0 || targetIndex >= newClubs.length) return prevClubs;
 
-    [newClubs[index], newClubs[targetIndex]] = [newClubs[targetIndex], newClubs[index]];
-    setClubs(newClubs);
-    await saveSetting('customClubs', newClubs);
-  };
+      [newClubs[index], newClubs[targetIndex]] = [newClubs[targetIndex], newClubs[index]];
+
+      // Save in background
+      saveSetting('customClubs', newClubs);
+
+      return newClubs;
+    });
+  }, []);
 
   const handleResetClubs = async () => {
     if (confirm('クラブリストをデフォルトに戻しますか？')) {
       setClubs(DEFAULT_CLUBS);
       await saveSetting('customClubs', DEFAULT_CLUBS);
     }
+  };
+
+  // Get current input fields display
+  const getCurrentInputFieldsDisplay = () => {
+    if (inputLevel === 'custom') return null;
+
+    const labels = {
+      slope: '傾斜',
+      lie: 'ライ',
+      club: 'クラブ',
+      strength: '強度',
+      wind: '風向き',
+      temperature: '気温',
+      feeling: '感触',
+      memo: 'メモ'
+    };
+
+    return Object.entries(INPUT_LEVEL_PRESETS[inputLevel].fields)
+      .filter(([, enabled]) => enabled)
+      .map(([key]) => labels[key])
+      .join('、');
   };
 
   const handleExportCSV = async () => {
@@ -494,42 +561,15 @@ export const SettingsPage = () => {
 
           <div className="space-y-3 max-h-80 overflow-y-auto">
             {clubs.map((club, index) => (
-              <div
+              <ClubItem
                 key={index}
-                className="flex items-center justify-between bg-[var(--color-neutral-100)] rounded-lg p-4"
-              >
-                <span className="font-bold text-lg">{club}</span>
-                <div className="flex gap-2">
-                  <button
-                    onClick={() => handleMoveClub(index, 'up')}
-                    disabled={index === 0}
-                    className={`min-w-[48px] min-h-[48px] flex items-center justify-center text-xl font-bold rounded-lg ${
-                      index === 0
-                        ? 'bg-[var(--color-neutral-200)] text-[var(--color-neutral-400)] cursor-not-allowed'
-                        : 'bg-[var(--color-card-bg)] text-[var(--color-primary-green)] hover:bg-[var(--color-neutral-200)] active:bg-[var(--color-neutral-300)]'
-                    }`}
-                  >
-                    ↑
-                  </button>
-                  <button
-                    onClick={() => handleMoveClub(index, 'down')}
-                    disabled={index === clubs.length - 1}
-                    className={`min-w-[48px] min-h-[48px] flex items-center justify-center text-xl font-bold rounded-lg ${
-                      index === clubs.length - 1
-                        ? 'bg-[var(--color-neutral-200)] text-[var(--color-neutral-400)] cursor-not-allowed'
-                        : 'bg-[var(--color-card-bg)] text-[var(--color-primary-green)] hover:bg-[var(--color-neutral-200)] active:bg-[var(--color-neutral-300)]'
-                    }`}
-                  >
-                    ↓
-                  </button>
-                  <button
-                    onClick={() => handleRemoveClub(index)}
-                    className="min-w-[48px] min-h-[48px] flex items-center justify-center text-sm font-bold text-white bg-[var(--color-secondary-red)] hover:opacity-90 active:opacity-80 rounded-lg"
-                  >
-                    削除
-                  </button>
-                </div>
-              </div>
+                club={club}
+                index={index}
+                totalClubs={clubs.length}
+                onMoveUp={() => handleMoveClub(index, 'up')}
+                onMoveDown={() => handleMoveClub(index, 'down')}
+                onRemove={() => handleRemoveClub(index)}
+              />
             ))}
           </div>
 
@@ -600,16 +640,10 @@ export const SettingsPage = () => {
           )}
 
           {/* Current settings display */}
-          {inputLevel !== 'custom' && (
+          {inputLevel !== 'custom' && getCurrentInputFieldsDisplay() && (
             <div className="bg-[var(--color-info-bg)] p-3 rounded-lg border border-[var(--color-info-border)]">
               <p className="text-xs text-[var(--color-info-text)]">
-                💡 現在の入力項目: {Object.entries(INPUT_LEVEL_PRESETS[inputLevel].fields)
-                  .filter(([, enabled]) => enabled)
-                  .map(([key]) => {
-                    const labels = { slope: '傾斜', lie: 'ライ', club: 'クラブ', strength: '強度', wind: '風向き', temperature: '気温', feeling: '感触', memo: 'メモ' };
-                    return labels[key];
-                  })
-                  .join('、')}、結果
+                💡 現在の入力項目: {getCurrentInputFieldsDisplay()}、結果
               </p>
             </div>
           )}

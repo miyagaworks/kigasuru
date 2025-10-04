@@ -186,12 +186,22 @@ export const RoundHistoryPage = () => {
         {/* Selected date shots */}
         {selectedDate && (
           <div className="bg-[var(--color-card-bg)] rounded-lg shadow-md p-6">
-            <h2 className="text-lg font-bold mb-4">
+            <h2 className="text-lg font-bold mb-3">
               {new Date(selectedDate).toLocaleDateString('ja-JP', { year: 'numeric', month: 'long', day: 'numeric' })} のショット
               <span className="text-sm font-normal text-[var(--color-neutral-600)] ml-2">
                 ({selectedShots.length}件)
               </span>
             </h2>
+
+            {selectedShots.length > 0 && (
+              <button
+                onClick={() => navigate(`/analysis?date=${selectedDate}`)}
+                className="w-full mb-4 px-4 py-3 bg-[var(--color-secondary-blue)] text-white font-bold rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center gap-2"
+              >
+                <Icon category="ui" name="analysis" size={24} style={{ filter: "brightness(0) invert(1)" }} />
+                <span className="text-base">この日の分析</span>
+              </button>
+            )}
 
             {selectedShots.length === 0 ? (
               <p className="text-center text-[var(--color-neutral-500)] py-8">

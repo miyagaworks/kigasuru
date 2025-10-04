@@ -40,6 +40,16 @@ db.version(3).stores({
   });
 });
 
+// Add manualLocation field for version 4
+db.version(4).stores({
+  shots: '++id, date, slope, club, lie, strength, wind, temperature, result, distance, feeling, memo, createdAt, golfCourse, actualTemperature, latitude, longitude, missType, manualLocation',
+}).upgrade(tx => {
+  // Migration: add manualLocation field to existing records
+  return tx.table('shots').toCollection().modify(shot => {
+    if (shot.manualLocation === undefined) shot.manualLocation = false;
+  });
+});
+
 /**
  * Shot record model
  */
@@ -61,6 +71,7 @@ export class Shot {
     latitude = null,    // 緯度
     longitude = null,   // 経度
     missType = null,    // ミスショットタイプ: top, choro, duff, over, shank, pull
+    manualLocation = false,  // 手動入力フラグ
   }) {
     this.date = date || new Date().toISOString();
     this.slope = slope;
@@ -78,6 +89,7 @@ export class Shot {
     this.latitude = latitude;
     this.longitude = longitude;
     this.missType = missType;
+    this.manualLocation = manualLocation;
     this.createdAt = Date.now();
   }
 }
@@ -229,6 +241,42 @@ export const getShot = async (shotId) => {
 export const clearAllData = async () => {
   await db.shots.clear();
   // Keep settings and calibration
+};
+
+/**
+ * Get manual location shots for today
+ */
+export const getTodayManualLocationShots = async () => {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const tomorrow = new Date(today);
+  tomorrow.setDate(tomorrow.getDate() + 1);
+
+  return await db.shots
+    .where('createdAt')
+    .between(today.getTime(), tomorrow.getTime())
+    .and(shot => shot.manualLocation === true)
+    .toArray();
+};
+
+/**
+ * Update location data for multiple shots
+ */
+export const updateLocationForShots = async (shotIds, locationData) => {
+  const { golfCourse, actualTemperature, temperature, latitude, longitude } = locationData;
+
+  await Promise.all(
+    shotIds.map(id =>
+      db.shots.update(id, {
+        golfCourse,
+        actualTemperature,
+        temperature,
+        latitude,
+        longitude,
+        manualLocation: false,
+      })
+    )
+  );
 };
 
 export default db;

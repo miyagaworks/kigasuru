@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate, useLocation, useSearchParams } from 'react-router-dom';
 import { Layout } from '../components/Layout';
 import { Button } from '../components/Button';
@@ -6,11 +6,168 @@ import { Icon } from '../components/Icon';
 import { useStore } from '../store';
 import { useGyro } from '../hooks/useGyro';
 import { useLocation as useGeoLocation } from '../hooks/useLocation';
-import { addShot, getSetting, getShot, updateShot } from '../db';
+import { addShot, getSetting, getShot, updateShot, getAllShots, getTodayManualLocationShots, updateLocationForShots } from '../db';
 import { getSlopeDisplayName } from '../sensors/gyro';
 import { getWeather, getLocationName } from '../utils/weather';
 
 const DEFAULT_CLUBS = ['DR', '3W', '5W', '7W', 'U4', 'U5', '5I', '6I', '7I', '8I', '9I', 'PW', '50', '52', '54', '56', '58'];
+
+// 傾斜選択セグメントの計算を事前に行う
+const SLOPE_SEGMENTS = [
+  { angle: -112.5, slope: 'left-up' },
+  { angle: -67.5, slope: 'left-up-toe-up' },
+  { angle: -22.5, slope: 'toe-up' },
+  { angle: 22.5, slope: 'left-down-toe-up' },
+  { angle: 67.5, slope: 'left-down' },
+  { angle: 112.5, slope: 'left-down-toe-down' },
+  { angle: 157.5, slope: 'toe-down' },
+  { angle: 202.5, slope: 'left-up-toe-down' },
+].map(({ angle, slope }) => {
+  const startAngle = angle;
+  const endAngle = angle + 45;
+  const largeArcFlag = 0;
+  const outerRadius = 145;
+  const innerRadius = 45;
+  const centerX = 150;
+  const centerY = 150;
+
+  const startOuterX = centerX + outerRadius * Math.cos((startAngle * Math.PI) / 180);
+  const startOuterY = centerY + outerRadius * Math.sin((startAngle * Math.PI) / 180);
+  const endOuterX = centerX + outerRadius * Math.cos((endAngle * Math.PI) / 180);
+  const endOuterY = centerY + outerRadius * Math.sin((endAngle * Math.PI) / 180);
+
+  const startInnerX = centerX + innerRadius * Math.cos((endAngle * Math.PI) / 180);
+  const startInnerY = centerY + innerRadius * Math.sin((endAngle * Math.PI) / 180);
+  const endInnerX = centerX + innerRadius * Math.cos((startAngle * Math.PI) / 180);
+  const endInnerY = centerY + innerRadius * Math.sin((startAngle * Math.PI) / 180);
+
+  const pathData = `
+    M ${startOuterX} ${startOuterY}
+    A ${outerRadius} ${outerRadius} 0 ${largeArcFlag} 1 ${endOuterX} ${endOuterY}
+    L ${startInnerX} ${startInnerY}
+    A ${innerRadius} ${innerRadius} 0 ${largeArcFlag} 0 ${endInnerX} ${endInnerY}
+    Z
+  `;
+
+  return { angle, slope, pathData };
+});
+
+// 傾斜アイコンの位置を事前計算
+const SLOPE_ICONS = [
+  { angle: -90, slope: 'left-up', icon: '/assets/icons/slope/slope-left-up.svg' },
+  { angle: 0, slope: 'toe-up', icon: '/assets/icons/slope/slope-toe-up.svg' },
+  { angle: 90, slope: 'left-down', icon: '/assets/icons/slope/slope-left-down.svg' },
+  { angle: 180, slope: 'toe-down', icon: '/assets/icons/slope/slope-toe-down.svg' },
+].map(({ angle, slope, icon }) => {
+  const iconSize = 100;
+  const iconRadius = 94;
+  const iconX = 150 + iconRadius * Math.cos((angle * Math.PI) / 180) - iconSize / 2;
+  const iconY = 150 + iconRadius * Math.sin((angle * Math.PI) / 180) - iconSize / 2;
+
+  return { angle, slope, icon, iconX, iconY, iconSize };
+});
+
+// 傾斜ラベルの位置を事前計算
+const SLOPE_LABELS = [
+  { angle: -112.5, slope: 'left-up', label: '左足\n上がり', labelAngle: -81, labelRadius: 110 },
+  { angle: -67.5, slope: 'left-up-toe-up', label: '左足上がり\n＋\nつま先上がり', labelAngle: -45, labelRadius: 100 },
+  { angle: -22.5, slope: 'toe-up', label: 'つま先\n上がり', labelAngle: 0, labelRadius: 74 },
+  { angle: 22.5, slope: 'left-down-toe-up', label: '左足下がり\n＋\nつま先上がり', labelAngle: 45, labelRadius: 100 },
+  { angle: 67.5, slope: 'left-down', label: '左足\n下がり', labelAngle: 81, labelRadius: 100 },
+  { angle: 112.5, slope: 'left-down-toe-down', label: '左足下がり\n＋\nつま先下がり', labelAngle: 135, labelRadius: 100 },
+  { angle: 157.5, slope: 'toe-down', label: 'つま先\n下がり', labelAngle: 178, labelRadius: 74 },
+  { angle: 202.5, slope: 'left-up-toe-down', label: '左足上がり\n＋\nつま先下がり', labelAngle: -135, labelRadius: 100 },
+].map(({ angle, slope, label, labelAngle, labelRadius }) => {
+  const centerX = 150;
+  const centerY = 150;
+  const labelX = centerX + labelRadius * Math.cos((labelAngle * Math.PI) / 180);
+  const labelY = centerY + labelRadius * Math.sin((labelAngle * Math.PI) / 180);
+  const fontSize = angle % 90 === 0 ? '14' : '11';
+  const fontWeight = angle % 90 === 0 ? 'bold' : 'normal';
+
+  return { slope, label, labelX, labelY, fontSize, fontWeight };
+});
+
+// 風向きセグメントの計算を事前に行う（レンダリング時の計算を削減）
+const WIND_SEGMENTS = [
+  { angle: -112.5, direction: 'up' },
+  { angle: -67.5, direction: 'up-right' },
+  { angle: -22.5, direction: 'right' },
+  { angle: 22.5, direction: 'down-right' },
+  { angle: 67.5, direction: 'down' },
+  { angle: 112.5, direction: 'down-left' },
+  { angle: 157.5, direction: 'left' },
+  { angle: 202.5, direction: 'up-left' },
+].map(({ angle, direction }) => {
+  const startAngle = angle;
+  const endAngle = angle + 45;
+  const largeArcFlag = 0;
+  const outerRadius = 145;
+  const innerRadius = 60;
+  const centerX = 150;
+  const centerY = 150;
+
+  const startOuterX = centerX + outerRadius * Math.cos((startAngle * Math.PI) / 180);
+  const startOuterY = centerY + outerRadius * Math.sin((startAngle * Math.PI) / 180);
+  const endOuterX = centerX + outerRadius * Math.cos((endAngle * Math.PI) / 180);
+  const endOuterY = centerY + outerRadius * Math.sin((endAngle * Math.PI) / 180);
+
+  const startInnerX = centerX + innerRadius * Math.cos((endAngle * Math.PI) / 180);
+  const startInnerY = centerY + innerRadius * Math.sin((endAngle * Math.PI) / 180);
+  const endInnerX = centerX + innerRadius * Math.cos((startAngle * Math.PI) / 180);
+  const endInnerY = centerY + innerRadius * Math.sin((startAngle * Math.PI) / 180);
+
+  const pathData = `
+    M ${startOuterX} ${startOuterY}
+    A ${outerRadius} ${outerRadius} 0 ${largeArcFlag} 1 ${endOuterX} ${endOuterY}
+    L ${startInnerX} ${startInnerY}
+    A ${innerRadius} ${innerRadius} 0 ${largeArcFlag} 0 ${endInnerX} ${endInnerY}
+    Z
+  `;
+
+  const arrowRotation = angle + 22.5 + 90;
+  const arrowRadius = 102;
+  const arrowAngle = angle + 22.5;
+  const arrowX = centerX + arrowRadius * Math.cos((arrowAngle * Math.PI) / 180);
+  const arrowY = centerY + arrowRadius * Math.sin((arrowAngle * Math.PI) / 180);
+
+  return {
+    angle,
+    direction,
+    pathData,
+    arrowX,
+    arrowY,
+    arrowRotation,
+  };
+});
+
+// 結果入力ページの位置計算関数（再利用可能）
+const calculatePositionFromEvent = (svg, clientX, clientY) => {
+  const rect = svg.getBoundingClientRect();
+  const x = clientX - rect.left;
+  const y = clientY - rect.top;
+
+  // SVG座標に変換（viewBox: -50 -50 400 400）
+  const svgX = (x / rect.width) * 400 - 50;
+  const svgY = (y / rect.height) * 400 - 50;
+
+  // 中心からの相対位置を計算（中心は150, 150）
+  const centerX = 150;
+  const centerY = 150;
+  const relX = svgX - centerX;
+  const relY = svgY - centerY;
+
+  // ヤード単位に変換（上が飛球方向なのでY軸を反転、70ヤード = 182ピクセル）
+  const yardsX = (relX / 182) * 70;
+  const yardsY = -(relY / 182) * 70; // 上がプラス（飛球方向）
+
+  // 70yd以内のみ
+  const distance = Math.sqrt(yardsX * yardsX + yardsY * yardsY);
+  if (distance <= 70) {
+    return { x: yardsX, y: yardsY };
+  }
+  return null;
+};
 
 /**
  * Record page - 5-tap shot recording
@@ -37,7 +194,7 @@ export const RecordPage = () => {
 
   const { currentShot, updateCurrentShot, resetCurrentShot, getShotCompletionPercentage, setCurrentShot } = useStore();
   const { gyro, isSupported, hasPermission, startMonitoring, stopMonitoring, requestPermission } = useGyro();
-  const { location: geoLocation, getLocation, useTestLocation, setUseTestLocation } = useGeoLocation();
+  const { getLocation } = useGeoLocation();
 
   const [gyroStopFn, setGyroStopFn] = useState(null);
   const [autoCollectStatus, setAutoCollectStatus] = useState({
@@ -46,6 +203,14 @@ export const RecordPage = () => {
     loading: false,
     error: null,
   });
+  const [showManualInput, setShowManualInput] = useState(false);
+  const [golfCourseHistory, setGolfCourseHistory] = useState([]);
+  const [showUpdateConfirm, setShowUpdateConfirm] = useState(false);
+  const [manualShotsToUpdate, setManualShotsToUpdate] = useState([]);
+  const [manualGolfCourse, setManualGolfCourse] = useState('');
+  const [manualTemperature, setManualTemperature] = useState('');
+  const [manualActualTemp, setManualActualTemp] = useState('');
+  const [isNewCourse, setIsNewCourse] = useState(false);
 
   // Initialize gyro on mount
   useEffect(() => {
@@ -84,6 +249,15 @@ export const RecordPage = () => {
         memo: true,
       });
       setEnabledFields(savedFields);
+
+      // Load golf course history
+      const allShots = await getAllShots();
+      const uniqueCourses = [...new Set(
+        allShots
+          .map(shot => shot.golfCourse)
+          .filter(course => course && course !== '不明' && course !== 'Unknown Location')
+      )].sort();
+      setGolfCourseHistory(uniqueCourses);
     };
     if (location.pathname === '/record') {
       loadSettings();
@@ -111,12 +285,12 @@ export const RecordPage = () => {
   }, [editId, setCurrentShot]);
 
   // Auto-collect function
-  const autoCollect = async (testMode = useTestLocation) => {
+  const autoCollect = async () => {
     setAutoCollectStatus(prev => ({ ...prev, loading: true, error: null }));
 
     try {
       // Get location
-      const locationData = await getLocation(testMode);
+      const locationData = await getLocation(false);
 
       // Get weather
       const weatherData = await getWeather(
@@ -143,6 +317,13 @@ export const RecordPage = () => {
         loading: false,
         error: null,
       });
+
+      // Check for manual location shots from today and offer to update
+      const manualShots = await getTodayManualLocationShots();
+      if (manualShots.length > 0 && !editId) {
+        setManualShotsToUpdate(manualShots);
+        setShowUpdateConfirm(true);
+      }
     } catch (error) {
       console.error('Auto-collect failed:', error);
       setAutoCollectStatus(prev => ({
@@ -150,6 +331,8 @@ export const RecordPage = () => {
         loading: false,
         error: error.message,
       }));
+      // Show manual input form on error
+      setShowManualInput(true);
     }
   };
 
@@ -159,6 +342,51 @@ export const RecordPage = () => {
     autoCollect();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [editId]);
+
+  // Handle manual input save
+  const handleManualInput = () => {
+    if (!manualGolfCourse || !manualTemperature) {
+      alert('ゴルフ場と気温を選択してください');
+      return;
+    }
+
+    // Update current shot with manual data
+    updateCurrentShot('golfCourse', manualGolfCourse);
+    updateCurrentShot('temperature', manualTemperature);
+    updateCurrentShot('actualTemperature', manualActualTemp ? parseFloat(manualActualTemp) : null);
+    updateCurrentShot('latitude', null);
+    updateCurrentShot('longitude', null);
+    updateCurrentShot('manualLocation', true);
+
+    // Hide manual input form
+    setShowManualInput(false);
+    setAutoCollectStatus(prev => ({
+      ...prev,
+      error: null,
+      weather: { temperatureCategory: manualTemperature },
+      location: { locationName: manualGolfCourse },
+    }));
+  };
+
+  // Handle batch update of manual shots
+  const handleUpdateManualShots = async () => {
+    try {
+      const shotIds = manualShotsToUpdate.map(shot => shot.id);
+      await updateLocationForShots(shotIds, {
+        golfCourse: currentShot.golfCourse,
+        actualTemperature: currentShot.actualTemperature,
+        temperature: currentShot.temperature,
+        latitude: currentShot.latitude,
+        longitude: currentShot.longitude,
+      });
+      alert(`${shotIds.length}件のショットの位置情報を更新しました`);
+      setShowUpdateConfirm(false);
+      setManualShotsToUpdate([]);
+    } catch (error) {
+      console.error('Failed to update manual shots:', error);
+      alert('更新に失敗しました');
+    }
+  };
 
   const handleSave = async () => {
     setIsSaving(true);
@@ -183,18 +411,18 @@ export const RecordPage = () => {
     }
   };
 
-  // Count total enabled steps
-  const getTotalSteps = () => {
+  // Count total enabled steps (memoized)
+  const totalSteps = useMemo(() => {
     let count = 2; // slope and result are always enabled
     if (enabledFields.lie) count++;
     if (enabledFields.club) count++;
     if (enabledFields.strength) count++;
     if (enabledFields.wind) count++;
     return count;
-  };
+  }, [enabledFields]);
 
-  // Get current step number (among enabled steps)
-  const getCurrentStepNumber = () => {
+  // Get current step number (among enabled steps) (memoized)
+  const currentStepNumber = useMemo(() => {
     let count = 1;
     if (step >= 2 && enabledFields.lie) count++;
     if (step >= 3 && enabledFields.club) count++;
@@ -202,7 +430,7 @@ export const RecordPage = () => {
     if (step >= 5 && enabledFields.wind) count++;
     if (step >= 6) count++;
     return count;
-  };
+  }, [step, enabledFields]);
 
   // Get next enabled step
   const getNextStep = (currentStep) => {
@@ -257,45 +485,8 @@ export const RecordPage = () => {
             <div className="relative w-full max-w-sm mx-auto" style={{ aspectRatio: '1/1' }}>
               <svg viewBox="0 0 300 300" className="w-full h-full">
                 {/* 8つのセグメント */}
-                {[
-                  { angle: -112.5, slope: 'left-up' },
-                  { angle: -67.5, slope: 'left-up-toe-up' },
-                  { angle: -22.5, slope: 'toe-up' },
-                  { angle: 22.5, slope: 'left-down-toe-up' },
-                  { angle: 67.5, slope: 'left-down' },
-                  { angle: 112.5, slope: 'left-down-toe-down' },
-                  { angle: 157.5, slope: 'toe-down' },
-                  { angle: 202.5, slope: 'left-up-toe-down' },
-                ].map(({ angle, slope }) => {
-                  // 一度選択したらジャイロの値を無視
+                {SLOPE_SEGMENTS.map(({ slope, pathData }) => {
                   const isActive = currentShot.slope ? (currentShot.slope === slope) : (gyro.slope === slope);
-                  const startAngle = angle;
-                  const endAngle = angle + 45;
-                  const largeArcFlag = 0;
-
-                  // 扇形のパス計算
-                  const outerRadius = 145;
-                  const innerRadius = 45;
-                  const centerX = 150;
-                  const centerY = 150;
-
-                  const startOuterX = centerX + outerRadius * Math.cos((startAngle * Math.PI) / 180);
-                  const startOuterY = centerY + outerRadius * Math.sin((startAngle * Math.PI) / 180);
-                  const endOuterX = centerX + outerRadius * Math.cos((endAngle * Math.PI) / 180);
-                  const endOuterY = centerY + outerRadius * Math.sin((endAngle * Math.PI) / 180);
-
-                  const startInnerX = centerX + innerRadius * Math.cos((endAngle * Math.PI) / 180);
-                  const startInnerY = centerY + innerRadius * Math.sin((endAngle * Math.PI) / 180);
-                  const endInnerX = centerX + innerRadius * Math.cos((startAngle * Math.PI) / 180);
-                  const endInnerY = centerY + innerRadius * Math.sin((startAngle * Math.PI) / 180);
-
-                  const pathData = `
-                    M ${startOuterX} ${startOuterY}
-                    A ${outerRadius} ${outerRadius} 0 ${largeArcFlag} 1 ${endOuterX} ${endOuterY}
-                    L ${startInnerX} ${startInnerY}
-                    A ${innerRadius} ${innerRadius} 0 ${largeArcFlag} 0 ${endInnerX} ${endInnerY}
-                    Z
-                  `;
 
                   return (
                     <g key={slope}>
@@ -346,18 +537,8 @@ export const RecordPage = () => {
                 </text>
 
                 {/* 4つの人間アイコン */}
-                {[
-                  { angle: -90, slope: 'left-up', icon: '/assets/icons/slope/slope-left-up.svg' },
-                  { angle: 0, slope: 'toe-up', icon: '/assets/icons/slope/slope-toe-up.svg' },
-                  { angle: 90, slope: 'left-down', icon: '/assets/icons/slope/slope-left-down.svg' },
-                  { angle: 180, slope: 'toe-down', icon: '/assets/icons/slope/slope-toe-down.svg' },
-                ].map(({ angle, slope, icon }) => {
+                {SLOPE_ICONS.map(({ slope, icon, iconX, iconY, iconSize }) => {
                   const isActive = currentShot.slope ? (currentShot.slope === slope) : (gyro.slope === slope);
-                  const iconSize = 100;
-                  const iconRadius = 94;
-                  const iconAngle = angle;
-                  const iconX = 150 + iconRadius * Math.cos((iconAngle * Math.PI) / 180) - iconSize / 2;
-                  const iconY = 150 + iconRadius * Math.sin((iconAngle * Math.PI) / 180) - iconSize / 2;
 
                   return (
                     <image
@@ -374,43 +555,8 @@ export const RecordPage = () => {
                 })}
 
                 {/* テキストラベル（最前面） */}
-                {[
-                  { angle: -112.5, slope: 'left-up', label: '左足\n上がり' },
-                  { angle: -67.5, slope: 'left-up-toe-up', label: '左足上がり\n＋\nつま先上がり' },
-                  { angle: -22.5, slope: 'toe-up', label: 'つま先\n上がり' },
-                  { angle: 22.5, slope: 'left-down-toe-up', label: '左足下がり\n＋\nつま先上がり' },
-                  { angle: 67.5, slope: 'left-down', label: '左足\n下がり' },
-                  { angle: 112.5, slope: 'left-down-toe-down', label: '左足下がり\n＋\nつま先下がり' },
-                  { angle: 157.5, slope: 'toe-down', label: 'つま先\n下がり' },
-                  { angle: 202.5, slope: 'left-up-toe-down', label: '左足上がり\n＋\nつま先下がり' },
-                ].map(({ angle, slope, label }) => {
+                {SLOPE_LABELS.map(({ slope, label, labelX, labelY, fontSize, fontWeight }) => {
                   const isActive = currentShot.slope ? (currentShot.slope === slope) : (gyro.slope === slope);
-                  const centerX = 150;
-                  const centerY = 150;
-
-                  // ラベル位置計算
-                  let labelRadius = 100;
-                  let labelAngle;
-
-                  // メイン4方向のラベル位置を個別設定
-                  if (slope === 'left-up') {
-                    labelAngle = -81;
-                    labelRadius = 110; // 個別設定
-                  } else if (slope === 'left-down') {
-                    labelAngle = 81;
-                    labelRadius = 100; // 個別設定
-                  } else if (slope === 'toe-up') {
-                    labelAngle = 0; // 右（修正）
-                    labelRadius = 74; // 個別設定
-                  } else if (slope === 'toe-down') {
-                    labelAngle = 178; // 左（修正）
-                    labelRadius = 74; // 個別設定
-                  } else {
-                    labelAngle = angle + 22.5; // コーナーはセグメント中央
-                  }
-
-                  const labelX = centerX + labelRadius * Math.cos((labelAngle * Math.PI) / 180);
-                  const labelY = centerY + labelRadius * Math.sin((labelAngle * Math.PI) / 180);
 
                   return (
                     <text
@@ -420,8 +566,8 @@ export const RecordPage = () => {
                       textAnchor="middle"
                       dominantBaseline="middle"
                       fill={isActive ? 'white' : '#212121'}
-                      fontSize={angle % 90 === 0 ? '14' : '11'}
-                      fontWeight={angle % 90 === 0 ? 'bold' : 'normal'}
+                      fontSize={fontSize}
+                      fontWeight={fontWeight}
                       className="pointer-events-none select-none"
                       style={{ whiteSpace: 'pre-line' }}
                     >
@@ -697,50 +843,8 @@ export const RecordPage = () => {
             <div className="relative w-full max-w-sm mx-auto" style={{ aspectRatio: '1/1' }}>
               <svg viewBox="0 0 300 300" className="w-full h-full">
                 {/* 8方向の風向きセグメント */}
-                {[
-                  { angle: -112.5, direction: 'up' },
-                  { angle: -67.5, direction: 'up-right' },
-                  { angle: -22.5, direction: 'right' },
-                  { angle: 22.5, direction: 'down-right' },
-                  { angle: 67.5, direction: 'down' },
-                  { angle: 112.5, direction: 'down-left' },
-                  { angle: 157.5, direction: 'left' },
-                  { angle: 202.5, direction: 'up-left' },
-                ].map(({ angle, direction }) => {
+                {WIND_SEGMENTS.map(({ direction, pathData, arrowX, arrowY, arrowRotation }) => {
                   const isActive = windDirection === direction;
-                  const startAngle = angle;
-                  const endAngle = angle + 45;
-                  const largeArcFlag = 0;
-
-                  const outerRadius = 145;
-                  const innerRadius = 60;
-                  const centerX = 150;
-                  const centerY = 150;
-
-                  const startOuterX = centerX + outerRadius * Math.cos((startAngle * Math.PI) / 180);
-                  const startOuterY = centerY + outerRadius * Math.sin((startAngle * Math.PI) / 180);
-                  const endOuterX = centerX + outerRadius * Math.cos((endAngle * Math.PI) / 180);
-                  const endOuterY = centerY + outerRadius * Math.sin((endAngle * Math.PI) / 180);
-
-                  const startInnerX = centerX + innerRadius * Math.cos((endAngle * Math.PI) / 180);
-                  const startInnerY = centerY + innerRadius * Math.sin((endAngle * Math.PI) / 180);
-                  const endInnerX = centerX + innerRadius * Math.cos((startAngle * Math.PI) / 180);
-                  const endInnerY = centerY + innerRadius * Math.sin((startAngle * Math.PI) / 180);
-
-                  const pathData = `
-                    M ${startOuterX} ${startOuterY}
-                    A ${outerRadius} ${outerRadius} 0 ${largeArcFlag} 1 ${endOuterX} ${endOuterY}
-                    L ${startInnerX} ${startInnerY}
-                    A ${innerRadius} ${innerRadius} 0 ${largeArcFlag} 0 ${endInnerX} ${endInnerY}
-                    Z
-                  `;
-
-                  // 矢印の回転角度計算（外側から内側に向ける）
-                  const arrowRotation = angle + 22.5 + 90;
-                  const arrowRadius = 102;
-                  const arrowAngle = angle + 22.5;
-                  const arrowX = centerX + arrowRadius * Math.cos((arrowAngle * Math.PI) / 180);
-                  const arrowY = centerY + arrowRadius * Math.sin((arrowAngle * Math.PI) / 180);
 
                   return (
                     <g key={direction}>
@@ -943,49 +1047,21 @@ export const RecordPage = () => {
                   const svg = e.currentTarget;
                   let lastResult = null;
 
-                  const calculatePosition = (clientX, clientY) => {
-                    const rect = svg.getBoundingClientRect();
-                    const x = clientX - rect.left;
-                    const y = clientY - rect.top;
-
-                    // SVG座標に変換（viewBox: -50 -50 400 400）
-                    const svgX = (x / rect.width) * 400 - 50;
-                    const svgY = (y / rect.height) * 400 - 50;
-
-                    // 中心からの相対位置を計算（中心は150, 150）
-                    const centerX = 150;
-                    const centerY = 150;
-                    const relX = svgX - centerX;
-                    const relY = svgY - centerY;
-
-                    // ヤード単位に変換（上が飛球方向なのでY軸を反転、70ヤード = 182ピクセル）
-                    const yardsX = (relX / 182) * 70;
-                    const yardsY = -(relY / 182) * 70; // 上がプラス（飛球方向）
-
-                    // 70yd以内のみ
-                    const distance = Math.sqrt(yardsX * yardsX + yardsY * yardsY);
-                    if (distance <= 70) {
-                      return { x: yardsX, y: yardsY };
-                    }
-                    return null;
-                  };
-
                   const handleMove = (moveEvent) => {
-                    lastResult = calculatePosition(moveEvent.clientX, moveEvent.clientY);
+                    lastResult = calculatePositionFromEvent(svg, moveEvent.clientX, moveEvent.clientY);
                   };
 
                   const handleUp = () => {
                     document.removeEventListener('mousemove', handleMove);
                     document.removeEventListener('mouseup', handleUp);
 
-                    // 最後に一度だけ状態を更新
                     if (lastResult) {
                       updateCurrentShot('result', lastResult);
                       updateCurrentShot('missType', null);
                     }
                   };
 
-                  lastResult = calculatePosition(e.clientX, e.clientY);
+                  lastResult = calculatePositionFromEvent(svg, e.clientX, e.clientY);
                   document.addEventListener('mousemove', handleMove);
                   document.addEventListener('mouseup', handleUp);
                 }}
@@ -994,36 +1070,9 @@ export const RecordPage = () => {
                   const svg = e.currentTarget;
                   let lastResult = null;
 
-                  const calculatePosition = (clientX, clientY) => {
-                    const rect = svg.getBoundingClientRect();
-                    const x = clientX - rect.left;
-                    const y = clientY - rect.top;
-
-                    // SVG座標に変換（viewBox: -50 -50 400 400）
-                    const svgX = (x / rect.width) * 400 - 50;
-                    const svgY = (y / rect.height) * 400 - 50;
-
-                    // 中心からの相対位置を計算（中心は150, 150）
-                    const centerX = 150;
-                    const centerY = 150;
-                    const relX = svgX - centerX;
-                    const relY = svgY - centerY;
-
-                    // ヤード単位に変換（上が飛球方向なのでY軸を反転、70ヤード = 182ピクセル）
-                    const yardsX = (relX / 182) * 70;
-                    const yardsY = -(relY / 182) * 70; // 上がプラス（飛球方向）
-
-                    // 70yd以内のみ
-                    const distance = Math.sqrt(yardsX * yardsX + yardsY * yardsY);
-                    if (distance <= 70) {
-                      return { x: yardsX, y: yardsY };
-                    }
-                    return null;
-                  };
-
                   const handleMove = (moveEvent) => {
                     if (moveEvent.touches[0]) {
-                      lastResult = calculatePosition(moveEvent.touches[0].clientX, moveEvent.touches[0].clientY);
+                      lastResult = calculatePositionFromEvent(svg, moveEvent.touches[0].clientX, moveEvent.touches[0].clientY);
                     }
                   };
 
@@ -1031,7 +1080,6 @@ export const RecordPage = () => {
                     document.removeEventListener('touchmove', handleMove);
                     document.removeEventListener('touchend', handleEnd);
 
-                    // 最後に一度だけ状態を更新
                     if (lastResult) {
                       updateCurrentShot('result', lastResult);
                       updateCurrentShot('missType', null);
@@ -1040,7 +1088,7 @@ export const RecordPage = () => {
 
                   const touch = e.touches[0];
                   if (touch) {
-                    lastResult = calculatePosition(touch.clientX, touch.clientY);
+                    lastResult = calculatePositionFromEvent(svg, touch.clientX, touch.clientY);
                   }
                   document.addEventListener('touchmove', handleMove, { passive: false });
                   document.addEventListener('touchend', handleEnd);
@@ -1248,29 +1296,6 @@ export const RecordPage = () => {
   return (
     <Layout>
       <div className="p-6">
-        {/* Test mode toggle */}
-        <div className="mb-4 p-3 bg-[var(--color-muted-bg)] rounded-lg border border-[var(--color-muted-border)]">
-          <label className="flex items-center justify-between cursor-pointer">
-            <div>
-              <span className="text-sm font-medium text-[var(--color-muted-text)]">
-                テストモード
-              </span>
-              <p className="text-xs text-[var(--color-neutral-600)] mt-0.5">
-                実際のゴルフ場の位置情報でテスト
-              </p>
-            </div>
-            <div className="relative">
-              <input
-                type="checkbox"
-                checked={useTestLocation}
-                onChange={(e) => setUseTestLocation(e.target.checked)}
-                className="sr-only peer"
-              />
-              <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-green-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-green-600"></div>
-            </div>
-          </label>
-        </div>
-
         {/* Auto-collected info */}
         {autoCollectStatus.loading ? (
           <div className="mb-4 p-3 bg-[var(--color-info-bg)] rounded-lg border border-[var(--color-info-border)] flex items-center gap-2">
@@ -1278,24 +1303,143 @@ export const RecordPage = () => {
             <p className="text-sm text-[var(--color-info-text)]">位置情報と天気を取得中...</p>
           </div>
         ) : autoCollectStatus.error ? (
-          <div className="mb-4 p-3 bg-[var(--color-error-bg)] rounded-lg border border-[var(--color-error-border)]">
-            <div className="flex items-center justify-between">
-              <div className="flex-1">
-                <p className="text-base font-medium text-[var(--color-error-text)] mb-1">
-                  自動収集に失敗しました
-                </p>
-                <p className="text-xs text-[var(--color-error-text)]">
-                  {autoCollectStatus.error}
-                </p>
+          <>
+            <div className="mb-4 p-3 bg-[var(--color-error-bg)] rounded-lg border border-[var(--color-error-border)]">
+              <div className="flex items-center justify-between">
+                <div className="flex-1">
+                  <p className="text-base font-medium text-[var(--color-error-text)] mb-1">
+                    自動収集に失敗しました
+                  </p>
+                  <p className="text-xs text-[var(--color-error-text)]">
+                    {autoCollectStatus.error}
+                  </p>
+                </div>
+                <button
+                  onClick={() => autoCollect()}
+                  className="ml-3 px-3 py-1 bg-[var(--color-secondary-red)] text-white text-xs rounded hover:opacity-90 transition-opacity whitespace-nowrap"
+                >
+                  再取得
+                </button>
               </div>
-              <button
-                onClick={autoCollect}
-                className="ml-3 px-3 py-1 bg-[var(--color-secondary-red)] text-white text-xs rounded hover:opacity-90 transition-opacity whitespace-nowrap"
-              >
-                再取得
-              </button>
             </div>
-          </div>
+
+            {/* Manual input form */}
+            {showManualInput && (
+              <div className="mb-4 p-4 bg-[var(--color-card-bg)] rounded-lg border-2 border-[var(--color-primary-green)]">
+                <h3 className="text-lg font-bold mb-4 text-[var(--color-primary-green)]">
+                  手動入力
+                </h3>
+
+                {/* Golf course selection */}
+                <div className="mb-4">
+                  <label className="block text-base font-bold mb-2">ゴルフ場</label>
+                  {!isNewCourse ? (
+                    <>
+                      <select
+                        value={manualGolfCourse}
+                        onChange={(e) => {
+                          const value = e.target.value;
+                          if (value === '__new__') {
+                            setIsNewCourse(true);
+                            setManualGolfCourse('');
+                          } else {
+                            setManualGolfCourse(value);
+                          }
+                        }}
+                        className="w-full px-4 py-3 text-base border-2 border-[var(--color-neutral-300)] rounded-lg bg-white"
+                      >
+                        <option value="">選択してください</option>
+                        {golfCourseHistory.map((course) => (
+                          <option key={course} value={course}>
+                            {course}
+                          </option>
+                        ))}
+                        <option value="__new__">+ 新しいゴルフ場を入力</option>
+                      </select>
+                    </>
+                  ) : (
+                    <>
+                      <input
+                        type="text"
+                        value={manualGolfCourse}
+                        onChange={(e) => setManualGolfCourse(e.target.value)}
+                        placeholder="ゴルフ場名を入力"
+                        className="w-full px-4 py-3 text-base border-2 border-[var(--color-neutral-300)] rounded-lg bg-white"
+                      />
+                      <button
+                        onClick={() => {
+                          setIsNewCourse(false);
+                          setManualGolfCourse('');
+                        }}
+                        className="mt-2 text-base text-[var(--color-primary-green)] hover:underline font-medium"
+                      >
+                        ← 履歴から選択
+                      </button>
+                    </>
+                  )}
+                </div>
+
+                {/* Temperature category selection */}
+                <div className="mb-4">
+                  <label className="block text-base font-bold mb-2">気温カテゴリ</label>
+                  <div className="grid grid-cols-3 gap-2">
+                    {[
+                      { key: 'summer', label: '夏季', desc: '25°C以上' },
+                      { key: 'mid-season', label: '中間期', desc: '15-25°C' },
+                      { key: 'winter', label: '冬季', desc: '15°C以下' },
+                    ].map(({ key, label, desc }) => (
+                      <button
+                        key={key}
+                        onClick={() => setManualTemperature(key)}
+                        className={`p-3 rounded-lg border-2 transition-all ${
+                          manualTemperature === key
+                            ? 'bg-[var(--color-primary-green)] text-white border-[var(--color-primary-green)]'
+                            : 'bg-white border-[var(--color-neutral-300)] hover:border-[var(--color-primary-light)]'
+                        }`}
+                      >
+                        <div className="text-base font-bold">{label}</div>
+                        <div className="text-sm mt-1 opacity-80">{desc}</div>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Optional: actual temperature input */}
+                <div className="mb-4">
+                  <label className="block text-base font-bold mb-2">実際の気温（オプション）</label>
+                  <input
+                    type="number"
+                    value={manualActualTemp}
+                    onChange={(e) => setManualActualTemp(e.target.value)}
+                    placeholder="例: 20"
+                    className="w-full px-4 py-3 text-base border-2 border-[var(--color-neutral-300)] rounded-lg bg-white"
+                  />
+                </div>
+
+                {/* Save button */}
+                <div className="flex gap-2">
+                  <button
+                    onClick={handleManualInput}
+                    className="flex-1 px-4 py-3 text-base bg-[var(--color-primary-green)] text-white font-bold rounded-lg hover:opacity-90 transition-opacity"
+                  >
+                    保存
+                  </button>
+                  <button
+                    onClick={() => {
+                      setShowManualInput(false);
+                      setIsNewCourse(false);
+                      setManualGolfCourse('');
+                      setManualTemperature('');
+                      setManualActualTemp('');
+                    }}
+                    className="px-4 py-3 text-base bg-[var(--color-neutral-300)] text-[var(--color-neutral-900)] font-bold rounded-lg hover:opacity-90 transition-opacity"
+                  >
+                    キャンセル
+                  </button>
+                </div>
+              </div>
+            )}
+          </>
         ) : autoCollectStatus.weather && autoCollectStatus.location ? (
           <div className="mb-4 p-3 bg-[var(--color-success-bg)] rounded-lg border border-[var(--color-success-border)]">
             <div className="flex items-center justify-between">
@@ -1304,11 +1448,6 @@ export const RecordPage = () => {
                   <p className="text-xs text-[var(--color-success-text)]">ゴルフ場</p>
                   <p className="text-sm font-medium text-[var(--color-success-text)]">
                     {currentShot.golfCourse || "不明"}
-                    {geoLocation?.isTest && (
-                      <span className="text-xs ml-1 text-[var(--color-neutral-600)]">
-                        (テスト)
-                      </span>
-                    )}
                   </p>
                 </div>
                 <div className="border-l border-[var(--color-success-border)] pl-3">
@@ -1332,7 +1471,7 @@ export const RecordPage = () => {
                 </div>
               </div>
               <button
-                onClick={autoCollect}
+                onClick={() => autoCollect()}
                 className="ml-3 px-3 py-1 bg-[var(--color-primary-green)] text-white text-xs rounded hover:opacity-90 transition-opacity whitespace-nowrap"
               >
                 再取得
@@ -1341,10 +1480,40 @@ export const RecordPage = () => {
           </div>
         ) : null}
 
+        {/* Batch update confirmation dialog */}
+        {showUpdateConfirm && manualShotsToUpdate.length > 0 && (
+          <div className="mb-4 p-4 bg-[var(--color-info-bg)] rounded-lg border-2 border-[var(--color-info-border)]">
+            <h3 className="text-lg font-bold mb-3 text-[var(--color-info-text)]">
+              位置情報の更新
+            </h3>
+            <p className="text-base text-[var(--color-info-text)] mb-4 leading-relaxed">
+              本日の手動入力ショット（{manualShotsToUpdate.length}件）が見つかりました。
+              現在の位置情報で更新しますか？
+            </p>
+            <div className="flex gap-2">
+              <button
+                onClick={handleUpdateManualShots}
+                className="flex-1 px-4 py-3 text-base bg-[var(--color-primary-green)] text-white font-bold rounded-lg hover:opacity-90 transition-opacity"
+              >
+                更新する
+              </button>
+              <button
+                onClick={() => {
+                  setShowUpdateConfirm(false);
+                  setManualShotsToUpdate([]);
+                }}
+                className="px-4 py-3 text-base bg-[var(--color-neutral-300)] text-[var(--color-neutral-900)] font-bold rounded-lg hover:opacity-90 transition-opacity"
+              >
+                スキップ
+              </button>
+            </div>
+          </div>
+        )}
+
         {/* Progress bar */}
         <div className="mb-6">
           <div className="flex justify-between items-center mb-2">
-            <span className="text-sm font-medium">ステップ {getCurrentStepNumber()} / {getTotalSteps()}</span>
+            <span className="text-sm font-medium">ステップ {currentStepNumber} / {totalSteps}</span>
             <span className="text-sm text-[var(--color-neutral-600)]">
               {getShotCompletionPercentage()}%
             </span>
@@ -1352,7 +1521,7 @@ export const RecordPage = () => {
           <div className="h-2 bg-[#b9d58f] rounded-full overflow-hidden">
             <div
               className="h-full bg-[var(--color-primary-green)] transition-all duration-300"
-              style={{ width: `${(getCurrentStepNumber() / getTotalSteps()) * 100}%` }}
+              style={{ width: `${(currentStepNumber / totalSteps) * 100}%` }}
             />
           </div>
         </div>

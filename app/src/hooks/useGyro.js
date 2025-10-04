@@ -4,7 +4,6 @@ import {
   requestGyroPermission,
   startGyroMonitoring,
   calibrateGyro as calibrateGyroSensor,
-  detectSlope,
 } from '../sensors/gyro';
 import { getCalibration, saveCalibration, getSetting, saveSetting } from '../db';
 import { useStore } from '../store';
@@ -66,7 +65,7 @@ export const useGyro = () => {
         setError('ジャイロセンサーの許可が拒否されました');
       }
       return granted;
-    } catch (err) {
+    } catch {
       setError('ジャイロセンサーの許可リクエストに失敗しました');
       return false;
     }
@@ -118,7 +117,7 @@ export const useGyro = () => {
 
       setGyroEnabled(true);
       return stopFn;
-    } catch (err) {
+    } catch {
       setError('ジャイロセンサーの起動に失敗しました');
       return null;
     }

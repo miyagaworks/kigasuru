@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { Layout } from '../components/Layout';
 import { Button } from '../components/Button';
 import { Icon } from '../components/Icon';
@@ -10,6 +11,9 @@ const DEFAULT_CLUBS = ['DR', '3W', '5W', '7W', 'U4', 'U5', '5I', '6I', '7I', '8I
  * Analysis page - Data visualization and statistics
  */
 export const AnalysisPage = () => {
+  const [searchParams, setSearchParams] = useSearchParams();
+  const dateFilter = searchParams.get('date'); // URLから日付パラメータを取得
+
   const [stats, setStats] = useState(null);
   const [clubs, setClubs] = useState(DEFAULT_CLUBS);
   const [golfCourses, setGolfCourses] = useState([]);
@@ -58,18 +62,28 @@ export const AnalysisPage = () => {
       )].sort();
       setGolfCourses(uniqueCourses);
 
+      // Apply date filter if present (from URL parameter)
+      let dateFilteredShots = allShots;
+      if (dateFilter) {
+        dateFilteredShots = allShots.filter(shot => {
+          const shotDate = new Date(shot.date);
+          const shotDateStr = `${shotDate.getFullYear()}-${String(shotDate.getMonth() + 1).padStart(2, '0')}-${String(shotDate.getDate()).padStart(2, '0')}`;
+          return shotDateStr === dateFilter;
+        });
+      }
+
       // Apply multiple selection filters (OR logic within each category)
       const hasActiveFilters = Object.values(filters).some(arr => arr.length > 0);
 
       const filtered = hasActiveFilters
-        ? allShots.filter(shot => {
+        ? dateFilteredShots.filter(shot => {
             return Object.entries(filters).every(([key, values]) => {
               if (values.length === 0) return true; // No filter for this category
 
               return values.includes(shot[key]); // Must match one of selected values
             });
           })
-        : allShots;
+        : dateFilteredShots;
 
       // Calculate statistics for filtered shots
       const distances = filtered.map(s => s.distance).filter(d => d > 0);
@@ -94,7 +108,7 @@ export const AnalysisPage = () => {
     } catch (error) {
       console.error('Failed to load data:', error);
     }
-  }, [filters]);
+  }, [filters, dateFilter]);
 
   useEffect(() => {
     loadData();
@@ -227,10 +241,39 @@ export const AnalysisPage = () => {
   return (
     <Layout>
       <div className="p-6">
-        <h1 className="text-2xl font-bold text-[var(--color-neutral-900)] mb-6 flex items-center gap-2">
+        <h1 className="text-2xl font-bold text-[var(--color-neutral-900)] mb-4 flex items-center gap-2">
           <Icon category="ui" name="analysis" size={28} />
           データ分析
         </h1>
+
+        {/* Date filter controls */}
+        {dateFilter && (
+          <>
+            <button
+              onClick={() => {
+                setSearchParams({});
+              }}
+              className="w-full mb-4 px-4 py-3 bg-[var(--color-secondary-blue)] text-white font-bold rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center gap-2"
+            >
+              <Icon category="ui" name="back" size={20} style={{ filter: "brightness(0) invert(1)" }} />
+              <span>全期間のデータを表示</span>
+            </button>
+
+            <div className="mb-6 p-4 bg-[var(--color-info-bg)] rounded-lg border border-[var(--color-info-border)] shadow-sm">
+              <div className="flex items-center gap-3">
+                <div className="flex-shrink-0 w-10 h-10 bg-[var(--color-secondary-blue)] rounded-full flex items-center justify-center">
+                  <Icon category="ui" name="calendar" size={20} style={{ filter: "brightness(0) invert(1)" }} />
+                </div>
+                <div>
+                  <p className="text-xs text-[var(--color-info-text)] font-medium">絞り込み期間</p>
+                  <p className="text-lg font-bold text-[var(--color-info-text)]">
+                    {new Date(dateFilter).toLocaleDateString('ja-JP', { year: 'numeric', month: 'long', day: 'numeric' })}
+                  </p>
+                </div>
+              </div>
+            </div>
+          </>
+        )}
 
         {/* Filters */}
         <div className="bg-[var(--color-card-bg)] rounded-lg shadow-md p-4 mb-6">
