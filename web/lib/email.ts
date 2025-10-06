@@ -1,6 +1,7 @@
 import { Resend } from 'resend';
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+// ビルド時に環境変数がない場合はダミー値を使用
+const resend = new Resend(process.env.RESEND_API_KEY || 'dummy-key-for-build');
 
 export interface SendEmailOptions {
   to: string[];
