@@ -1,14 +1,14 @@
 'use client';
 
-import { useState } from 'react';
+import { Suspense, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { Button } from '@/components/Button';
 import { Icon } from '@/components/Icon';
 
 /**
- * メール確認待ちページ
+ * メール確認待ちページのコンテンツ
  */
-export default function VerifyRequestPage() {
+function VerifyRequestContent() {
   const searchParams = useSearchParams();
   const email = searchParams.get('email') || '';
   const [isResending, setIsResending] = useState(false);
@@ -112,5 +112,22 @@ export default function VerifyRequestPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+/**
+ * メール確認待ちページ
+ */
+export default function VerifyRequestPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-[var(--color-bg)] flex items-center justify-center">
+        <div className="text-center">
+          <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-[var(--color-primary-green)]"></div>
+        </div>
+      </div>
+    }>
+      <VerifyRequestContent />
+    </Suspense>
   );
 }

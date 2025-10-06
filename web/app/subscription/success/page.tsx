@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, Suspense } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Layout } from '@/components/Layout';
@@ -8,9 +8,9 @@ import { Button } from '@/components/Button';
 import { Icon } from '@/components/Icon';
 
 /**
- * 決済成功ページ
+ * 決済成功ページ - Content Component
  */
-export default function SubscriptionSuccessPage() {
+function SubscriptionSuccessContent() {
   const { data: session } = useSession();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -167,5 +167,16 @@ export default function SubscriptionSuccessPage() {
         </div>
       </div>
     </Layout>
+  );
+}
+
+/**
+ * 決済成功ページ
+ */
+export default function SubscriptionSuccessPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-[var(--color-bg)] flex items-center justify-center"><div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-[var(--color-primary-green)]"></div></div>}>
+      <SubscriptionSuccessContent />
+    </Suspense>
   );
 }
