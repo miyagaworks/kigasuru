@@ -4,7 +4,8 @@ import { auth } from '@/auth';
 import { prisma } from '@/lib/prisma';
 import { isAdmin } from '@/lib/admin';
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
+// ビルド時に環境変数がない場合はダミー値を使用
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || 'sk_test_dummy-key-for-build', {
   apiVersion: '2025-09-30.clover',
 });
 

@@ -2,11 +2,12 @@ import { NextRequest, NextResponse } from 'next/server';
 import Stripe from 'stripe';
 import { prisma } from '@/lib/prisma';
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
+// ビルド時に環境変数がない場合はダミー値を使用
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || 'sk_test_dummy-key-for-build', {
   apiVersion: '2025-09-30.clover',
 });
 
-const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET!;
+const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET || 'whsec_dummy-secret-for-build';
 
 // Stripe APIの実行時プロパティを含む型定義
 type StripeSubscriptionWithPeriod = Stripe.Subscription & {
