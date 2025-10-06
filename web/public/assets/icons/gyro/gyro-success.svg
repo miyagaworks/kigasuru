@@ -1,0 +1,22 @@
+<svg
+  xmlns="http://www.w3.org/2000/svg"
+  viewBox="0 0 48 48"
+  fill="none"
+  stroke="currentColor"
+  stroke-width="2"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+>
+  <!-- スマートフォン -->
+  <rect x="16" y="10" width="16" height="28" rx="2" stroke-width="2.5"/>
+
+  <!-- 成功チェックマーク -->
+  <circle cx="24" cy="24" r="7" fill="#4CAF50" stroke="#2E7D32" stroke-width="2"/>
+  <path d="M 20 24 L 23 27 L 28 21" stroke="#FFFFFF" stroke-width="2.5" fill="none"/>
+
+  <!-- 成功の光 -->
+  <path d="M 10 24 L 12 24" stroke-width="1.5" opacity="0.5" stroke="#4CAF50"/>
+  <path d="M 36 24 L 38 24" stroke-width="1.5" opacity="0.5" stroke="#4CAF50"/>
+  <path d="M 24 10 L 24 12" stroke-width="1.5" opacity="0.5" stroke="#4CAF50"/>
+  <path d="M 24 36 L 24 38" stroke-width="1.5" opacity="0.5" stroke="#4CAF50"/>
+</svg>

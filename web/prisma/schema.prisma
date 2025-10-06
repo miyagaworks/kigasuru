@@ -1,0 +1,323 @@
+// Kigasuru App - Database Schema
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+// =====================================================
+// Authentication Models (NextAuth v5)
+// =====================================================
+
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String    @unique
+  emailVerified DateTime?
+  password      String?   // メール認証の場合のみ使用
+  image         String?
+
+  // サブスクリプション情報
+  subscriptionStatus String @default("trial") // trial, active, canceled, permanent
+  trialEndsAt        DateTime?
+  subscriptionEndsAt DateTime?
+
+  // Stripe情報
+  stripeCustomerId       String? @unique
+  stripeSubscriptionId   String? @unique
+
+  // LINE連携情報
+  lineUserId              String?   @unique
+  lineNotificationEnabled Boolean   @default(false)
+  lineFriendAdded         Boolean   @default(false)
+  lineFriendAddedAt       DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  accounts                 Account[]
+  sessions                 Session[]
+  shots                    Shot[]
+  subscriptions            Subscription[]
+  payments                 Payment[]
+  linePromotions           LinePromotion[]
+  emailVerificationToken   EmailVerificationToken?
+
+  @@index([email])
+  @@index([stripeCustomerId])
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@index([userId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+model EmailVerificationToken {
+  id        String   @id @default(cuid())
+  userId    String   @unique
+  token     String   @unique
+  expires   DateTime
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([token])
+  @@index([userId])
+}
+
+// 仮登録（メール認証前）
+model PendingRegistration {
+  id             String   @id @default(cuid())
+  name           String
+  email          String   @unique
+  hashedPassword String
+  token          String   @unique
+  expires        DateTime
+  createdAt      DateTime @default(now())
+
+  @@index([email])
+  @@index([token])
+  @@index([expires])
+}
+
+// パスワードリセットトークン
+model PasswordResetToken {
+  id        String   @id @default(cuid())
+  userId    String
+  token     String   @unique
+  expires   DateTime
+  createdAt DateTime @default(now())
+
+  @@index([token])
+  @@index([userId])
+  @@index([expires])
+}
+
+// =====================================================
+// App-specific Models
+// =====================================================
+
+model Shot {
+  id          String   @id @default(cuid())
+  userId      String
+
+  // ショット基本情報
+  date        DateTime
+  club        String
+  distance    Int
+
+  // コンディション
+  slope       String?
+  lie         String?
+  strength    String?
+  wind        String?
+  temperature String?
+
+  // 結果
+  result      Json?    // {x: number, y: number}
+  feeling     String?
+  memo        String?
+
+  // 位置情報
+  golfCourse        String?
+  latitude          Float?
+  longitude         Float?
+  actualTemperature Float?
+  manualLocation    Boolean @default(false)
+
+  // ミスタイプ
+  missType String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([date])
+  @@index([club])
+}
+
+model Subscription {
+  id        String   @id @default(cuid())
+  userId    String
+
+  plan      String   // trial, monthly, yearly, permanent_personal, permanent_premium
+  status    String   // active, canceled, expired
+
+  startDate DateTime
+  endDate   DateTime?
+
+  stripeSubscriptionId String? @unique
+  stripePriceId        String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([status])
+}
+
+model Payment {
+  id               String   @id @default(cuid())
+  userId           String
+
+  amount           Int      // 金額（円）
+  currency         String   @default("jpy")
+  status           String   // succeeded, failed, pending
+
+  stripePaymentIntentId String? @unique
+
+  plan             String?  // どのプランの支払いか
+
+  createdAt        DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([status])
+}
+
+model CancellationRequest {
+  id        String   @id @default(cuid())
+  userId    String
+
+  reason    String?  // 解約理由
+  status    String   @default("pending") // pending, approved, rejected
+
+  requestedAt DateTime @default(now())
+  processedAt DateTime?
+  processedBy String?  // 処理した管理者のID
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+  @@index([status])
+}
+
+model EmailCampaign {
+  id        String   @id @default(cuid())
+
+  title     String   // キャンペーンタイトル
+  subject   String   // メール件名
+  content   String   // メール本文（HTMLまたはテキスト）
+
+  // 配信対象
+  targetType String  // all, trial, active, permanent
+
+  // 配信状態
+  status    String   @default("draft") // draft, scheduled, sending, sent, failed
+
+  // 配信統計
+  totalRecipients Int     @default(0)
+  sentCount      Int     @default(0)
+  failedCount    Int     @default(0)
+
+  // スケジュール
+  scheduledAt DateTime?
+  sentAt      DateTime?
+
+  // 作成者
+  createdBy String
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([status])
+  @@index([targetType])
+  @@index([createdAt])
+}
+
+// =====================================================
+// LINE Promotions
+// =====================================================
+
+model LinePromotion {
+  id        String   @id @default(cuid())
+  userId    String
+
+  lineUserId        String?
+  promotionApplied  Boolean  @default(false)
+  appliedAt         DateTime?
+  promotionDays     Int?     // 延長日数（30日間など）
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId])
+  @@index([userId])
+  @@index([lineUserId])
+}
+
+// =====================================================
+// Settings & Calibration
+// =====================================================
+
+model UserSettings {
+  id     String @id @default(cuid())
+  userId String @unique
+
+  // ジャイロ設定
+  gyroPermission Boolean @default(false)
+  gyroCalibrated Boolean @default(false)
+  flatThreshold  Float   @default(5.0)
+
+  // 入力フィールド設定
+  inputLevel String @default("standard")
+  enabledFields Json  // {slope: true, lie: true, ...}
+
+  // クラブ設定
+  clubs Json // ["DR", "3W", ...]
+
+  // キャリブレーションデータ
+  gyroCalibration Json? // {xOffset: number, yOffset: number}
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+}

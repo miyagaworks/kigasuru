@@ -1,0 +1,20 @@
+<svg
+  xmlns="http://www.w3.org/2000/svg"
+  viewBox="0 0 24 24"
+  fill="none"
+  stroke="currentColor"
+  stroke-width="2"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+>
+  <!-- 絶好調の顔 😎 -->
+  <circle cx="12" cy="12" r="10" fill="#4CAF50" stroke="#2E7D32" stroke-width="2"/>
+
+  <!-- サングラス -->
+  <rect x="5" y="9" width="6" height="4" rx="1" fill="#212121" stroke="none"/>
+  <rect x="13" y="9" width="6" height="4" rx="1" fill="#212121" stroke="none"/>
+  <line x1="11" y1="11" x2="13" y2="11" stroke="#212121" stroke-width="2"/>
+
+  <!-- 笑顔 -->
+  <path d="M 7 15 Q 12 18, 17 15" stroke="#FFFFFF" stroke-width="2" fill="none"/>
+</svg>

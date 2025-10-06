@@ -1,0 +1,293 @@
+import Dexie, { type Table } from 'dexie';
+
+/**
+ * IndexedDB database for offline-first golf shot tracking
+ * 6次元データ記録: 傾斜 × クラブ × ライ × 強度 × 風向き × 気温
+ */
+
+export interface Shot {
+  id?: number;
+  date: string;
+  slope: string;
+  club: string;
+  lie: string;
+  strength: string;
+  wind: string;
+  temperature: string;
+  result: { x: number; y: number } | null;
+  distance: number | null;
+  feeling: string | null;
+  memo: string;
+  golfCourse: string | null;
+  actualTemperature: number | null;
+  latitude: number | null;
+  longitude: number | null;
+  missType: string | null;
+  manualLocation: boolean;
+  createdAt: number;
+}
+
+export interface Setting {
+  key: string;
+  value: unknown;
+}
+
+export interface Calibration {
+  id: string;
+  xOffset: number;
+  yOffset: number;
+  zOffset: number;
+  timestamp: number;
+}
+
+export class KigasuruDB extends Dexie {
+  shots!: Table<Shot, number>;
+  settings!: Table<Setting, string>;
+  calibration!: Table<Calibration, string>;
+
+  constructor() {
+    super('KigasuruDB');
+
+    this.version(1).stores({
+      shots: '++id, date, slope, club, lie, strength, wind, temperature, result, distance, feeling, memo, createdAt',
+      settings: 'key, value',
+      calibration: 'id, xOffset, yOffset, zOffset, timestamp',
+    });
+
+    this.version(2).stores({
+      shots: '++id, date, slope, club, lie, strength, wind, temperature, result, distance, feeling, memo, createdAt, golfCourse, actualTemperature, latitude, longitude',
+    }).upgrade(tx => {
+      return tx.table('shots').toCollection().modify(shot => {
+        if (!shot.golfCourse) shot.golfCourse = null;
+        if (!shot.actualTemperature) shot.actualTemperature = null;
+        if (!shot.latitude) shot.latitude = null;
+        if (!shot.longitude) shot.longitude = null;
+      });
+    });
+
+    this.version(3).stores({
+      shots: '++id, date, slope, club, lie, strength, wind, temperature, result, distance, feeling, memo, createdAt, golfCourse, actualTemperature, latitude, longitude, missType',
+    }).upgrade(tx => {
+      return tx.table('shots').toCollection().modify(shot => {
+        if (!shot.missType) shot.missType = null;
+      });
+    });
+
+    this.version(4).stores({
+      shots: '++id, date, slope, club, lie, strength, wind, temperature, result, distance, feeling, memo, createdAt, golfCourse, actualTemperature, latitude, longitude, missType, manualLocation',
+    }).upgrade(tx => {
+      return tx.table('shots').toCollection().modify(shot => {
+        if (shot.manualLocation === undefined) shot.manualLocation = false;
+      });
+    });
+  }
+}
+
+export const db = new KigasuruDB();
+
+/**
+ * Add a shot record
+ */
+export const addShot = async (shotData: Partial<Shot>): Promise<number> => {
+  const shot: Shot = {
+    date: shotData.date || new Date().toISOString(),
+    slope: shotData.slope || '',
+    club: shotData.club || '',
+    lie: shotData.lie || '',
+    strength: shotData.strength || '',
+    wind: shotData.wind || '',
+    temperature: shotData.temperature || '',
+    result: shotData.result || null,
+    distance: shotData.distance || null,
+    feeling: shotData.feeling || null,
+    memo: shotData.memo || '',
+    golfCourse: shotData.golfCourse || null,
+    actualTemperature: shotData.actualTemperature || null,
+    latitude: shotData.latitude || null,
+    longitude: shotData.longitude || null,
+    missType: shotData.missType || null,
+    manualLocation: shotData.manualLocation || false,
+    createdAt: Date.now(),
+  };
+  return await db.shots.add(shot);
+};
+
+/**
+ * Get all shots
+ */
+export const getAllShots = async (): Promise<Shot[]> => {
+  return await db.shots.orderBy('createdAt').reverse().toArray();
+};
+
+/**
+ * Get shots with filters
+ */
+export const getFilteredShots = async (filters: Partial<Shot> = {}): Promise<Shot[]> => {
+  let collection = db.shots.toCollection();
+
+  Object.entries(filters).forEach(([key, value]) => {
+    if (value !== undefined && value !== null) {
+      collection = collection.filter(shot => shot[key as keyof Shot] === value);
+    }
+  });
+
+  return await collection.toArray();
+};
+
+/**
+ * Calculate statistics for specific conditions
+ */
+export const getStatistics = async (filters: Partial<Shot> = {}) => {
+  const shots = await getFilteredShots(filters);
+
+  if (shots.length === 0) {
+    return null;
+  }
+
+  const distances = shots.map(s => s.distance).filter((d): d is number => d !== null && d > 0);
+  const avgDistance = distances.length > 0
+    ? distances.reduce((a, b) => a + b, 0) / distances.length
+    : 0;
+
+  const resultCounts: Record<string, number> = shots.reduce((acc, shot) => {
+    if (shot.result && typeof shot.result === 'object' && shot.result.x !== undefined) {
+      const distance = Math.sqrt(shot.result.x ** 2 + shot.result.y ** 2);
+      let category: string;
+      if (distance <= 5) {
+        category = 'ジャスト';
+      } else if (distance <= 10) {
+        category = 'ターゲット';
+      } else if (shot.result.y < -10) {
+        category = '大ショート';
+      } else if (shot.result.y < 0) {
+        category = 'ショート';
+      } else if (shot.result.y > 10) {
+        category = '大オーバー';
+      } else {
+        category = 'オーバー';
+      }
+      acc[category] = (acc[category] || 0) + 1;
+    }
+    return acc;
+  }, {} as Record<string, number>);
+
+  const mostCommonResult = Object.keys(resultCounts).length > 0
+    ? Object.keys(resultCounts).reduce((a, b) =>
+        resultCounts[a] > resultCounts[b] ? a : b
+      )
+    : null;
+
+  return {
+    count: shots.length,
+    avgDistance: Math.round(avgDistance),
+    resultCounts,
+    mostCommonResult,
+  };
+};
+
+/**
+ * Save setting
+ */
+export const saveSetting = async (key: string, value: unknown): Promise<string> => {
+  return await db.settings.put({ key, value });
+};
+
+/**
+ * Get setting
+ */
+export const getSetting = async <T = unknown>(key: string, defaultValue: T | null = null): Promise<T | null> => {
+  const setting = await db.settings.get(key);
+  return setting ? setting.value as T : defaultValue;
+};
+
+/**
+ * Save calibration data
+ */
+export const saveCalibration = async (data: Omit<Calibration, 'id' | 'timestamp'>): Promise<string> => {
+  return await db.calibration.put({
+    id: 'current',
+    ...data,
+    timestamp: Date.now(),
+  });
+};
+
+/**
+ * Get calibration data
+ */
+export const getCalibration = async (): Promise<Calibration | undefined> => {
+  return await db.calibration.get('current');
+};
+
+/**
+ * Update a shot record
+ */
+export const updateShot = async (shotId: number, updates: Partial<Shot>): Promise<number> => {
+  return await db.shots.update(shotId, updates);
+};
+
+/**
+ * Delete a shot record
+ */
+export const deleteShot = async (shotId: number): Promise<void> => {
+  return await db.shots.delete(shotId);
+};
+
+/**
+ * Get a single shot by ID
+ */
+export const getShot = async (shotId: number): Promise<Shot | undefined> => {
+  return await db.shots.get(shotId);
+};
+
+/**
+ * Clear all data (for reset)
+ */
+export const clearAllData = async (): Promise<void> => {
+  await db.shots.clear();
+  // Keep settings and calibration
+};
+
+/**
+ * Get manual location shots for today
+ */
+export const getTodayManualLocationShots = async (): Promise<Shot[]> => {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const tomorrow = new Date(today);
+  tomorrow.setDate(tomorrow.getDate() + 1);
+
+  return await db.shots
+    .where('createdAt')
+    .between(today.getTime(), tomorrow.getTime())
+    .and(shot => shot.manualLocation === true)
+    .toArray();
+};
+
+/**
+ * Update location data for multiple shots
+ */
+export const updateLocationForShots = async (
+  shotIds: number[],
+  locationData: {
+    golfCourse: string | null;
+    actualTemperature: number | null;
+    temperature: string;
+    latitude: number | null;
+    longitude: number | null;
+  }
+): Promise<void> => {
+  await Promise.all(
+    shotIds.map(id =>
+      db.shots.update(id, {
+        golfCourse: locationData.golfCourse,
+        actualTemperature: locationData.actualTemperature,
+        temperature: locationData.temperature,
+        latitude: locationData.latitude,
+        longitude: locationData.longitude,
+        manualLocation: false,
+      })
+    )
+  );
+};
+
+export default db;

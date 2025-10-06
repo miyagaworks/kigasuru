@@ -1,0 +1,16 @@
+<svg
+  xmlns="http://www.w3.org/2000/svg"
+  viewBox="0 0 24 24"
+  fill="none"
+  stroke="currentColor"
+  stroke-width="2"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+>
+  <!-- ペン -->
+  <path d="M 17 3 L 21 7 L 9 19 L 3 21 L 5 15 Z" stroke-width="2"/>
+  <line x1="15" y1="5" x2="19" y2="9" stroke-width="2"/>
+
+  <!-- ペン先 -->
+  <path d="M 9 19 L 5 15" stroke-width="2"/>
+</svg>
