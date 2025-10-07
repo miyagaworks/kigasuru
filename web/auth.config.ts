@@ -31,12 +31,10 @@ export default {
       },
       authorization: {
         params: {
-          scope: 'profile openid', // emailを削除
+          scope: 'profile openid', // emailを削除（LINEはemail権限を持っていない）
           response_type: 'code',
         },
       },
-      // iOS PWAでのcookie問題のため、stateチェックを無効化
-      checks: [],
     }),
     Credentials({
       credentials: {

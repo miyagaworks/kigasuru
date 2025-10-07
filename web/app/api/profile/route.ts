@@ -11,14 +11,30 @@ export async function GET() {
       return NextResponse.json({ error: '認証されていません' }, { status: 401 });
     }
 
-    // ユーザー情報を取得
+    // ユーザー情報と認証プロバイダー情報を取得
     const user = await prisma.user.findUnique({
       where: { id: session.user.id },
+      include: {
+        accounts: {
+          select: {
+            provider: true,
+          },
+        },
+      },
     });
 
     if (!user) {
       return NextResponse.json({ error: 'ユーザーが見つかりません' }, { status: 404 });
     }
+
+    // 認証プロバイダーのリスト
+    const authProviders = user.accounts.map(account => account.provider);
+
+    // LINE認証のみで、Google/メール認証がない場合のチェック
+    const hasLineAuth = authProviders.includes('line');
+    const hasGoogleAuth = authProviders.includes('google');
+    const hasEmailAuth = !!user.password;
+    const needsAdditionalAuth = hasLineAuth && !hasGoogleAuth && !hasEmailAuth;
 
     // 安全なユーザー情報（パスワードなどの機密情報を除く）
     const safeUser = {
@@ -29,6 +45,8 @@ export async function GET() {
       subscriptionStatus: user.subscriptionStatus,
       trialEndsAt: user.trialEndsAt,
       hasPassword: !!user.password, // メール認証ユーザーかどうか
+      authProviders,
+      needsAdditionalAuth,
     };
 
     return NextResponse.json({

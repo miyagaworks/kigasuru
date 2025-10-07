@@ -80,28 +80,12 @@ export default function PWACallbackPage() {
         console.error('=== PWA OAuth Error Debug ===');
         logs.forEach(log => console.error(log));
 
-        // ポップアップウィンドウの場合は、Cache APIにエラーを保存して閉じる
-        if (window.opener && window.opener !== window) {
-          await authBridge.saveAuthToken({
-            token: bridgeToken || '',
-            provider: 'error',
-            callbackUrl: '/auth/signin',
-            userData: {
-              id: '',
-              name: '',
-              email: '',
-              image: null
-            }
-          });
-          window.close();
-        } else {
-          // 認証エラーの場合、すぐにリダイレクト
-          const returnUrl = new URL(window.location.origin);
-          returnUrl.pathname = '/auth/signin';
-          returnUrl.searchParams.set('error', errorDescription || errorParam);
+        // 認証エラーの場合、すぐにリダイレクト
+        const returnUrl = new URL(window.location.origin);
+        returnUrl.pathname = '/auth/signin';
+        returnUrl.searchParams.set('error', errorDescription || errorParam);
 
-          window.location.href = returnUrl.toString();
-        }
+        window.location.href = returnUrl.toString();
         return;
       }
 

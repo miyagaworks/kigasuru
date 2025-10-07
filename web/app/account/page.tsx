@@ -8,6 +8,7 @@ import { Button } from '@/components/Button';
 import { Icon } from '@/components/Icon';
 import { ImageUpload } from '@/components/ui/ImageUpload';
 import { toast } from 'react-hot-toast';
+import { AuthProviders } from '@/components/AuthProviders';
 
 interface UserProfile {
   id?: string;
@@ -15,6 +16,8 @@ interface UserProfile {
   name?: string;
   image?: string | null;
   hasPassword?: boolean;
+  authProviders?: string[];
+  needsAdditionalAuth?: boolean;
 }
 
 /**
@@ -31,6 +34,8 @@ export default function AccountPage() {
   });
   const [image, setImage] = useState<string | null>(null);
   const [hasPassword, setHasPassword] = useState(false);
+  const [authProviders, setAuthProviders] = useState<string[]>([]);
+  const [needsAdditionalAuth, setNeedsAdditionalAuth] = useState(false);
   const [passwordData, setPasswordData] = useState({
     currentPassword: '',
     newPassword: '',
@@ -76,6 +81,8 @@ export default function AccountPage() {
         });
         setImage(userData?.image || null);
         setHasPassword(userData?.hasPassword || false);
+        setAuthProviders(userData?.authProviders || []);
+        setNeedsAdditionalAuth(userData?.needsAdditionalAuth || false);
       } catch {
         toast.error('プロフィール情報の取得に失敗しました');
       } finally {
@@ -300,6 +307,18 @@ export default function AccountPage() {
             </Button>
           </div>
         </form>
+
+        {/* Authentication Providers Section */}
+        <div className="bg-[var(--color-card-bg)] rounded-lg shadow-md p-6 mb-6">
+          <h2 className="text-lg font-bold text-[var(--color-neutral-900)] mb-4">
+            ログイン方法
+          </h2>
+          <AuthProviders
+            authProviders={authProviders}
+            hasPassword={hasPassword}
+            needsAdditionalAuth={needsAdditionalAuth}
+          />
+        </div>
 
         {/* Password change section - only for email authenticated users */}
         {hasPassword && (

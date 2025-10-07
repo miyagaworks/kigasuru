@@ -7,6 +7,7 @@ import { Button } from '@/components/Button';
 import { Icon } from '@/components/Icon';
 import { getAllShots, getStatistics, type Shot } from '@/lib/db';
 import LineFriendConfirmFlow from '@/components/line/LineFriendConfirmFlow';
+import { PwaInstallBanner } from '@/components/PwaInstallBanner';
 
 interface Statistics {
   count: number;
@@ -24,10 +25,12 @@ export default function DashboardPage() {
   const [stats, setStats] = useState<Statistics | null>(null);
   const [loading, setLoading] = useState(true);
   const [showLineBanner, setShowLineBanner] = useState(false);
+  const [needsAdditionalAuth, setNeedsAdditionalAuth] = useState(false);
 
   useEffect(() => {
     loadData();
     loadPromotionStatus();
+    checkAuthStatus();
   }, []);
 
   const loadData = async () => {
@@ -71,6 +74,18 @@ export default function DashboardPage() {
       }
     } catch (error) {
       console.error('Failed to load promotion status:', error);
+    }
+  };
+
+  const checkAuthStatus = async () => {
+    try {
+      const response = await fetch('/api/profile');
+      if (response.ok) {
+        const data = await response.json();
+        setNeedsAdditionalAuth(data.user?.needsAdditionalAuth || false);
+      }
+    } catch (error) {
+      console.error('Failed to check auth status:', error);
     }
   };
 
@@ -273,6 +288,7 @@ export default function DashboardPage() {
           </div>
         )}
       </div>
+      <PwaInstallBanner needsAdditionalAuth={needsAdditionalAuth} />
     </Layout>
   );
 };
