@@ -118,12 +118,19 @@ function SignInForm() {
             callbackUrl: callbackUrl
           });
 
-          // PWAコールバックURLを設定
-          const pwaCallbackUrl = `${window.location.origin}/auth/pwa-callback?pwa_bridge_token=${bridgeToken}`;
+          // PWAコールバックURLを設定（デバッグモードの場合はdebugパラメータも追加）
+          const pwaCallbackUrl = new URL('/auth/pwa-callback', window.location.origin);
+          pwaCallbackUrl.searchParams.set('pwa_bridge_token', bridgeToken);
+
+          if (searchParams?.get('debug') === 'true') {
+            pwaCallbackUrl.searchParams.set('debug', 'true');
+          }
+
+          console.log(`OAuth Provider: ${provider}, Callback URL: ${pwaCallbackUrl.toString()}`);
 
           // 同じウィンドウでOAuth認証を実行（PWAコールバック経由）
           await signIn(provider, {
-            callbackUrl: pwaCallbackUrl,
+            callbackUrl: pwaCallbackUrl.toString(),
             redirect: true,
           });
 

@@ -1217,13 +1217,13 @@ function RecordContent() {
                 )}
 
                 {/* 距離ラベル（上が飛球方向） */}
-                <text x="150" y="128" textAnchor="middle" fontSize="12" fill="var(--color-neutral-600)">10y</text>
-                <text x="150" y="102" textAnchor="middle" fontSize="12" fill="var(--color-neutral-600)">20y</text>
-                <text x="150" y="76" textAnchor="middle" fontSize="12" fill="var(--color-neutral-600)">30y</text>
-                <text x="150" y="50" textAnchor="middle" fontSize="12" fill="var(--color-neutral-600)">40y</text>
-                <text x="150" y="24" textAnchor="middle" fontSize="12" fill="var(--color-neutral-600)">50y</text>
-                <text x="150" y="-2" textAnchor="middle" fontSize="12" fill="var(--color-neutral-600)">60y</text>
-                <text x="150" y="-28" textAnchor="middle" fontSize="12" fill="var(--color-neutral-600)">70y</text>
+                <text x="150" y="128" textAnchor="middle" fontSize="12" fill="var(--color-neutral-600)">10yd</text>
+                <text x="150" y="102" textAnchor="middle" fontSize="12" fill="var(--color-neutral-600)">20yd</text>
+                <text x="150" y="76" textAnchor="middle" fontSize="12" fill="var(--color-neutral-600)">30yd</text>
+                <text x="150" y="50" textAnchor="middle" fontSize="12" fill="var(--color-neutral-600)">40yd</text>
+                <text x="150" y="24" textAnchor="middle" fontSize="12" fill="var(--color-neutral-600)">50yd</text>
+                <text x="150" y="-2" textAnchor="middle" fontSize="12" fill="var(--color-neutral-600)">60yd</text>
+                <text x="150" y="-28" textAnchor="middle" fontSize="12" fill="var(--color-neutral-600)">70yd</text>
               </svg>
 
               {/* 選択位置の表示と取り消しボタン */}
