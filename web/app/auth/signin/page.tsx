@@ -106,8 +106,8 @@ function SignInForm() {
         const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
 
         if (isIOS) {
-          // iOS PWA: ブリッジトークンを使った認証フロー
-          console.log('iOS PWA detected, using bridge authentication...');
+          // iOS PWA: カスタムOAuthハンドラーを使用（cookieに依存しない）
+          console.log('iOS PWA detected, using custom OAuth handler...');
 
           // ブリッジトークンを生成
           const bridgeToken = authBridge.generateBridgeToken();
@@ -119,36 +119,19 @@ function SignInForm() {
             callbackUrl: callbackUrl
           });
 
-          // PWAコールバックURLを設定（デバッグモードの場合はdebugパラメータも追加）
-          const pwaCallbackUrl = new URL('/auth/pwa-callback', window.location.origin);
-          pwaCallbackUrl.searchParams.set('pwa_bridge_token', bridgeToken);
+          // iOS PWA専用のOAuthエンドポイントを使用
+          const iosPwaAuthUrl = new URL(`/api/auth/ios-pwa/${provider}`, window.location.origin);
+          iosPwaAuthUrl.searchParams.set('bridge_token', bridgeToken);
+          iosPwaAuthUrl.searchParams.set('callback_url', callbackUrl);
 
           if (searchParams?.get('debug') === 'true') {
-            pwaCallbackUrl.searchParams.set('debug', 'true');
+            iosPwaAuthUrl.searchParams.set('debug', 'true');
           }
 
-          console.log(`OAuth Provider: ${provider}, Callback URL: ${pwaCallbackUrl.toString()}`);
+          console.log(`iOS PWA OAuth URL: ${iosPwaAuthUrl.toString()}`);
 
-          try {
-            // 同じウィンドウでOAuth認証を実行（PWAコールバック経由）
-            console.log('Calling signIn with:', {
-              provider,
-              callbackUrl: pwaCallbackUrl.toString(),
-              redirect: true
-            });
-
-            const result = await signIn(provider, {
-              callbackUrl: pwaCallbackUrl.toString(),
-              redirect: true,
-            });
-
-            // redirect: trueの場合、通常はここに到達しない
-            console.log('SignIn result:', result);
-          } catch (signInError) {
-            console.error('SignIn error:', signInError);
-            setError(`認証エラー: ${signInError instanceof Error ? signInError.message : 'Unknown error'}`);
-            setOauthLoading(false);
-          }
+          // iOS PWA専用のOAuth認証フローへリダイレクト
+          window.location.href = iosPwaAuthUrl.toString();
 
           return;
         }
