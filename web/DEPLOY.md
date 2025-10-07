@@ -29,6 +29,14 @@ NEXTAUTH_SECRET=<openssl rand -base64 32で生成>
 NEXTAUTH_URL=https://your-domain.vercel.app
 ```
 
+### アプリケーション設定
+
+```
+NEXT_PUBLIC_APP_URL=https://your-domain.vercel.app
+```
+
+**重要**: `NEXT_PUBLIC_APP_URL`は本番環境のURLに設定してください。これはOGP画像やPWAマニフェストで使用されます。
+
 ### Google OAuth
 
 1. Google Cloud Consoleで新しいプロジェクトを作成
@@ -110,6 +118,7 @@ npx prisma db push
 - [ ] Webhookが正常に受信されるか
 - [ ] PWAとしてインストール可能か
 - [ ] Service Workerが正常に動作するか
+- [ ] OGP画像が表示されるか（[Open Graph Debugger](https://www.opengraph.xyz/)で確認）
 
 ## 4. トラブルシューティング
 

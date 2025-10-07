@@ -33,14 +33,16 @@ export const metadata: Metadata = {
   openGraph: {
     title: '上手くなる気がするぅぅぅ PRO',
     description: '科学的ゴルフ上達アプリ - ジャイロセンサーで傾斜を自動検出',
-    images: [{ url: '/og-image.png', width: 1200, height: 630, alt: '上手くなる気がするぅぅぅ PRO' }],
+    images: [{ url: '/og-image.png', width: 1200, height: 700, alt: '上手くなる気がするぅぅぅ PRO' }],
     type: 'website',
+    siteName: '上手くなる気がするぅぅぅ PRO',
   },
   twitter: {
     card: 'summary_large_image',
     title: '上手くなる気がするぅぅぅ PRO',
     description: '科学的ゴルフ上達アプリ - ジャイロセンサーで傾斜を自動検出',
     images: ['/og-image.png'],
+    creator: '@kigasuru',
   },
 };
 
