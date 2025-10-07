@@ -17,6 +17,7 @@ export const metadata: Metadata = {
   title: '上手くなる気がするぅぅぅ PRO',
   description: '科学的ゴルフ上達アプリ - ジャイロセンサーで傾斜を自動検出し、6次元データでショットを記録・分析',
   metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'),
+  manifest: '/manifest.json',
   appleWebApp: {
     capable: true,
     statusBarStyle: 'default',
@@ -32,8 +33,14 @@ export const metadata: Metadata = {
   openGraph: {
     title: '上手くなる気がするぅぅぅ PRO',
     description: '科学的ゴルフ上達アプリ - ジャイロセンサーで傾斜を自動検出',
-    images: '/og-image.png',
+    images: [{ url: '/og-image.png', width: 1200, height: 630, alt: '上手くなる気がするぅぅぅ PRO' }],
     type: 'website',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: '上手くなる気がするぅぅぅ PRO',
+    description: '科学的ゴルフ上達アプリ - ジャイロセンサーで傾斜を自動検出',
+    images: ['/og-image.png'],
   },
 };
 
