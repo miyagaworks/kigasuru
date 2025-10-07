@@ -131,6 +131,19 @@ function SignInForm() {
           try {
             // 同じウィンドウでOAuth認証を実行（PWAコールバック経由）
             console.log('Calling signIn...');
+
+            // iOS PWAの場合、直接URLを構築してリダイレクト
+            if (provider === 'line') {
+              // LINEのOAuth URLを直接構築
+              const authUrl = `/api/auth/signin/line?callbackUrl=${encodeURIComponent(pwaCallbackUrl.toString())}`;
+              console.log('Redirecting to LINE auth URL:', authUrl);
+
+              // window.location.hrefで直接遷移
+              window.location.href = authUrl;
+              return;
+            }
+
+            // Google認証は従来の方法を使用
             const result = await signIn(provider, {
               callbackUrl: pwaCallbackUrl.toString(),
               redirect: true,
