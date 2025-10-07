@@ -6,7 +6,7 @@ import { isAdmin } from '@/lib/admin';
 /**
  * メールキャンペーン一覧取得
  */
-export async function GET(req: NextRequest) {
+export async function GET() {
   try {
     const session = await auth();
     if (!session?.user?.email) {

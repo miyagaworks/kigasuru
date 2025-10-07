@@ -16,14 +16,6 @@ interface Statistics {
   mostUsedClub?: string;
 }
 
-interface PromotionStatus {
-  isEligible: boolean;
-  isApplied: boolean;
-  daysRemaining: number;
-  lineFriendAdded: boolean;
-  message: string;
-}
-
 /**
  * Dashboard page - Main entry point after login
  */
@@ -31,7 +23,6 @@ export default function DashboardPage() {
   const router = useRouter();
   const [stats, setStats] = useState<Statistics | null>(null);
   const [loading, setLoading] = useState(true);
-  const [promotionStatus, setPromotionStatus] = useState<PromotionStatus | null>(null);
   const [showLineBanner, setShowLineBanner] = useState(false);
 
   useEffect(() => {
@@ -75,7 +66,6 @@ export default function DashboardPage() {
       const response = await fetch('/api/line/apply-promotion');
       if (response.ok) {
         const data = await response.json();
-        setPromotionStatus(data);
         // トライアル期間中で、まだプロモーションを適用していない場合にバナーを表示
         setShowLineBanner(data.isEligible && !data.isApplied);
       }

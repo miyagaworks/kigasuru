@@ -6,7 +6,6 @@ import { useEffect, useState } from 'react';
 import { setupAutoSync } from '@/lib/sync';
 
 export function Providers({ children }: { children: React.ReactNode }) {
-  const [isOnline, setIsOnline] = useState(true);
   const [showOfflineNotice, setShowOfflineNotice] = useState(false);
 
   useEffect(() => {
@@ -39,17 +38,12 @@ export function Providers({ children }: { children: React.ReactNode }) {
 
     // オンライン/オフライン検知
     const handleOnline = () => {
-      setIsOnline(true);
       setShowOfflineNotice(false);
     };
 
     const handleOffline = () => {
-      setIsOnline(false);
       setShowOfflineNotice(true);
     };
-
-    // 初期状態を設定
-    setIsOnline(navigator.onLine);
 
     window.addEventListener('online', handleOnline);
     window.addEventListener('offline', handleOffline);

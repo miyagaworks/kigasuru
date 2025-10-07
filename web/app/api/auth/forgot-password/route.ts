@@ -54,7 +54,7 @@ export async function POST(request: Request) {
     const resetUrl = `${baseUrl}/auth/reset-password?token=${resetToken}`;
 
     // メール送信
-    const { html, text } = getPasswordResetTemplate({
+    const { html } = getPasswordResetTemplate({
       resetUrl,
       email: user.email,
     });

@@ -1,7 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { useRouter } from 'next/navigation';
+import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { Layout } from '@/components/Layout';
 import { Button } from '@/components/Button';
 import { Icon } from '@/components/Icon';
@@ -75,7 +74,6 @@ const ClubItem = React.memo(({ club, index, totalClubs, onMoveUp, onMoveDown, on
 ClubItem.displayName = 'ClubItem';
 
 export default function SettingsPage() {
-  const router = useRouter();
   const { isSupported, hasPermission, isCalibrating, gyro, requestPermission, calibrate } = useGyro();
   const [calibrationStatus, setCalibrationStatus] = useState('');
   const [importStatus, setImportStatus] = useState('');
@@ -100,8 +98,8 @@ export default function SettingsPage() {
   // Debounce timer for threshold changes
   const thresholdTimerRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Input level presets
-  const INPUT_LEVEL_PRESETS = {
+  // Input level presets - memoized to avoid dependency issues
+  const INPUT_LEVEL_PRESETS = useMemo(() => ({
     beginner: {
       label: '初心者',
       description: '最小限の入力（傾斜、クラブ、結果のみ）',
@@ -122,7 +120,7 @@ export default function SettingsPage() {
       description: '自分で選択',
       fields: customInputFields,
     },
-  };
+  }), [customInputFields]);
 
   const loadThreshold = async () => {
     const saved = (await getSetting<number>('flatThreshold', 2)) ?? 2;
@@ -180,7 +178,7 @@ export default function SettingsPage() {
       await saveSetting('customInputFields', fields);
       await saveSetting('enabledInputFields', fields);
     }
-  }, []);
+  }, [INPUT_LEVEL_PRESETS]);
 
   const handleCustomFieldToggle = useCallback(async (field: keyof InputFieldsConfig) => {
     setCustomInputFields(prev => {

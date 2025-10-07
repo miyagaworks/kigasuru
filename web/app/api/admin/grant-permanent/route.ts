@@ -20,7 +20,7 @@ export async function POST(request: Request) {
       );
     }
 
-    const { userId, reason } = await request.json();
+    const { userId } = await request.json();
 
     if (!userId) {
       return NextResponse.json(

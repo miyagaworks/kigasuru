@@ -56,7 +56,7 @@ export async function POST(request: Request) {
     const baseUrl = process.env.AUTH_URL || process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
     const verificationUrl = `${baseUrl}/api/auth/verify-email?token=${token}`;
 
-    const { html, text } = getEmailVerificationTemplate({
+    const { html } = getEmailVerificationTemplate({
       verificationUrl,
       email: normalizedEmail,
     });

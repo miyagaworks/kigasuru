@@ -25,7 +25,7 @@ interface EmailCampaign {
 
 export default function EmailsPage() {
   const router = useRouter();
-  const { data: session, status } = useSession();
+  const { data: session } = useSession();
   const [campaigns, setCampaigns] = useState<EmailCampaign[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');

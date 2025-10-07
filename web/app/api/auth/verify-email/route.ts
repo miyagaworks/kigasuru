@@ -1,6 +1,5 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/db/prisma';
-import { redirect } from 'next/navigation';
 
 export async function GET(request: Request) {
   try {

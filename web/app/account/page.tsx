@@ -76,7 +76,7 @@ export default function AccountPage() {
         });
         setImage(userData?.image || null);
         setHasPassword(userData?.hasPassword || false);
-      } catch (error) {
+      } catch {
         toast.error('プロフィール情報の取得に失敗しました');
       } finally {
         setIsLoading(false);
