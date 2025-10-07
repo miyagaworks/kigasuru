@@ -94,6 +94,7 @@ function SignInForm() {
   };
 
   const handleOAuthSignIn = async (provider: 'google' | 'line') => {
+    console.log(`🔥 handleOAuthSignIn called with provider: ${provider}`);
     setError(null);
     setOauthLoading(true);
 
@@ -234,7 +235,12 @@ function SignInForm() {
         <div className="space-y-4">
           {/* LINE Login */}
           <button
-            onClick={() => handleOAuthSignIn('line')}
+            type="button"
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              handleOAuthSignIn('line');
+            }}
             disabled={oauthLoading || emailLoading}
             className="w-full h-12 bg-[#00B900] text-white rounded-lg font-medium hover:bg-[#00A000] transition-colors disabled:opacity-50 shadow-sm flex items-center justify-center gap-2"
           >
