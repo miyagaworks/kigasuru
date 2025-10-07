@@ -66,7 +66,7 @@ export function AuthProviders({ authProviders, hasPassword, needsAdditionalAuth 
       setShowPasswordForm(false);
       setPasswordForm({ password: '', confirmPassword: '' });
       window.location.reload();
-    } catch (error) {
+    } catch {
       toast.error('パスワードの設定に失敗しました');
     } finally {
       setIsLinking(false);
@@ -91,7 +91,7 @@ export function AuthProviders({ authProviders, hasPassword, needsAdditionalAuth 
           </svg>
         );
       default:
-        return <Icon icon="mail" className="w-5 h-5" />;
+        return <Icon category="ui" name="mail" size={20} className="w-5 h-5" />;
     }
   };
 
@@ -130,7 +130,7 @@ export function AuthProviders({ authProviders, hasPassword, needsAdditionalAuth 
           ))}
           {hasPassword && (
             <div className="flex items-center gap-3 p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
-              <Icon icon="mail" className="w-5 h-5" />
+              <Icon category="ui" name="mail" size={20} className="w-5 h-5" />
               <span>メールアドレス</span>
               <span className="ml-auto text-sm text-green-600 dark:text-green-400">設定済み</span>
             </div>
@@ -168,7 +168,7 @@ export function AuthProviders({ authProviders, hasPassword, needsAdditionalAuth 
                     className="w-full justify-start gap-3"
                     variant="outline"
                   >
-                    <Icon icon="mail" className="w-5 h-5" />
+                    <Icon category="ui" name="mail" size={20} className="w-5 h-5" />
                     パスワードを設定
                   </Button>
                 ) : (
@@ -188,7 +188,7 @@ export function AuthProviders({ authProviders, hasPassword, needsAdditionalAuth 
                           onClick={() => setShowPassword(!showPassword)}
                           className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
                         >
-                          <Icon icon={showPassword ? 'eyeOff' : 'eye'} className="w-5 h-5" />
+                          <Icon category="ui" name={showPassword ? 'eyeOff' : 'eye'} size={20} className="w-5 h-5" />
                         </button>
                       </div>
                     </div>

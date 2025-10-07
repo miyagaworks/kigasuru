@@ -4,6 +4,11 @@ import { useState, useEffect } from 'react';
 import { Button } from '@/components/Button';
 import { Icon } from '@/components/Icon';
 
+interface BeforeInstallPromptEvent extends Event {
+  prompt: () => Promise<void>;
+  userChoice: Promise<{ outcome: 'accepted' | 'dismissed' }>;
+}
+
 interface PwaInstallBannerProps {
   needsAdditionalAuth?: boolean;
 }
@@ -11,7 +16,7 @@ interface PwaInstallBannerProps {
 export function PwaInstallBanner({ needsAdditionalAuth = false }: PwaInstallBannerProps) {
   const [showBanner, setShowBanner] = useState(false);
   const [showInstructions, setShowInstructions] = useState(false);
-  const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
+  const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
   const [isIOS, setIsIOS] = useState(false);
 
   useEffect(() => {
@@ -33,15 +38,15 @@ export function PwaInstallBanner({ needsAdditionalAuth = false }: PwaInstallBann
     checkInstallability();
 
     // インストールプロンプトイベントをキャッチ
-    const handleBeforeInstallPrompt = (e: Event) => {
+    const handleBeforeInstallPrompt = (e: BeforeInstallPromptEvent) => {
       e.preventDefault();
       setDeferredPrompt(e);
     };
 
-    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt as EventListener);
 
     return () => {
-      window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+      window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt as EventListener);
     };
   }, []);
 
@@ -87,13 +92,13 @@ export function PwaInstallBanner({ needsAdditionalAuth = false }: PwaInstallBann
           className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
           aria-label="閉じる"
         >
-          <Icon icon="x" className="w-5 h-5" />
+          <Icon category="ui" name="x" size={20} className="w-5 h-5" />
         </button>
 
         <div className="flex flex-col md:flex-row items-center gap-4">
           <div className="flex-shrink-0">
             <div className="w-16 h-16 bg-gradient-to-br from-green-400 to-blue-500 rounded-2xl flex items-center justify-center">
-              <Icon icon="download" className="w-8 h-8 text-white" />
+              <Icon category="ui" name="download" size={32} className="w-8 h-8 text-white" />
             </div>
           </div>
 
@@ -157,14 +162,12 @@ export function PwaInstallBanner({ needsAdditionalAuth = false }: PwaInstallBann
               <li>「ホーム画面に追加」をタップ</li>
               <li>「追加」をタップして完了</li>
             </ol>
-            <Button
+            <button
               onClick={() => setShowInstructions(false)}
-              variant="link"
-              size="sm"
-              className="mt-2"
+              className="mt-2 text-blue-600 dark:text-blue-400 text-sm underline hover:no-underline"
             >
               閉じる
-            </Button>
+            </button>
           </div>
         )}
       </div>
