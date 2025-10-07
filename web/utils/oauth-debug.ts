@@ -16,7 +16,7 @@ export const debugOAuth = {
       platform: navigator.platform,
       currentUrl: window.location.href,
       referrer: document.referrer,
-      standalone: (window.navigator as any).standalone,
+      standalone: (window.navigator as { standalone?: boolean }).standalone,
       displayMode: window.matchMedia('(display-mode: standalone)').matches,
     };
   },
@@ -77,13 +77,15 @@ export const debugOAuth = {
 };
 
 // エラーレポートの生成
-export const generateErrorReport = async (error: any) => {
+export const generateErrorReport = async (error: unknown) => {
+  const errorObj = error as { message?: string; error?: string; stack?: string; code?: string } | null;
+
   const report = {
     timestamp: new Date().toISOString(),
     error: {
-      message: error?.message || error?.error || 'Unknown error',
-      stack: error?.stack,
-      code: error?.code,
+      message: errorObj?.message || errorObj?.error || 'Unknown error',
+      stack: errorObj?.stack,
+      code: errorObj?.code,
     },
     environment: debugOAuth.getEnvironmentInfo(),
     session: await debugOAuth.checkSession(),

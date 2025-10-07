@@ -67,7 +67,7 @@ export const authBridge = {
   // iOS PWAかどうかを判定
   isIOSPWA(): boolean {
     const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
-    const isStandalone = (window.navigator as any).standalone === true ||
+    const isStandalone = (window.navigator as { standalone?: boolean }).standalone === true ||
                          window.matchMedia('(display-mode: standalone)').matches;
     return isIOS && isStandalone;
   },
