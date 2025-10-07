@@ -222,6 +222,7 @@ function SignInForm() {
                 }}
                 required
                 disabled={loading}
+                autoComplete="email"
                 className="w-full px-4 py-2 border border-[var(--color-neutral-400)] rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--color-primary-green)] bg-white"
                 placeholder="example@email.com"
               />
@@ -246,6 +247,7 @@ function SignInForm() {
                   }}
                   required
                   disabled={loading}
+                  autoComplete="current-password"
                   className="w-full px-4 py-2 pr-12 border border-[var(--color-neutral-400)] rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--color-primary-green)] bg-white"
                   placeholder="••••••••"
                 />
