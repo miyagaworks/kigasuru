@@ -44,6 +44,10 @@ export default function PWACallbackPage() {
         logs.push(`  - ${key}: ${value}`);
       });
 
+      // ブリッジトークンを最初に取得（エラー処理で使用するため）
+      const bridgeToken = authBridge.getBridgeTokenFromUrl();
+      logs.push(`Bridge Token: ${bridgeToken || 'not found'}`);
+
       // iOS PWAカスタムハンドラーからのパラメータ
       const authStatus = urlParams.get('status');
       const userId = urlParams.get('user_id');
@@ -76,21 +80,33 @@ export default function PWACallbackPage() {
         console.error('=== PWA OAuth Error Debug ===');
         logs.forEach(log => console.error(log));
 
-        // 認証エラーの場合、すぐにリダイレクト
-        const returnUrl = new URL(window.location.origin);
-        returnUrl.pathname = '/auth/signin';
-        returnUrl.searchParams.set('error', errorDescription || errorParam);
+        // ポップアップウィンドウの場合は、Cache APIにエラーを保存して閉じる
+        if (window.opener && window.opener !== window) {
+          await authBridge.saveAuthToken({
+            token: bridgeToken || '',
+            provider: 'error',
+            callbackUrl: '/auth/signin',
+            userData: {
+              id: '',
+              name: '',
+              email: '',
+              image: null
+            }
+          });
+          window.close();
+        } else {
+          // 認証エラーの場合、すぐにリダイレクト
+          const returnUrl = new URL(window.location.origin);
+          returnUrl.pathname = '/auth/signin';
+          returnUrl.searchParams.set('error', errorDescription || errorParam);
 
-        window.location.href = returnUrl.toString();
+          window.location.href = returnUrl.toString();
+        }
         return;
       }
 
       // Cookieの存在を確認
       logs.push(`Cookies: ${document.cookie ? 'exists' : 'empty'}`);
-
-      // ブリッジトークンを取得
-      const bridgeToken = authBridge.getBridgeTokenFromUrl();
-      logs.push(`Bridge Token: ${bridgeToken || 'not found'}`);
 
       if (!bridgeToken) {
         console.error('No bridge token found');
@@ -119,15 +135,22 @@ export default function PWACallbackPage() {
           }
         });
 
-        // PWAに戻る
-        const returnUrl = new URL(window.location.origin);
-        returnUrl.pathname = '/dashboard';
-        returnUrl.searchParams.set('pwa_bridge_success', 'true');
-        returnUrl.searchParams.set('pwa_bridge_token', bridgeToken);
-        returnUrl.searchParams.set('user_id', userId);
+        // ポップアップウィンドウの場合は、自己を閉じる
+        if (window.opener && window.opener !== window) {
+          logs.push('Closing popup window after successful auth');
+          console.log('Closing OAuth popup window');
+          window.close();
+        } else {
+          // PWAに戻る（ポップアップでない場合）
+          const returnUrl = new URL(window.location.origin);
+          returnUrl.pathname = '/dashboard';
+          returnUrl.searchParams.set('pwa_bridge_success', 'true');
+          returnUrl.searchParams.set('pwa_bridge_token', bridgeToken);
+          returnUrl.searchParams.set('user_id', userId);
 
-        // iOS PWAの場合、location.hrefで遷移
-        window.location.href = returnUrl.toString();
+          // iOS PWAの場合、location.hrefで遷移
+          window.location.href = returnUrl.toString();
+        }
         return;
       }
 
@@ -167,14 +190,21 @@ export default function PWACallbackPage() {
           callbackUrl: '/dashboard'
         });
 
-        // PWAに戻る
-        const returnUrl = new URL(window.location.origin);
-        returnUrl.pathname = '/dashboard';
-        returnUrl.searchParams.set('pwa_bridge_success', 'true');
-        returnUrl.searchParams.set('pwa_bridge_token', bridgeToken);
+        // ポップアップウィンドウの場合は、自己を閉じる
+        if (window.opener && window.opener !== window) {
+          logs.push('Closing popup window after successful auth (NextAuth)');
+          console.log('Closing OAuth popup window (NextAuth)');
+          window.close();
+        } else {
+          // PWAに戻る（ポップアップでない場合）
+          const returnUrl = new URL(window.location.origin);
+          returnUrl.pathname = '/dashboard';
+          returnUrl.searchParams.set('pwa_bridge_success', 'true');
+          returnUrl.searchParams.set('pwa_bridge_token', bridgeToken);
 
-        // iOS PWAの場合、location.hrefで遷移
-        window.location.href = returnUrl.toString();
+          // iOS PWAの場合、location.hrefで遷移
+          window.location.href = returnUrl.toString();
+        }
       } else if (status === 'unauthenticated') {
         logs.push('❌ Authentication failed - no session after retries');
         logs.push(`Total retries: ${retryCount}`);
@@ -183,12 +213,28 @@ export default function PWACallbackPage() {
         console.error('=== PWA OAuth Failed Debug ===');
         logs.forEach(log => console.error(log));
 
-        // 認証失敗
-        const returnUrl = new URL(window.location.origin);
-        returnUrl.pathname = '/auth/signin';
-        returnUrl.searchParams.set('error', 'OAuth認証に失敗しました');
+        // ポップアップウィンドウの場合は、Cache APIにエラーを保存して閉じる
+        if (window.opener && window.opener !== window) {
+          await authBridge.saveAuthToken({
+            token: bridgeToken || '',
+            provider: 'error',
+            callbackUrl: '/auth/signin',
+            userData: {
+              id: '',
+              name: '',
+              email: '',
+              image: null
+            }
+          });
+          window.close();
+        } else {
+          // 認証失敗
+          const returnUrl = new URL(window.location.origin);
+          returnUrl.pathname = '/auth/signin';
+          returnUrl.searchParams.set('error', 'OAuth認証に失敗しました');
 
-        window.location.href = returnUrl.toString();
+          window.location.href = returnUrl.toString();
+        }
       }
 
       setDebugInfo(logs);

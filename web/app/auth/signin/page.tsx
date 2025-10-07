@@ -119,7 +119,7 @@ function SignInForm() {
             callbackUrl: callbackUrl
           });
 
-          // iOS PWA専用のOAuthエンドポイントを使用
+          // iOS PWA: 別ウィンドウでOAuth認証を開く
           const iosPwaAuthUrl = new URL(`/api/auth/ios-pwa/${provider}`, window.location.origin);
           iosPwaAuthUrl.searchParams.set('bridge_token', bridgeToken);
           iosPwaAuthUrl.searchParams.set('callback_url', callbackUrl);
@@ -128,10 +128,58 @@ function SignInForm() {
             iosPwaAuthUrl.searchParams.set('debug', 'true');
           }
 
-          console.log(`iOS PWA OAuth URL: ${iosPwaAuthUrl.toString()}`);
+          console.log(`iOS PWA OAuth URL (popup): ${iosPwaAuthUrl.toString()}`);
 
-          // iOS PWA専用のOAuth認証フローへリダイレクト
-          window.location.href = iosPwaAuthUrl.toString();
+          // 別ウィンドウでOAuth認証を開く（PWAコンテキストを維持）
+          const width = 500;
+          const height = 700;
+          const left = (window.screen.width - width) / 2;
+          const top = (window.screen.height - height) / 2;
+
+          const authWindow = window.open(
+            iosPwaAuthUrl.toString(),
+            'oauth',
+            `width=${width},height=${height},left=${left},top=${top},toolbar=no,menubar=no,scrollbars=yes`
+          );
+
+          if (!authWindow) {
+            setError('ポップアップがブロックされました。ブラウザの設定を確認してください。');
+            setOauthLoading(false);
+            return;
+          }
+
+          // ポップアップウィンドウの監視とブリッジトークンのチェック
+          const checkInterval = setInterval(async () => {
+            try {
+              // ポップアップが閉じられたかチェック
+              if (authWindow.closed) {
+                clearInterval(checkInterval);
+
+                // Cache APIから認証結果を確認
+                const authData = await authBridge.getAuthToken();
+                if (authData && authData.token === bridgeToken) {
+                  console.log('iOS PWA OAuth success, redirecting...');
+                  // 認証成功、ダッシュボードへリダイレクト
+                  window.location.href = authData.callbackUrl || '/dashboard';
+                } else {
+                  console.log('iOS PWA OAuth cancelled or failed');
+                  setOauthLoading(false);
+                }
+              }
+            } catch (err) {
+              console.error('Error checking auth window:', err);
+            }
+          }, 500);
+
+          // タイムアウト（5分）
+          setTimeout(() => {
+            if (!authWindow.closed) {
+              authWindow.close();
+              clearInterval(checkInterval);
+              setError('認証がタイムアウトしました');
+              setOauthLoading(false);
+            }
+          }, 5 * 60 * 1000);
 
           return;
         }
