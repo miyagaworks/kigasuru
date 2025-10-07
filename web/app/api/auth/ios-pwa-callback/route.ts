@@ -263,38 +263,20 @@ export async function GET(request: NextRequest) {
       throw new Error('User creation/lookup failed');
     }
 
-    // JWTトークンを生成（NextAuthのセッションの代わり）
-    const sessionToken = jwt.sign(
-      {
-        sub: user.id,
-        name: user.name,
-        email: user.email,
-        picture: user.image,
-      },
-      process.env.NEXTAUTH_SECRET!,
-      { expiresIn: '30d' }
-    );
-
-    // PWAコールバックページへリダイレクト（セッショントークン付き）
+    // PWAコールバックページへリダイレクト（ユーザー情報付き）
     const returnUrl = new URL('/auth/pwa-callback', request.url);
     returnUrl.searchParams.set('pwa_bridge_token', bridgeToken);
-    returnUrl.searchParams.set('session_token', sessionToken);
     returnUrl.searchParams.set('provider', provider);
     returnUrl.searchParams.set('status', 'success');
+    // ユーザー情報をURLパラメータで渡す（NextAuthのJWE形式ではなく）
+    returnUrl.searchParams.set('user_id', user.id);
+    returnUrl.searchParams.set('user_name', encodeURIComponent(user.name || ''));
+    returnUrl.searchParams.set('user_email', encodeURIComponent(user.email));
+    if (user.image) {
+      returnUrl.searchParams.set('user_image', encodeURIComponent(user.image));
+    }
 
-    // セッションCookieも設定（通常のNextAuthと互換性を保つため）
-    const response = NextResponse.redirect(returnUrl);
-    response.cookies.set({
-      name: 'next-auth.session-token',
-      value: sessionToken,
-      httpOnly: true,
-      sameSite: 'lax',
-      secure: true,
-      path: '/',
-      maxAge: 30 * 24 * 60 * 60, // 30日
-    });
-
-    return response;
+    return NextResponse.redirect(returnUrl);
   } catch (error) {
     console.error('iOS PWA OAuth callback error:', error);
     return NextResponse.redirect(

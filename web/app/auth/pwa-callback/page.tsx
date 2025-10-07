@@ -45,11 +45,17 @@ export default function PWACallbackPage() {
       });
 
       // iOS PWAカスタムハンドラーからのパラメータ
-      const sessionToken = urlParams.get('session_token');
       const authStatus = urlParams.get('status');
-      if (sessionToken) {
-        logs.push(`Custom Session Token: ${sessionToken.substring(0, 20)}...`);
+      const userId = urlParams.get('user_id');
+      const userName = urlParams.get('user_name');
+      const userEmail = urlParams.get('user_email');
+      const userImage = urlParams.get('user_image');
+
+      if (authStatus === 'success' && userId) {
         logs.push(`Auth Status: ${authStatus}`);
+        logs.push(`User ID: ${userId}`);
+        logs.push(`User Name: ${decodeURIComponent(userName || '')}`);
+        logs.push(`User Email: ${decodeURIComponent(userEmail || '')}`);
       }
 
       // NextAuthのコールバックパラメータも確認
@@ -93,18 +99,24 @@ export default function PWACallbackPage() {
       }
 
       // iOS PWAカスタムハンドラーからのセッションチェック
-      if (sessionToken && authStatus === 'success') {
+      if (authStatus === 'success' && userId) {
         logs.push('✅ iOS PWA custom auth successful');
 
         // すべてのログをコンソールに出力（成功時）
         console.log('=== iOS PWA OAuth Success Debug ===');
         logs.forEach(log => console.log(log));
 
-        // 認証成功：セッション情報をCache APIに保存
+        // 認証成功：ユーザー情報をCache APIに保存
         await authBridge.saveAuthToken({
           token: bridgeToken,
           provider: urlParams.get('provider') || 'oauth',
-          callbackUrl: '/dashboard'
+          callbackUrl: '/dashboard',
+          userData: {
+            id: userId,
+            name: decodeURIComponent(userName || ''),
+            email: decodeURIComponent(userEmail || ''),
+            image: userImage ? decodeURIComponent(userImage) : null
+          }
         });
 
         // PWAに戻る
@@ -112,6 +124,7 @@ export default function PWACallbackPage() {
         returnUrl.pathname = '/dashboard';
         returnUrl.searchParams.set('pwa_bridge_success', 'true');
         returnUrl.searchParams.set('pwa_bridge_token', bridgeToken);
+        returnUrl.searchParams.set('user_id', userId);
 
         // iOS PWAの場合、location.hrefで遷移
         window.location.href = returnUrl.toString();
@@ -119,7 +132,7 @@ export default function PWACallbackPage() {
       }
 
       // 通常のNextAuthセッション待ち（Google認証などで使用）
-      if (status === 'loading' || (status === 'unauthenticated' && retryCount < maxRetries && !sessionToken)) {
+      if (status === 'loading' || (status === 'unauthenticated' && retryCount < maxRetries && authStatus !== 'success')) {
         logs.push(`Waiting for session... (retry ${retryCount}/${maxRetries})`);
 
         // コンソールにもリアルタイムで出力

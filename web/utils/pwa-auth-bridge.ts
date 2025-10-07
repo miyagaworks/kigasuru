@@ -10,6 +10,12 @@ export interface AuthBridgeData {
   timestamp: number;
   provider: string;
   callbackUrl: string;
+  userData?: {
+    id: string;
+    name: string;
+    email: string;
+    image: string | null;
+  };
 }
 
 // Service Worker経由でCache APIを使用
