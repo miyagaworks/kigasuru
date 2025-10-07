@@ -388,12 +388,20 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   logger: {
     error(error) {
       console.error('[NextAuth Error]:', error);
+      // LINE OAuth特有のエラーをより詳細に出力
+      if (error instanceof Error && error.message?.includes('OAuth')) {
+        console.error('[OAuth Error Details]:', {
+          message: error.message,
+          stack: error.stack,
+          cause: error.cause,
+        });
+      }
     },
     warn(warning) {
       console.warn('[NextAuth Warning]:', warning);
     },
     debug(message) {
-      if (process.env.NEXTAUTH_DEBUG === 'true') {
+      if (process.env.NEXTAUTH_DEBUG === 'true' || process.env.NODE_ENV === 'development') {
         console.log('[NextAuth Debug]:', message);
       }
     },

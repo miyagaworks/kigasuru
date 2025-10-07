@@ -235,12 +235,7 @@ function SignInForm() {
         <div className="space-y-4">
           {/* LINE Login */}
           <button
-            type="button"
-            onClick={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              handleOAuthSignIn('line');
-            }}
+            onClick={() => handleOAuthSignIn('line')}
             disabled={oauthLoading || emailLoading}
             className="w-full h-12 bg-[#00B900] text-white rounded-lg font-medium hover:bg-[#00A000] transition-colors disabled:opacity-50 shadow-sm flex items-center justify-center gap-2"
           >

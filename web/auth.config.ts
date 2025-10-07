@@ -2,6 +2,7 @@
 import type { NextAuthConfig } from 'next-auth';
 import Credentials from 'next-auth/providers/credentials';
 import Google from 'next-auth/providers/google';
+import Line from 'next-auth/providers/line';
 import { LoginSchema } from '@/lib/auth/schemas';
 import bcrypt from 'bcryptjs';
 import { prisma } from '@/lib/prisma';
@@ -21,40 +22,21 @@ export default {
         },
       },
     }),
-    // LINE provider configuration
-    {
-      id: 'line',
-      name: 'LINE',
-      type: 'oauth' as const,
-      clientId: process.env.LINE_CHANNEL_ID || '',
-      clientSecret: process.env.LINE_CHANNEL_SECRET || '',
-      authorization: {
-        url: 'https://access.line.me/oauth2/v2.1/authorize',
-        params: {
-          response_type: 'code',
-          scope: 'profile openid email',
-          bot_prompt: 'normal',
-        },
-      },
-      token: {
-        url: 'https://api.line.me/oauth2/v2.1/token',
-      },
-      userinfo: {
-        url: 'https://api.line.me/v2/profile',
-      },
+    Line({
+      clientId: process.env.LINE_CHANNEL_ID!,
+      clientSecret: process.env.LINE_CHANNEL_SECRET!,
+      allowDangerousEmailAccountLinking: false,
       client: {
         id_token_signed_response_alg: 'HS256',
       },
-      profile(profile: { userId: string; displayName: string; email?: string; pictureUrl?: string }) {
-        return {
-          id: profile.userId,
-          name: profile.displayName,
-          email: profile.email || null,
-          image: profile.pictureUrl || null,
-        };
+      authorization: {
+        params: {
+          scope: 'profile openid', // emailを削除
+          response_type: 'code',
+        },
       },
-      allowDangerousEmailAccountLinking: false,
-    },
+      checks: ['state'],
+    }),
     Credentials({
       credentials: {
         email: { label: 'メールアドレス', type: 'email' },
