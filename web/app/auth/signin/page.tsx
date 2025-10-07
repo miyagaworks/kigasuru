@@ -16,7 +16,8 @@ function SignInForm() {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [loading, setLoading] = useState(false);
+  const [emailLoading, setEmailLoading] = useState(false);
+  const [oauthLoading, setOauthLoading] = useState(false);
   const [isPWA, setIsPWA] = useState(false);
 
   // Check if running in PWA mode
@@ -71,7 +72,7 @@ function SignInForm() {
   const handleEmailSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
-    setLoading(true);
+    setEmailLoading(true);
 
     try {
       const result = await signIn('credentials', {
@@ -88,13 +89,13 @@ function SignInForm() {
     } catch {
       setError('ログインに失敗しました');
     } finally {
-      setLoading(false);
+      setEmailLoading(false);
     }
   };
 
   const handleOAuthSignIn = async (provider: 'google' | 'line') => {
     setError(null);
-    setLoading(true);
+    setOauthLoading(true);
 
     try {
       const callbackUrl = searchParams?.get('callbackUrl') || '/dashboard';
@@ -144,7 +145,7 @@ function SignInForm() {
 
         if (!authWindow) {
           setError('ポップアップがブロックされました。ブラウザの設定を確認してください。');
-          setLoading(false);
+          setOauthLoading(false);
           return;
         }
 
@@ -165,7 +166,7 @@ function SignInForm() {
             authWindow.close();
             clearInterval(checkClosed);
             setError('認証がタイムアウトしました');
-            setLoading(false);
+            setOauthLoading(false);
           }
         }, 5 * 60 * 1000);
       } else {
@@ -186,7 +187,7 @@ function SignInForm() {
       }
 
       setError(`${provider === 'google' ? 'Google' : 'LINE'}ログインに失敗しました`);
-      setLoading(false);
+      setOauthLoading(false);
     }
   };
 
@@ -213,7 +214,7 @@ function SignInForm() {
           {/* LINE Login */}
           <button
             onClick={() => handleOAuthSignIn('line')}
-            disabled={loading}
+            disabled={oauthLoading || emailLoading}
             className="w-full h-12 bg-[#00B900] text-white rounded-lg font-medium hover:bg-[#00A000] transition-colors disabled:opacity-50 shadow-sm flex items-center justify-center gap-2"
           >
             <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
@@ -227,7 +228,7 @@ function SignInForm() {
             variant="outline"
             className="w-full h-12 border-[var(--color-neutral-400)] hover:bg-[var(--color-neutral-200)] flex items-center justify-center gap-2"
             onClick={() => handleOAuthSignIn('google')}
-            disabled={loading}
+            disabled={oauthLoading || emailLoading}
           >
             <svg width="20" height="20" viewBox="0 0 24 24">
               <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
@@ -267,7 +268,7 @@ function SignInForm() {
                   setEmail(sanitized);
                 }}
                 required
-                disabled={loading}
+                disabled={emailLoading || oauthLoading}
                 autoComplete="email"
                 className="w-full px-4 py-2 border border-[var(--color-neutral-400)] rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--color-primary-green)] bg-white"
                 placeholder="example@email.com"
@@ -292,7 +293,7 @@ function SignInForm() {
                     setPassword(sanitized);
                   }}
                   required
-                  disabled={loading}
+                  disabled={emailLoading || oauthLoading}
                   autoComplete="current-password"
                   className="w-full px-4 py-2 pr-12 border border-[var(--color-neutral-400)] rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--color-primary-green)] bg-white"
                   placeholder="••••••••"
@@ -324,9 +325,9 @@ function SignInForm() {
             <Button
               type="submit"
               className="w-full h-12 bg-[var(--color-primary-green)] hover:bg-[var(--color-primary-dark)] text-white disabled:opacity-50 disabled:cursor-not-allowed"
-              disabled={loading || !isValidEmail(email) || !password.trim() || password.length < 8}
+              disabled={emailLoading || oauthLoading || !isValidEmail(email) || !password.trim() || password.length < 8}
             >
-              {loading ? 'ログイン中...' : 'ログイン'}
+              {emailLoading ? 'ログイン中...' : 'ログイン'}
             </Button>
 
             <div className="text-center text-sm text-[var(--color-neutral-700)] mt-4">
