@@ -20,9 +20,10 @@ function SignInForm() {
   // Check if running in PWA mode
   useEffect(() => {
     const checkPWA = () => {
-      const standalone = window.matchMedia('(display-mode: standalone)').matches ||
-                        (window.navigator as any).standalone === true;
-      setIsPWA(standalone);
+      const isStandalone = window.matchMedia('(display-mode: standalone)').matches;
+      const isIOSStandalone = 'standalone' in window.navigator &&
+                              (window.navigator as { standalone?: boolean }).standalone === true;
+      setIsPWA(isStandalone || isIOSStandalone);
     };
     checkPWA();
   }, []);
