@@ -5,7 +5,6 @@ import { signIn } from 'next-auth/react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
-import { debugOAuth, generateErrorReport } from '@/utils/oauth-debug';
 import { authBridge } from '@/utils/pwa-auth-bridge';
 import { IosPwaAuthNotice } from '@/components/ios-pwa-auth-notice';
 
@@ -33,10 +32,6 @@ function SignInForm() {
       setIsPWA(isStandalone || isIOSStandalone);
       setIsIosPWA((isStandalone || isIOSStandalone) && isIOS);
 
-      // iOSのPWAを検出
-      if ((isStandalone || isIOSStandalone) && isIOS && searchParams?.get('debug') === 'true') {
-        console.log('🍎 iOS PWA detected');
-      }
     };
     checkPWA();
 
@@ -56,11 +51,6 @@ function SignInForm() {
     };
 
     checkBridgeSuccess();
-
-    // Debug mode: URLに?debug=trueが含まれている場合
-    if (searchParams?.get('debug') === 'true') {
-      debugOAuth.logDebugInfo();
-    }
   }, [searchParams]);
 
   // メールアドレスの基本的なバリデーション
@@ -99,7 +89,6 @@ function SignInForm() {
   };
 
   const handleOAuthSignIn = async (provider: 'google' | 'line') => {
-    console.log(`🔥 handleOAuthSignIn called with provider: ${provider}`);
     setError(null);
     setOauthLoading(true);
 
@@ -112,8 +101,6 @@ function SignInForm() {
 
         if (isIOS) {
           // iOS PWA: Google認証のみサポート（LINE認証はUIで非表示になっている）
-          console.log('iOS PWA detected, using standard OAuth flow for Google');
-
           // Google認証は通常のsignInを使用
           await signIn(provider, {
             callbackUrl,
@@ -162,22 +149,13 @@ function SignInForm() {
         }, 5 * 60 * 1000);
       } else {
         // 通常のブラウザモード: OAuth認証はプロバイダーページへの遷移が必要
-        console.log(`Browser OAuth: provider=${provider}, callbackUrl=${callbackUrl}`);
         await signIn(provider, {
           callbackUrl,
           redirect: true, // OAuthでは必ずtrueにする（プロバイダーページへ遷移）
         });
         // signInでredirect: trueの場合、この行には到達しない
       }
-    } catch (err) {
-      console.error('OAuth error:', err);
-
-      // デバッグモードの場合、詳細なエラー情報を記録
-      if (searchParams?.get('debug') === 'true') {
-        const errorReport = await generateErrorReport(err);
-        console.error('Detailed error report:', errorReport);
-      }
-
+    } catch {
       setError(`${provider === 'google' ? 'Google' : 'LINE'}ログインに失敗しました`);
       setOauthLoading(false);
     }

@@ -10,8 +10,6 @@ export const dynamic = 'force-dynamic';
 function AuthErrorContent() {
   const searchParams = useSearchParams();
   const error = searchParams?.get('error');
-  const errorDescription = searchParams?.get('error_description');
-  const isDebugMode = searchParams?.get('debug') === 'true';
 
   const getErrorMessage = () => {
     switch (error) {
@@ -63,18 +61,6 @@ function AuthErrorContent() {
           <h1 className="text-2xl font-bold text-[var(--color-neutral-900)] mb-2">認証エラー</h1>
           <p className="text-[var(--color-neutral-700)] mb-8">{getErrorMessage()}</p>
 
-          {/* デバッグ情報 */}
-          {(isDebugMode || error) && (
-            <div className="mb-6 p-4 bg-gray-100 rounded-lg text-left text-sm">
-              <p className="font-bold text-gray-800 mb-2">Debug Information:</p>
-              <div className="space-y-1 text-gray-600">
-                <p>Error Type: {error || 'Unknown'}</p>
-                {errorDescription && <p>Error Description: {errorDescription}</p>}
-                <p>URL: {typeof window !== 'undefined' ? window.location.href : 'N/A'}</p>
-                <p>All Parameters: {searchParams ? Array.from(searchParams).map(([k, v]) => `${k}=${v}`).join(', ') : 'None'}</p>
-              </div>
-            </div>
-          )}
 
           <div className="flex flex-col gap-3">
             <Link href="/auth/signin" className="block">

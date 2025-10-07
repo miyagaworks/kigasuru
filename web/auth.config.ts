@@ -102,5 +102,5 @@ export default {
     signOut: '/auth/signin',
     error: '/auth/error',
   },
-  debug: process.env.NODE_ENV === 'development' || process.env.NEXTAUTH_DEBUG === 'true',
+  debug: process.env.NODE_ENV === 'development',
 } satisfies NextAuthConfig;
