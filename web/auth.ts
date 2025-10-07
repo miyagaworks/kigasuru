@@ -107,61 +107,33 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           return true;
         }
 
-        // OAuth認証（Google, LINE）の処理
-        if (account?.provider === 'google' || account?.provider === 'line') {
+        // OAuth認証（Google）の処理
+        if (account?.provider === 'google') {
           const provider = account.provider;
+          const email = user?.email?.toLowerCase();
 
-          // LINEの場合、emailが無い可能性があるのでランダム英数字@kigasuru.comから生成
-          const generateRandomEmail = () => {
-            const chars = 'abcdefghijklmnopqrstuvwxyz0123456789';
-            let result = '';
-            for (let i = 0; i < 16; i++) {
-              result += chars.charAt(Math.floor(Math.random() * chars.length));
-            }
-            return `${result}@kigasuru.com`;
-          };
-
-          // LINEの場合はlineUserIdで既存ユーザーを検索、Googleの場合はemailで検索
-          let existingUser = null;
-
-          if (provider === 'line' && profile?.sub) {
-            existingUser = await prisma.user.findUnique({
-              where: { lineUserId: profile.sub },
-              select: {
-                id: true,
-                name: true,
-                email: true,
-                password: true,
-                emailVerified: true,
-                lineUserId: true,
-                image: true,
-                accounts: {
-                  select: {
-                    provider: true,
-                  },
-                },
-              },
-            });
-          } else {
-            const email = user?.email ? user.email.toLowerCase() : generateRandomEmail();
-            existingUser = await prisma.user.findUnique({
-              where: { email },
-              select: {
-                id: true,
-                name: true,
-                email: true,
-                password: true,
-                emailVerified: true,
-                lineUserId: true,
-                image: true,
-                accounts: {
-                  select: {
-                    provider: true,
-                  },
-                },
-              },
-            });
+          if (!email) {
+            console.error('Google authentication requires email');
+            return false;
           }
+
+          // Googleの場合はemailで既存ユーザーを検索
+          const existingUser = await prisma.user.findUnique({
+            where: { email },
+            select: {
+              id: true,
+              name: true,
+              email: true,
+              password: true,
+              emailVerified: true,
+              image: true,
+              accounts: {
+                select: {
+                  provider: true,
+                },
+              },
+            },
+          });
 
           if (existingUser) {
             const hasProviderAccount = existingUser.accounts.some(
@@ -186,21 +158,10 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
                 });
 
                 // プロフィール画像が未設定で、OAuthプロバイダーから画像が取得できる場合は設定
-                const updateData: { lineUserId?: string; image?: string } = {};
-
-                if (provider === 'line' && profile?.sub) {
-                  updateData.lineUserId = profile.sub;
-                }
-
-                // プロフィール画像をOAuthプロバイダーから取得
                 if (!existingUser.image && (profile as OAuthProfile)?.picture) {
-                  updateData.image = (profile as OAuthProfile).picture;
-                }
-
-                if (Object.keys(updateData).length > 0) {
                   await prisma.user.update({
                     where: { id: existingUser.id },
-                    data: updateData,
+                    data: { image: (profile as OAuthProfile).picture },
                   });
                 }
               } catch (accountError) {
@@ -227,73 +188,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
             return true;
           }
 
-          // 新規ユーザーの場合 - PrismaAdapterが自動的にユーザーを作成
-          // LINE認証の場合、lineUserIdを設定するためにここでユーザーを作成
-          if (provider === 'line') {
-            try {
-              const now = new Date();
-              const trialEndsAt = new Date(now);
-              trialEndsAt.setDate(trialEndsAt.getDate() + 7); // 7日間の無料トライアル
-
-              const email = user?.email ? user.email.toLowerCase() : generateRandomEmail();
-
-              const newUser = await prisma.user.create({
-                data: {
-                  name: user.name || email.split('@')[0],
-                  email: email,
-                  password: null,
-                  subscriptionStatus: 'trial',
-                  trialEndsAt,
-                  emailVerified: new Date(),
-                  lineUserId: profile?.sub || null,
-                  image: (profile as OAuthProfile)?.picture || null,
-                },
-              });
-
-              await prisma.account.create({
-                data: {
-                  userId: newUser.id,
-                  type: 'oauth',
-                  provider: provider,
-                  providerAccountId: (profile?.sub || user.id) as string,
-                  access_token: account.access_token || '',
-                  token_type: account.token_type || 'bearer',
-                  id_token: account.id_token || undefined,
-                  scope: account.scope || undefined,
-                  expires_at: account.expires_at || undefined,
-                  refresh_token: account.refresh_token || undefined,
-                },
-              });
-
-              // デフォルト設定を作成
-              await prisma.userSettings.create({
-                data: {
-                  userId: newUser.id,
-                  enabledFields: {
-                    slope: true,
-                    lie: true,
-                    club: true,
-                    strength: true,
-                    wind: true,
-                    temperature: true,
-                    feeling: true,
-                    memo: true,
-                  },
-                  clubs: ['DR', '3W', '5W', '7W', 'U4', 'U5', '5I', '6I', '7I', '8I', '9I', 'PW', '50', '52', '54', '56', '58'],
-                },
-              });
-
-              user.id = newUser.id;
-              user.name = newUser.name || user.name;
-              user.email = newUser.email || email;
-              user.image = newUser.image;
-
-              return true;
-            } catch (createError) {
-              console.error('新規ユーザー作成エラー:', createError);
-              throw new Error('アカウントの作成中にエラーが発生しました');
-            }
-          }
+          // 新規ユーザーの場合 - Google認証で明示的にユーザーを作成
 
           // Google認証の場合も明示的にユーザーを作成
           if (provider === 'google') {
@@ -302,7 +197,11 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
               const trialEndsAt = new Date(now);
               trialEndsAt.setDate(trialEndsAt.getDate() + 7); // 7日間の無料トライアル
 
-              const email = user?.email ? user.email.toLowerCase() : generateRandomEmail();
+              if (!user?.email) {
+                console.error('Google authentication requires email');
+                return false;
+              }
+              const email = user.email.toLowerCase();
 
               const newUser = await prisma.user.create({
                 data: {

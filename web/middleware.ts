@@ -8,7 +8,6 @@ export default auth((req) => {
 
   const isAuthRoute = nextUrl.pathname.startsWith('/auth');
   const isApiAuthRoute = nextUrl.pathname.startsWith('/api/auth');
-  const isLineWebhook = nextUrl.pathname === '/api/line/webhook';
 
   // PWA and static files that should be publicly accessible
   const isStaticAsset =
@@ -18,7 +17,7 @@ export default auth((req) => {
     nextUrl.pathname === '/apple-touch-icon.png' ||
     nextUrl.pathname === '/og-image.png';
 
-  const isPublicRoute = nextUrl.pathname === '/' || isAuthRoute || isApiAuthRoute || isStaticAsset || isLineWebhook;
+  const isPublicRoute = nextUrl.pathname === '/' || isAuthRoute || isApiAuthRoute || isStaticAsset;
 
   // 認証されていないユーザーを保護されたルートから除外
   if (!isLoggedIn && !isPublicRoute) {

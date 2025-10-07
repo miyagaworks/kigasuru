@@ -32,8 +32,6 @@ export async function GET() {
         subscriptionEndsAt: true,
         stripeCustomerId: true,
         stripeSubscriptionId: true,
-        lineUserId: true,
-        lineFriendAdded: true,
         createdAt: true,
         updatedAt: true,
         _count: {

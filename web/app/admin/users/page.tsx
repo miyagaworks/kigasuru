@@ -18,8 +18,6 @@ interface User {
   subscriptionEndsAt: Date | null;
   stripeCustomerId: string | null;
   stripeSubscriptionId: string | null;
-  lineUserId: string | null;
-  lineFriendAdded: boolean;
   createdAt: Date;
   updatedAt: Date;
   _count: {
@@ -266,18 +264,6 @@ export default function AdminUsersPage() {
                       <p className="text-sm text-[var(--color-neutral-600)]">
                         {user.email}
                       </p>
-                      {user.lineUserId && (
-                        <div className="flex items-center gap-1 mt-1 flex-wrap">
-                          <span className="text-xs px-2 py-0.5 bg-[#06C755] text-white rounded">
-                            LINE連携
-                          </span>
-                          {user.lineFriendAdded && (
-                            <span className="text-xs px-2 py-0.5 bg-[var(--color-success-bg)] text-[var(--color-success-text)] rounded">
-                              友だち追加済
-                            </span>
-                          )}
-                        </div>
-                      )}
                     </div>
                   </div>
 
