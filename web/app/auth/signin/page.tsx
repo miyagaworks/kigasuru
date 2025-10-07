@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { debugOAuth, generateErrorReport } from '@/utils/oauth-debug';
+import { authBridge } from '@/utils/pwa-auth-bridge';
 
 export const dynamic = 'force-dynamic';
 
@@ -32,6 +33,23 @@ function SignInForm() {
       }
     };
     checkPWA();
+
+    // PWAブリッジ成功時の処理
+    const checkBridgeSuccess = async () => {
+      if (searchParams?.get('pwa_bridge_success') === 'true') {
+        const bridgeToken = searchParams?.get('pwa_bridge_token');
+        if (bridgeToken) {
+          // キャッシュから認証情報を確認
+          const authData = await authBridge.getAuthToken();
+          if (authData && authData.token === bridgeToken) {
+            // 認証成功、ダッシュボードへリダイレクト
+            window.location.href = authData.callbackUrl || '/dashboard';
+          }
+        }
+      }
+    };
+
+    checkBridgeSuccess();
 
     // Debug mode: URLに?debug=trueが含まれている場合
     if (searchParams?.get('debug') === 'true') {
@@ -82,21 +100,33 @@ function SignInForm() {
       const callbackUrl = searchParams?.get('callbackUrl') || '/dashboard';
 
       if (isPWA) {
-        // iOS PWAの検出
+        // iOS PWAの検出（PWAモード AND iOSデバイス）
         const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
 
         if (isIOS) {
-          // iOS PWA: 同じウィンドウで認証（ポップアップは機能しないため）
-          setError('iOS PWAでの認証は、一度ブラウザでログインしてからPWAをインストールしてください。');
-          setLoading(false);
+          // iOS PWA: ブリッジトークンを使った認証フロー
+          console.log('iOS PWA detected, using bridge authentication...');
 
-          // 3秒後にブラウザモードへの案内を表示
-          setTimeout(() => {
-            if (confirm('Safariブラウザでログインページを開きますか？')) {
-              // iOS Safariで開く
-              window.location.href = `https://app.kigasuru.com/auth/signin`;
-            }
-          }, 2000);
+          // ブリッジトークンを生成
+          const bridgeToken = authBridge.generateBridgeToken();
+
+          // 認証前にブリッジトークンをキャッシュに保存
+          await authBridge.saveAuthToken({
+            token: bridgeToken,
+            provider: provider,
+            callbackUrl: callbackUrl
+          });
+
+          // PWAコールバックURLを設定
+          const pwaCallbackUrl = `${window.location.origin}/auth/pwa-callback?pwa_bridge_token=${bridgeToken}`;
+
+          // 同じウィンドウでOAuth認証を実行（PWAコールバック経由）
+          await signIn(provider, {
+            callbackUrl: pwaCallbackUrl,
+            redirect: true,
+          });
+
+          // signInでredirect: trueの場合、この行には到達しない
           return;
         }
 
