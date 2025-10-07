@@ -85,11 +85,11 @@ export function PwaInstallBanner({ needsAdditionalAuth = false }: PwaInstallBann
   if (!showBanner) return null;
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-800 shadow-lg z-50 animate-slide-up">
+    <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-lg z-50 animate-slide-up">
       <div className="max-w-4xl mx-auto p-4">
         <button
           onClick={handleDismiss}
-          className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+          className="absolute top-4 right-4 text-gray-400 hover:text-gray-600"
           aria-label="閉じる"
         >
           <Icon category="ui" name="x" size={20} className="w-5 h-5" />
@@ -103,13 +103,13 @@ export function PwaInstallBanner({ needsAdditionalAuth = false }: PwaInstallBann
           </div>
 
           <div className="flex-1 text-center md:text-left">
-            <h3 className="text-lg font-bold text-gray-900 dark:text-white">
+            <h3 className="text-lg font-bold text-gray-900">
               キガスルをアプリとして使いましょう！
             </h3>
-            <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+            <p className="text-sm text-gray-600 mt-1">
               ホーム画面に追加すると、アプリのようにすぐにアクセスできます。
               {needsAdditionalAuth && (
-                <span className="text-orange-600 dark:text-orange-400 font-medium">
+                <span className="text-orange-600 font-medium">
                   {' '}PWAを利用するには、アカウント設定で追加の認証方法を設定してください。
                 </span>
               )}
@@ -146,11 +146,11 @@ export function PwaInstallBanner({ needsAdditionalAuth = false }: PwaInstallBann
 
         {/* iOS向けインストール手順 */}
         {showInstructions && isIOS && (
-          <div className="mt-4 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
-            <h4 className="font-medium text-blue-900 dark:text-blue-100 mb-2">
+          <div className="mt-4 p-4 bg-blue-50 rounded-lg">
+            <h4 className="font-medium text-blue-900 mb-2">
               iOSでのインストール方法
             </h4>
-            <ol className="list-decimal list-inside space-y-1 text-sm text-blue-700 dark:text-blue-300">
+            <ol className="list-decimal list-inside space-y-1 text-sm text-blue-700">
               <li>Safariブラウザで開いてください</li>
               <li>
                 画面下部の共有ボタン
@@ -164,7 +164,7 @@ export function PwaInstallBanner({ needsAdditionalAuth = false }: PwaInstallBann
             </ol>
             <button
               onClick={() => setShowInstructions(false)}
-              className="mt-2 text-blue-600 dark:text-blue-400 text-sm underline hover:no-underline"
+              className="mt-2 text-blue-600 text-sm underline hover:no-underline"
             >
               閉じる
             </button>
