@@ -384,5 +384,18 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     verifyRequest: '/auth/verify-request',
   },
   providers: authConfig.providers,
-  debug: process.env.NODE_ENV === 'development',
+  debug: process.env.NODE_ENV === 'development' || process.env.NEXTAUTH_DEBUG === 'true',
+  logger: {
+    error(error) {
+      console.error('[NextAuth Error]:', error);
+    },
+    warn(warning) {
+      console.warn('[NextAuth Warning]:', warning);
+    },
+    debug(message) {
+      if (process.env.NEXTAUTH_DEBUG === 'true') {
+        console.log('[NextAuth Debug]:', message);
+      }
+    },
+  },
 });
