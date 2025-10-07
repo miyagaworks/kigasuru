@@ -29,6 +29,13 @@ export default {
       client: {
         id_token_signed_response_alg: 'HS256',
       },
+      authorization: {
+        params: {
+          scope: 'profile openid email',
+          response_type: 'code',
+          state: true,
+        },
+      },
     }),
     Credentials({
       credentials: {
@@ -96,5 +103,5 @@ export default {
     signOut: '/auth/signin',
     error: '/auth/error',
   },
-  debug: false,
+  debug: process.env.NODE_ENV === 'development' || process.env.NEXTAUTH_DEBUG === 'true',
 } satisfies NextAuthConfig;
