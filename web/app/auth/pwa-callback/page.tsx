@@ -6,47 +6,18 @@ import { authBridge } from '@/utils/pwa-auth-bridge';
 
 export default function PWACallbackPage() {
   const { data: session, status } = useSession();
-  const [debugInfo, setDebugInfo] = useState<string[]>([]);
-  const [showDebug, setShowDebug] = useState(false);
   const [retryCount, setRetryCount] = useState(0);
   const maxRetries = 20; // 10秒間（500ms × 20回）
 
-  useEffect(() => {
-    // クライアントサイドでのみデバッグモードをチェック
-    if (typeof window !== 'undefined') {
-      const urlParams = new URLSearchParams(window.location.search);
-      setShowDebug(process.env.NODE_ENV === 'development' || urlParams.get('debug') === 'true');
-    }
-  }, []);
 
   useEffect(() => {
 
     const handleCallback = async () => {
-      const logs: string[] = [];
-
-      // タイムスタンプを追加
-      logs.push(`=== PWA Callback Debug (${new Date().toISOString()}) ===`);
-      logs.push(`Retry Count: ${retryCount}`);
-
-      // デバッグ情報を追加
-      logs.push(`Status: ${status}`);
-      logs.push(`Session: ${session ? 'exists' : 'null'}`);
-      if (session) {
-        logs.push(`Session User: ${JSON.stringify(session.user)}`);
-      }
-      logs.push(`Full URL: ${window.location.href}`);
-
       // URLパラメータを確認
       const urlParams = new URLSearchParams(window.location.search);
-      const paramsArray = Array.from(urlParams);
-      logs.push(`URL Params Count: ${paramsArray.length}`);
-      paramsArray.forEach(([key, value]) => {
-        logs.push(`  - ${key}: ${value}`);
-      });
 
       // ブリッジトークンを最初に取得（エラー処理で使用するため）
       const bridgeToken = authBridge.getBridgeTokenFromUrl();
-      logs.push(`Bridge Token: ${bridgeToken || 'not found'}`);
 
       // iOS PWAカスタムハンドラーからのパラメータ
       const authStatus = urlParams.get('status');
@@ -56,30 +27,22 @@ export default function PWACallbackPage() {
       const userImage = urlParams.get('user_image');
 
       if (authStatus === 'success' && userId) {
-        logs.push(`Auth Status: ${authStatus}`);
-        logs.push(`User ID: ${userId}`);
-        logs.push(`User Name: ${decodeURIComponent(userName || '')}`);
-        logs.push(`User Email: ${decodeURIComponent(userEmail || '')}`);
+        // logs.push(`Auth Status: ${authStatus}`);
+        // logs.push(`User ID: ${userId}`);
+        // logs.push(`User Name: ${decodeURIComponent(userName || '')}`);
+        // logs.push(`User Email: ${decodeURIComponent(userEmail || '')}`);
       }
 
       // NextAuthのコールバックパラメータも確認
       const callbackUrl = urlParams.get('callbackUrl');
       if (callbackUrl) {
-        logs.push(`NextAuth CallbackUrl: ${callbackUrl}`);
+        // logs.push(`NextAuth CallbackUrl: ${callbackUrl}`);
       }
 
       // エラーパラメータをチェック
       const errorParam = urlParams.get('error');
       const errorDescription = urlParams.get('error_description');
       if (errorParam) {
-        logs.push(`!!! OAuth Error Detected !!!`);
-        logs.push(`OAuth Error: ${errorParam}`);
-        logs.push(`Error Description: ${errorDescription || 'N/A'}`);
-
-        // すべてのログをコンソールに出力
-        console.error('=== PWA OAuth Error Debug ===');
-        logs.forEach(log => console.error(log));
-
         // 認証エラーの場合、すぐにリダイレクト
         const returnUrl = new URL(window.location.origin);
         returnUrl.pathname = '/auth/signin';
@@ -90,21 +53,19 @@ export default function PWACallbackPage() {
       }
 
       // Cookieの存在を確認
-      logs.push(`Cookies: ${document.cookie ? 'exists' : 'empty'}`);
+      // logs.push(`Cookies: ${document.cookie ? 'exists' : 'empty'}`);
 
       if (!bridgeToken) {
-        console.error('No bridge token found');
-        setDebugInfo(logs);
         return;
       }
 
       // iOS PWAカスタムハンドラーからのセッションチェック
       if (authStatus === 'success' && userId) {
-        logs.push('✅ iOS PWA custom auth successful');
+        // logs.push('✅ iOS PWA custom auth successful');
 
         // すべてのログをコンソールに出力（成功時）
-        console.log('=== iOS PWA OAuth Success Debug ===');
-        logs.forEach(log => console.log(log));
+        // console.log('=== iOS PWA OAuth Success Debug ===');
+        // logs.forEach(log => // console.log(log));
 
         // 認証成功：ユーザー情報をCache APIに保存
         await authBridge.saveAuthToken({
@@ -121,8 +82,8 @@ export default function PWACallbackPage() {
 
         // ポップアップウィンドウの場合は、自己を閉じる
         if (window.opener && window.opener !== window) {
-          logs.push('Closing popup window after successful auth');
-          console.log('Closing OAuth popup window');
+          // logs.push('Closing popup window after successful auth');
+          // console.log('Closing OAuth popup window');
           window.close();
         } else {
           // PWAに戻る（ポップアップでない場合）
@@ -140,12 +101,11 @@ export default function PWACallbackPage() {
 
       // 通常のNextAuthセッション待ち（Google認証などで使用）
       if (status === 'loading' || (status === 'unauthenticated' && retryCount < maxRetries && authStatus !== 'success')) {
-        logs.push(`Waiting for session... (retry ${retryCount}/${maxRetries})`);
+        // logs.push(`Waiting for session... (retry ${retryCount}/${maxRetries})`);
 
         // コンソールにもリアルタイムで出力
-        console.log(`PWA Callback: Waiting for session (retry ${retryCount}/${maxRetries})`);
+        // console.log(`PWA Callback: Waiting for session (retry ${retryCount}/${maxRetries})`);
 
-        setDebugInfo(logs);
 
         // 500ms後にリトライ
         setTimeout(() => {
@@ -154,18 +114,18 @@ export default function PWACallbackPage() {
         return;
       }
 
-      logs.push(`=== Final Status Check ===`);
-      logs.push(`Status: ${status}`);
-      logs.push(`Session exists: ${!!session}`);
-      logs.push(`Retry count reached: ${retryCount}`);
+      // logs.push(`=== Final Status Check ===`);
+      // logs.push(`Status: ${status}`);
+      // logs.push(`Session exists: ${!!session}`);
+      // logs.push(`Retry count reached: ${retryCount}`);
 
       if (status === 'authenticated' && session) {
-        logs.push('✅ Authentication successful');
-        logs.push(`User: ${JSON.stringify(session.user)}`);
+        // logs.push('✅ Authentication successful');
+        // logs.push(`User: ${JSON.stringify(session.user)}`);
 
         // すべてのログをコンソールに出力（成功時）
-        console.log('=== PWA OAuth Success Debug ===');
-        logs.forEach(log => console.log(log));
+        // console.log('=== PWA OAuth Success Debug ===');
+        // logs.forEach(log => // console.log(log));
 
         // 認証成功：セッション情報をCache APIに保存
         await authBridge.saveAuthToken({
@@ -176,8 +136,8 @@ export default function PWACallbackPage() {
 
         // ポップアップウィンドウの場合は、自己を閉じる
         if (window.opener && window.opener !== window) {
-          logs.push('Closing popup window after successful auth (NextAuth)');
-          console.log('Closing OAuth popup window (NextAuth)');
+          // logs.push('Closing popup window after successful auth (NextAuth)');
+          // console.log('Closing OAuth popup window (NextAuth)');
           window.close();
         } else {
           // PWAに戻る（ポップアップでない場合）
@@ -190,12 +150,12 @@ export default function PWACallbackPage() {
           window.location.href = returnUrl.toString();
         }
       } else if (status === 'unauthenticated') {
-        logs.push('❌ Authentication failed - no session after retries');
-        logs.push(`Total retries: ${retryCount}`);
+        // logs.push('❌ Authentication failed - no session after retries');
+        // logs.push(`Total retries: ${retryCount}`);
 
         // すべてのログをコンソールに出力（失敗時）
-        console.error('=== PWA OAuth Failed Debug ===');
-        logs.forEach(log => console.error(log));
+        // console.error('=== PWA OAuth Failed Debug ===');
+        // logs.forEach(log => // console.error(log));
 
         // ポップアップウィンドウの場合は、Cache APIにエラーを保存して閉じる
         if (window.opener && window.opener !== window) {
@@ -221,7 +181,6 @@ export default function PWACallbackPage() {
         }
       }
 
-      setDebugInfo(logs);
     };
 
     handleCallback();
@@ -236,15 +195,6 @@ export default function PWACallbackPage() {
           PWAに戻ります。しばらくお待ちください。
         </p>
 
-        {/* デバッグ情報（開発環境またはdebug=trueパラメータがある場合） */}
-        {showDebug && debugInfo.length > 0 && (
-          <div className="mt-4 p-4 bg-gray-100 rounded text-left text-xs">
-            <p className="font-bold mb-2">Debug Info:</p>
-            {debugInfo.map((log, index) => (
-              <p key={index} className="text-gray-600">{log}</p>
-            ))}
-          </div>
-        )}
       </div>
     </div>
   );

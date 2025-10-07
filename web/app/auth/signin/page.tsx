@@ -321,44 +321,6 @@ function SignInForm() {
             </Link>
           </div>
 
-          {/* デバッグモード切り替え（PWA用） */}
-          {isPWA && (
-            <div className="text-center mt-4">
-              {searchParams?.get('debug') === 'true' ? (
-                <>
-                  <p className="text-xs text-[var(--color-warning)] mb-2">🐛 デバッグモード有効</p>
-                  <Link
-                    href="/auth/signin"
-                    className="text-xs text-[var(--color-neutral-500)] hover:underline"
-                  >
-                    デバッグモードを無効にする
-                  </Link>
-                  <button
-                    onClick={async () => {
-                      try {
-                        const res = await fetch('/api/auth/debug?debug=true');
-                        const data = await res.json();
-                        console.log('🔧 Environment Check:', data);
-                        alert(`環境変数チェック結果:\n${JSON.stringify(data, null, 2)}`);
-                      } catch (error) {
-                        console.error('環境変数チェックエラー:', error);
-                      }
-                    }}
-                    className="block w-full mt-2 text-xs text-[var(--color-primary-green)] hover:underline"
-                  >
-                    環境変数をチェック
-                  </button>
-                </>
-              ) : (
-                <Link
-                  href="/auth/signin?debug=true"
-                  className="text-xs text-[var(--color-neutral-500)] hover:underline"
-                >
-                  デバッグモードを有効にする
-                </Link>
-              )}
-            </div>
-          )}
         </div>
       </div>
     </div>
