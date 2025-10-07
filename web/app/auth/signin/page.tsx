@@ -65,30 +65,67 @@ function SignInForm() {
 
   const handleOAuthSignIn = async (provider: 'google' | 'line') => {
     setError(null);
-
-    // PWAモードの場合、警告を表示
-    if (isPWA) {
-      const confirmed = confirm(
-        'PWAモードで開いています。\n\n' +
-        'OAuth認証を行うには、Safariまたはブラウザで開く必要があります。\n\n' +
-        '1. このアプリを閉じる\n' +
-        '2. SafariまたはChromeでapp.kigasuru.comを開く\n' +
-        '3. ログイン後、再度PWAアプリから開く\n\n' +
-        '続けますか？'
-      );
-
-      if (!confirmed) {
-        return;
-      }
-    }
-
     setLoading(true);
 
     try {
-      await signIn(provider, {
-        callbackUrl: searchParams?.get('callbackUrl') || '/dashboard',
-      });
-    } catch {
+      const callbackUrl = searchParams?.get('callbackUrl') || '/dashboard';
+
+      if (isPWA) {
+        // PWAモード: ポップアップウィンドウで認証
+        const width = 500;
+        const height = 600;
+        const left = window.screenX + (window.outerWidth - width) / 2;
+        const top = window.screenY + (window.outerHeight - height) / 2;
+
+        const authWindow = window.open(
+          `/api/auth/signin/${provider}?callbackUrl=${encodeURIComponent(callbackUrl)}`,
+          'oauth',
+          `width=${width},height=${height},left=${left},top=${top},toolbar=no,menubar=no`
+        );
+
+        if (!authWindow) {
+          setError('ポップアップがブロックされました。ブラウザの設定を確認してください。');
+          setLoading(false);
+          return;
+        }
+
+        // ポップアップの監視
+        const checkClosed = setInterval(() => {
+          if (authWindow.closed) {
+            clearInterval(checkClosed);
+            // ポップアップが閉じられたら、認証状態を確認してリロード
+            setTimeout(() => {
+              window.location.href = callbackUrl;
+            }, 500);
+          }
+        }, 500);
+
+        // タイムアウト（5分）
+        setTimeout(() => {
+          if (!authWindow.closed) {
+            authWindow.close();
+            clearInterval(checkClosed);
+            setError('認証がタイムアウトしました');
+            setLoading(false);
+          }
+        }, 5 * 60 * 1000);
+      } else {
+        // 通常のブラウザモード: 同じウィンドウで認証
+        const result = await signIn(provider, {
+          callbackUrl,
+          redirect: false,
+        });
+
+        if (result?.error) {
+          setError(`認証に失敗しました: ${result.error}`);
+          setLoading(false);
+        } else if (result?.ok) {
+          // 認証成功、リダイレクト
+          window.location.href = callbackUrl;
+        }
+      }
+    } catch (err) {
+      console.error('OAuth error:', err);
       setError(`${provider === 'google' ? 'Google' : 'LINE'}ログインに失敗しました`);
       setLoading(false);
     }
