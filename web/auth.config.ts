@@ -35,7 +35,8 @@ export default {
           response_type: 'code',
         },
       },
-      checks: ['state'],
+      // iOS PWAでのcookie問題のため、stateチェックを無効化
+      checks: [],
     }),
     Credentials({
       credentials: {
