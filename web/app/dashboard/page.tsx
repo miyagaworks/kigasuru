@@ -6,7 +6,6 @@ import { Layout } from '@/components/Layout';
 import { Button } from '@/components/Button';
 import { Icon } from '@/components/Icon';
 import { getAllShots, getStatistics, type Shot } from '@/lib/db';
-import LineFriendConfirmFlow from '@/components/line/LineFriendConfirmFlow';
 import { PwaInstallBanner } from '@/components/PwaInstallBanner';
 
 interface Statistics {
@@ -24,12 +23,10 @@ export default function DashboardPage() {
   const router = useRouter();
   const [stats, setStats] = useState<Statistics | null>(null);
   const [loading, setLoading] = useState(true);
-  const [showLineBanner, setShowLineBanner] = useState(false);
   const [needsAdditionalAuth, setNeedsAdditionalAuth] = useState(false);
 
   useEffect(() => {
     loadData();
-    loadPromotionStatus();
     checkAuthStatus();
   }, []);
 
@@ -64,18 +61,6 @@ export default function DashboardPage() {
     }
   };
 
-  const loadPromotionStatus = async () => {
-    try {
-      const response = await fetch('/api/line/apply-promotion');
-      if (response.ok) {
-        const data = await response.json();
-        // トライアル期間中で、まだプロモーションを適用していない場合にバナーを表示
-        setShowLineBanner(data.isEligible && !data.isApplied);
-      }
-    } catch (error) {
-      console.error('Failed to load promotion status:', error);
-    }
-  };
 
   const checkAuthStatus = async () => {
     try {
@@ -136,15 +121,6 @@ export default function DashboardPage() {
           </button>
         </div>
 
-        {/* LINE Friend Campaign Modal */}
-        {showLineBanner && (
-          <LineFriendConfirmFlow
-            onComplete={() => {
-              setShowLineBanner(false);
-              loadPromotionStatus();
-            }}
-          />
-        )}
 
         {/* Getting started guide */}
         <div className="mt-8 bg-[var(--color-info-bg)] rounded-lg border border-[var(--color-info-border)] p-6">

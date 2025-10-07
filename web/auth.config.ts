@@ -2,7 +2,6 @@
 import type { NextAuthConfig } from 'next-auth';
 import Credentials from 'next-auth/providers/credentials';
 import Google from 'next-auth/providers/google';
-import Line from 'next-auth/providers/line';
 import { LoginSchema } from '@/lib/auth/schemas';
 import bcrypt from 'bcryptjs';
 import { prisma } from '@/lib/prisma';
@@ -18,20 +17,6 @@ export default {
           scope: 'openid email profile',
           prompt: 'select_account',
           access_type: 'offline',
-          response_type: 'code',
-        },
-      },
-    }),
-    Line({
-      clientId: process.env.LINE_CHANNEL_ID!,
-      clientSecret: process.env.LINE_CHANNEL_SECRET!,
-      allowDangerousEmailAccountLinking: false,
-      client: {
-        id_token_signed_response_alg: 'HS256',
-      },
-      authorization: {
-        params: {
-          scope: 'profile openid', // emailを削除（LINEはemail権限を持っていない）
           response_type: 'code',
         },
       },
