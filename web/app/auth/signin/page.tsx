@@ -5,6 +5,7 @@ import { signIn } from 'next-auth/react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
+import { debugOAuth, generateErrorReport } from '@/utils/oauth-debug';
 
 export const dynamic = 'force-dynamic';
 
@@ -26,7 +27,12 @@ function SignInForm() {
       setIsPWA(isStandalone || isIOSStandalone);
     };
     checkPWA();
-  }, []);
+
+    // Debug mode: URLに?debug=trueが含まれている場合
+    if (searchParams?.get('debug') === 'true') {
+      debugOAuth.logDebugInfo();
+    }
+  }, [searchParams]);
 
   // メールアドレスの基本的なバリデーション
   const isValidEmail = (email: string) => {
@@ -126,6 +132,13 @@ function SignInForm() {
       }
     } catch (err) {
       console.error('OAuth error:', err);
+
+      // デバッグモードの場合、詳細なエラー情報を記録
+      if (searchParams?.get('debug') === 'true') {
+        const errorReport = await generateErrorReport(err);
+        console.error('Detailed error report:', errorReport);
+      }
+
       setError(`${provider === 'google' ? 'Google' : 'LINE'}ログインに失敗しました`);
       setLoading(false);
     }
