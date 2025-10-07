@@ -13,10 +13,8 @@ const geistMono = Geist_Mono({
   subsets: ['latin'],
 });
 
-const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
-
 export const metadata: Metadata = {
-  metadataBase: new URL(appUrl),
+  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || 'https://kigasuru.vercel.app'),
   title: '上手くなる気がするぅぅぅ PRO',
   description: '科学的ゴルフ上達アプリ - ジャイロセンサーで傾斜を自動検出し、6次元データでショットを記録・分析',
   manifest: '/manifest.json',
@@ -40,7 +38,7 @@ export const metadata: Metadata = {
     description: '科学的ゴルフ上達アプリ - ジャイロセンサーで傾斜を自動検出',
     images: [
       {
-        url: `${appUrl}/og-image.png`,
+        url: '/og-image.png',
         width: 1200,
         height: 700,
         alt: '上手くなる気がするぅぅぅ PRO',
@@ -52,7 +50,7 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: '上手くなる気がするぅぅぅ PRO',
     description: '科学的ゴルフ上達アプリ - ジャイロセンサーで傾斜を自動検出',
-    images: [`${appUrl}/og-image.png`],
+    images: ['/og-image.png'],
     creator: '@kigasuru',
   },
 };

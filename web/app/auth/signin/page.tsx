@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, Suspense } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { signIn } from 'next-auth/react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
@@ -15,6 +15,17 @@ function SignInForm() {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [isPWA, setIsPWA] = useState(false);
+
+  // Check if running in PWA mode
+  useEffect(() => {
+    const checkPWA = () => {
+      const standalone = window.matchMedia('(display-mode: standalone)').matches ||
+                        (window.navigator as any).standalone === true;
+      setIsPWA(standalone);
+    };
+    checkPWA();
+  }, []);
 
   // メールアドレスの基本的なバリデーション
   const isValidEmail = (email: string) => {
@@ -53,6 +64,23 @@ function SignInForm() {
 
   const handleOAuthSignIn = async (provider: 'google' | 'line') => {
     setError(null);
+
+    // PWAモードの場合、警告を表示
+    if (isPWA) {
+      const confirmed = confirm(
+        'PWAモードで開いています。\n\n' +
+        'OAuth認証を行うには、Safariまたはブラウザで開く必要があります。\n\n' +
+        '1. このアプリを閉じる\n' +
+        '2. SafariまたはChromeでapp.kigasuru.comを開く\n' +
+        '3. ログイン後、再度PWAアプリから開く\n\n' +
+        '続けますか？'
+      );
+
+      if (!confirmed) {
+        return;
+      }
+    }
+
     setLoading(true);
 
     try {
