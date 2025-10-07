@@ -1,6 +1,6 @@
 {
   "name": "上手くなる気がするぅぅぅ PRO",
-  "short_name": "気がするPRO",
+  "short_name": "気がするぅぅぅ",
   "description": "科学的ゴルフ上達アプリ - ジャイロセンサーで傾斜を自動検出し、6次元データでショットを記録・分析",
   "start_url": "/",
   "display": "standalone",

@@ -20,7 +20,7 @@ export const metadata: Metadata = {
   appleWebApp: {
     capable: true,
     statusBarStyle: 'default',
-    title: '気がするPRO',
+    title: '気がするぅぅぅ',
   },
   icons: {
     icon: [
