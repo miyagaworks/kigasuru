@@ -4,6 +4,14 @@ import authConfig from './auth.config';
 import { prisma } from '@/lib/prisma';
 import type { DefaultSession } from 'next-auth';
 
+// OAuth profile interface
+interface OAuthProfile {
+  sub?: string;
+  picture?: string;
+  email?: string;
+  name?: string;
+}
+
 // 型定義の拡張
 declare module 'next-auth' {
   interface User {
@@ -130,15 +138,15 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
                 });
 
                 // プロフィール画像が未設定で、OAuthプロバイダーから画像が取得できる場合は設定
-                const updateData: any = {};
+                const updateData: { lineUserId?: string; image?: string } = {};
 
                 if (provider === 'line' && profile?.sub) {
                   updateData.lineUserId = profile.sub;
                 }
 
                 // プロフィール画像をOAuthプロバイダーから取得
-                if (!existingUser.image && (profile as any)?.picture) {
-                  updateData.image = (profile as any).picture;
+                if (!existingUser.image && (profile as OAuthProfile)?.picture) {
+                  updateData.image = (profile as OAuthProfile).picture;
                 }
 
                 if (Object.keys(updateData).length > 0) {
@@ -152,11 +160,11 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
               }
             } else {
               // 既にアカウントがリンクされている場合でも、画像が未設定なら更新
-              if (!existingUser.image && (profile as any)?.picture) {
+              if (!existingUser.image && (profile as OAuthProfile)?.picture) {
                 try {
                   await prisma.user.update({
                     where: { id: existingUser.id },
-                    data: { image: (profile as any).picture },
+                    data: { image: (profile as OAuthProfile).picture },
                   });
                 } catch (updateError) {
                   console.error('Image update error:', updateError);
@@ -190,7 +198,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
                   trialEndsAt,
                   emailVerified: new Date(),
                   lineUserId: profile?.sub || null,
-                  image: (profile as any)?.picture || null,
+                  image: (profile as OAuthProfile)?.picture || null,
                 },
               });
 
@@ -256,7 +264,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
                   subscriptionStatus: 'trial',
                   trialEndsAt,
                   emailVerified: new Date(),
-                  image: (profile as any)?.picture || null,
+                  image: (profile as OAuthProfile)?.picture || null,
                 },
               });
 

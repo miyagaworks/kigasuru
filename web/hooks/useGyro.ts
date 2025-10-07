@@ -19,7 +19,7 @@ export const useGyro = () => {
   const [isCalibrating, setIsCalibrating] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const { gyro, updateGyro, setGyroEnabled, setGyroCalibrated, updateCurrentShot } = useStore();
+  const { gyro, updateGyro, setGyroEnabled, setGyroCalibrated } = useStore();
 
   // Check support on mount
   useEffect(() => {
