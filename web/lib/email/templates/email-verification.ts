@@ -5,7 +5,8 @@ export interface EmailVerificationTemplateProps {
 
 export function getEmailVerificationTemplate({
   verificationUrl,
-  email,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  email: _email,
 }: EmailVerificationTemplateProps) {
   const html = `
 <!DOCTYPE html>

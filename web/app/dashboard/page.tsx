@@ -79,6 +79,7 @@ export default function DashboardPage() {
       <div className="p-6">
         {/* App title */}
         <div className="text-center mb-8 mt-8">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src="/logo_top.svg"
             alt="上手くなる気がするぅぅぅ PRO"

@@ -50,7 +50,8 @@ export default function LineProvider<P extends LineProfile>(
         }
 
         // id_tokenを除外してJWT検証をスキップ
-        const { id_token, ...rest } = tokens;
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        const { id_token: _id_token, ...rest } = tokens;
         return { tokens: rest };
       },
     },

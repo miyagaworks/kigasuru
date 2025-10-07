@@ -13,6 +13,7 @@ interface ImageUploadProps {
   maxSizeKB?: number;
 }
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 interface CropArea {
   x: number;
   y: number;
@@ -217,7 +218,7 @@ const SimpleCropper = ({
           if (deltaY > 0) {
             try {
               moveEvent.preventDefault();
-            } catch (error) {
+            } catch {
               // エラーを無視
             }
           }
@@ -412,7 +413,7 @@ const SimpleCropper = ({
     }
   };
 
-  const handleTouchEnd = (e: React.TouchEvent) => {
+  const handleTouchEnd = () => {
     // preventDefaultは呼び出さない（passive対応）
     setIsDragging(false);
     setInitialTouchDistance(null);
@@ -655,7 +656,7 @@ export function ImageUpload({
           const { dataUrl } = await resizeImage(file, 2000, 2000, 0.8);
           processedImage = dataUrl;
           toast.success('画像をリサイズしました', { id: 'resize' });
-        } catch (error) {
+        } catch {
           toast.error('画像のリサイズに失敗しました', { id: 'resize' });
           setIsUploading(false);
           return;
@@ -679,7 +680,7 @@ export function ImageUpload({
       setOriginalImage(processedImage);
       setShowEditor(true);
       setIsUploading(false);
-    } catch (error) {
+    } catch {
       toast.error('画像処理に失敗しました');
       setIsUploading(false);
     }
