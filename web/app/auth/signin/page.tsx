@@ -25,6 +25,11 @@ function SignInForm() {
       const isIOSStandalone = 'standalone' in window.navigator &&
                               (window.navigator as { standalone?: boolean }).standalone === true;
       setIsPWA(isStandalone || isIOSStandalone);
+
+      // iOSのPWAを検出
+      if (isIOSStandalone && searchParams?.get('debug') === 'true') {
+        console.log('🍎 iOS PWA detected');
+      }
     };
     checkPWA();
 
@@ -77,7 +82,25 @@ function SignInForm() {
       const callbackUrl = searchParams?.get('callbackUrl') || '/dashboard';
 
       if (isPWA) {
-        // PWAモード: ポップアップウィンドウで認証
+        // iOS PWAの検出
+        const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+
+        if (isIOS) {
+          // iOS PWA: 同じウィンドウで認証（ポップアップは機能しないため）
+          setError('iOS PWAでの認証は、一度ブラウザでログインしてからPWAをインストールしてください。');
+          setLoading(false);
+
+          // 3秒後にブラウザモードへの案内を表示
+          setTimeout(() => {
+            if (confirm('Safariブラウザでログインページを開きますか？')) {
+              // iOS Safariで開く
+              window.location.href = `https://app.kigasuru.com/auth/signin`;
+            }
+          }, 2000);
+          return;
+        }
+
+        // その他のPWA: ポップアップウィンドウで認証
         const width = 500;
         const height = 600;
         const left = window.screenX + (window.outerWidth - width) / 2;

@@ -319,7 +319,15 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         return true;
       } catch (error) {
         console.error('SignIn callback error:', error);
-        throw error;
+        console.error('Error details:', {
+          provider: account?.provider,
+          user: user?.email,
+          profile: profile?.sub,
+          errorMessage: error instanceof Error ? error.message : 'Unknown error',
+          errorStack: error instanceof Error ? error.stack : undefined,
+        });
+        // エラーを返すのではなく、falseを返して認証を拒否
+        return false;
       }
     },
 
@@ -374,5 +382,5 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     verifyRequest: '/auth/verify-request',
   },
   providers: authConfig.providers,
-  debug: false,
+  debug: process.env.NODE_ENV === 'development',
 });
