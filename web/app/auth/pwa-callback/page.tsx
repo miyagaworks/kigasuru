@@ -7,6 +7,15 @@ import { authBridge } from '@/utils/pwa-auth-bridge';
 export default function PWACallbackPage() {
   const { data: session, status } = useSession();
   const [debugInfo, setDebugInfo] = useState<string[]>([]);
+  const [showDebug, setShowDebug] = useState(false);
+
+  useEffect(() => {
+    // クライアントサイドでのみデバッグモードをチェック
+    if (typeof window !== 'undefined') {
+      const urlParams = new URLSearchParams(window.location.search);
+      setShowDebug(process.env.NODE_ENV === 'development' || urlParams.get('debug') === 'true');
+    }
+  }, []);
 
   useEffect(() => {
     let retryCount = 0;
@@ -113,8 +122,8 @@ export default function PWACallbackPage() {
           PWAに戻ります。しばらくお待ちください。
         </p>
 
-        {/* デバッグ情報（URLパラメータにdebug=trueがある場合も表示） */}
-        {(process.env.NODE_ENV === 'development' || new URLSearchParams(window.location.search).get('debug') === 'true') && debugInfo.length > 0 && (
+        {/* デバッグ情報（開発環境またはdebug=trueパラメータがある場合） */}
+        {showDebug && debugInfo.length > 0 && (
           <div className="mt-4 p-4 bg-gray-100 rounded text-left text-xs">
             <p className="font-bold mb-2">Debug Info:</p>
             {debugInfo.map((log, index) => (
