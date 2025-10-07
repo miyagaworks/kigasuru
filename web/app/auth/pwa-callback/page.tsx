@@ -8,6 +8,8 @@ export default function PWACallbackPage() {
   const { data: session, status } = useSession();
   const [debugInfo, setDebugInfo] = useState<string[]>([]);
   const [showDebug, setShowDebug] = useState(false);
+  const [retryCount, setRetryCount] = useState(0);
+  const maxRetries = 20; // 10秒間（500ms × 20回）
 
   useEffect(() => {
     // クライアントサイドでのみデバッグモードをチェック
@@ -18,34 +20,53 @@ export default function PWACallbackPage() {
   }, []);
 
   useEffect(() => {
-    let retryCount = 0;
-    const maxRetries = 20; // 10秒間（500ms × 20回）
 
     const handleCallback = async () => {
       const logs: string[] = [];
 
+      // タイムスタンプを追加
+      logs.push(`=== PWA Callback Debug (${new Date().toISOString()}) ===`);
+      logs.push(`Retry Count: ${retryCount}`);
+
       // デバッグ情報を追加
       logs.push(`Status: ${status}`);
       logs.push(`Session: ${session ? 'exists' : 'null'}`);
-      logs.push(`URL: ${window.location.href}`);
+      if (session) {
+        logs.push(`Session User: ${JSON.stringify(session.user)}`);
+      }
+      logs.push(`Full URL: ${window.location.href}`);
 
       // URLパラメータを確認
       const urlParams = new URLSearchParams(window.location.search);
-      logs.push(`URL Params: ${Array.from(urlParams).map(([key, value]) => `${key}=${value}`).join(', ')}`);
+      const paramsArray = Array.from(urlParams);
+      logs.push(`URL Params Count: ${paramsArray.length}`);
+      paramsArray.forEach(([key, value]) => {
+        logs.push(`  - ${key}: ${value}`);
+      });
+
+      // NextAuthのコールバックパラメータも確認
+      const callbackUrl = urlParams.get('callbackUrl');
+      if (callbackUrl) {
+        logs.push(`NextAuth CallbackUrl: ${callbackUrl}`);
+      }
 
       // エラーパラメータをチェック
       const errorParam = urlParams.get('error');
       const errorDescription = urlParams.get('error_description');
       if (errorParam) {
+        logs.push(`!!! OAuth Error Detected !!!`);
         logs.push(`OAuth Error: ${errorParam}`);
         logs.push(`Error Description: ${errorDescription || 'N/A'}`);
+
+        // すべてのログをコンソールに出力
+        console.error('=== PWA OAuth Error Debug ===');
+        logs.forEach(log => console.error(log));
 
         // 認証エラーの場合、すぐにリダイレクト
         const returnUrl = new URL(window.location.origin);
         returnUrl.pathname = '/auth/signin';
         returnUrl.searchParams.set('error', errorDescription || errorParam);
 
-        console.error('OAuth Error:', errorParam, errorDescription);
         window.location.href = returnUrl.toString();
         return;
       }
@@ -66,18 +87,32 @@ export default function PWACallbackPage() {
       // セッションが確立されるまで待つ
       if (status === 'loading' || (status === 'unauthenticated' && retryCount < maxRetries)) {
         logs.push(`Waiting for session... (retry ${retryCount}/${maxRetries})`);
+
+        // コンソールにもリアルタイムで出力
+        console.log(`PWA Callback: Waiting for session (retry ${retryCount}/${maxRetries})`);
+
         setDebugInfo(logs);
 
         // 500ms後にリトライ
         setTimeout(() => {
-          retryCount++;
-          handleCallback();
+          setRetryCount(prev => prev + 1);
         }, 500);
         return;
       }
 
+      logs.push(`=== Final Status Check ===`);
+      logs.push(`Status: ${status}`);
+      logs.push(`Session exists: ${!!session}`);
+      logs.push(`Retry count reached: ${retryCount}`);
+
       if (status === 'authenticated' && session) {
-        logs.push('Authentication successful');
+        logs.push('✅ Authentication successful');
+        logs.push(`User: ${JSON.stringify(session.user)}`);
+
+        // すべてのログをコンソールに出力（成功時）
+        console.log('=== PWA OAuth Success Debug ===');
+        logs.forEach(log => console.log(log));
+
         // 認証成功：セッション情報をCache APIに保存
         await authBridge.saveAuthToken({
           token: bridgeToken,
@@ -94,15 +129,17 @@ export default function PWACallbackPage() {
         // iOS PWAの場合、location.hrefで遷移
         window.location.href = returnUrl.toString();
       } else if (status === 'unauthenticated') {
-        logs.push('Authentication failed - no session');
+        logs.push('❌ Authentication failed - no session after retries');
+        logs.push(`Total retries: ${retryCount}`);
+
+        // すべてのログをコンソールに出力（失敗時）
+        console.error('=== PWA OAuth Failed Debug ===');
+        logs.forEach(log => console.error(log));
 
         // 認証失敗
         const returnUrl = new URL(window.location.origin);
         returnUrl.pathname = '/auth/signin';
         returnUrl.searchParams.set('error', 'OAuth認証に失敗しました');
-
-        // エラー詳細をコンソールに出力
-        console.error('PWA Callback Debug Info:', logs);
 
         window.location.href = returnUrl.toString();
       }
@@ -111,7 +148,7 @@ export default function PWACallbackPage() {
     };
 
     handleCallback();
-  }, [session, status]);
+  }, [session, status, retryCount]);
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-[var(--color-bg-main)] px-4">
