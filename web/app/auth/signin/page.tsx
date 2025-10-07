@@ -128,13 +128,22 @@ function SignInForm() {
 
           console.log(`OAuth Provider: ${provider}, Callback URL: ${pwaCallbackUrl.toString()}`);
 
-          // 同じウィンドウでOAuth認証を実行（PWAコールバック経由）
-          await signIn(provider, {
-            callbackUrl: pwaCallbackUrl.toString(),
-            redirect: true,
-          });
+          try {
+            // 同じウィンドウでOAuth認証を実行（PWAコールバック経由）
+            console.log('Calling signIn...');
+            const result = await signIn(provider, {
+              callbackUrl: pwaCallbackUrl.toString(),
+              redirect: true,
+            });
 
-          // signInでredirect: trueの場合、この行には到達しない
+            // redirect: trueの場合、通常はここに到達しない
+            console.log('SignIn result:', result);
+          } catch (signInError) {
+            console.error('SignIn error:', signInError);
+            setError(`認証エラー: ${signInError instanceof Error ? signInError.message : 'Unknown error'}`);
+            setOauthLoading(false);
+          }
+
           return;
         }
 
