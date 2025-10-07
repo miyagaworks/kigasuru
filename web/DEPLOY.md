@@ -39,24 +39,37 @@ NEXT_PUBLIC_APP_URL=https://your-domain.vercel.app
 
 ### Google OAuth
 
-1. Google Cloud Consoleで新しいプロジェクトを作成
+1. [Google Cloud Console](https://console.cloud.google.com/) にアクセス
 2. OAuth 2.0 クライアントIDを作成
-3. 承認済みのリダイレクトURIに追加: `https://your-domain.vercel.app/api/auth/callback/google`
+3. **承認済みのリダイレクトURI**に以下を**すべて**追加:
+   - `http://localhost:3000/api/auth/callback/google`
+   - `https://app.kigasuru.com/api/auth/callback/google`
+   - `https://kigasuru.vercel.app/api/auth/callback/google`
 
 ```
 GOOGLE_CLIENT_ID=xxx.apps.googleusercontent.com
 GOOGLE_CLIENT_SECRET=GOCSPX-xxx
 ```
 
+**重要**: PWA環境でも動作させるため、すべてのドメインを登録してください。
+
 ### LINE Login
 
-1. LINE Developers Consoleでチャネルを作成
-2. コールバックURLに追加: `https://your-domain.vercel.app/api/auth/callback/line`
+1. [LINE Developers Console](https://developers.line.biz/console/) にアクセス
+2. チャネルのLINE Loginタブを選択
+3. **コールバックURL**に以下を**すべて**追加:
+   - `http://localhost:3000/api/auth/callback/line`
+   - `https://app.kigasuru.com/api/auth/callback/line`
+   - `https://kigasuru.vercel.app/api/auth/callback/line`
 
 ```
 LINE_CHANNEL_ID=xxx
 LINE_CHANNEL_SECRET=xxx
 ```
+
+**重要**: PWA環境でも動作させるため、すべてのドメインを登録してください。
+
+詳細な設定手順は `OAUTH_SETUP.md` を参照してください。
 
 ### Stripe
 
