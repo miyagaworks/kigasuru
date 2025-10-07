@@ -2,7 +2,6 @@
 
 import { useState } from 'react';
 import { Button } from '@/components/Button';
-import { Icon } from '@/components/Icon';
 import { signIn } from 'next-auth/react';
 import { toast } from 'react-hot-toast';
 
