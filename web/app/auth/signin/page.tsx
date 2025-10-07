@@ -380,6 +380,21 @@ function SignInForm() {
                   >
                     デバッグモードを無効にする
                   </Link>
+                  <button
+                    onClick={async () => {
+                      try {
+                        const res = await fetch('/api/auth/debug?debug=true');
+                        const data = await res.json();
+                        console.log('🔧 Environment Check:', data);
+                        alert(`環境変数チェック結果:\n${JSON.stringify(data, null, 2)}`);
+                      } catch (error) {
+                        console.error('環境変数チェックエラー:', error);
+                      }
+                    }}
+                    className="block w-full mt-2 text-xs text-[var(--color-primary-green)] hover:underline"
+                  >
+                    環境変数をチェック
+                  </button>
                 </>
               ) : (
                 <Link

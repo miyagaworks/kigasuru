@@ -23,19 +23,9 @@ export default {
       },
     }),
     Line({
-      clientId: process.env.LINE_CHANNEL_ID ?? '',
-      clientSecret: process.env.LINE_CHANNEL_SECRET ?? '',
+      clientId: process.env.LINE_CHANNEL_ID!,
+      clientSecret: process.env.LINE_CHANNEL_SECRET!,
       allowDangerousEmailAccountLinking: false,
-      issuer: 'https://access.line.me',
-      client: {
-        id_token_signed_response_alg: 'HS256',
-      },
-      authorization: {
-        params: {
-          scope: 'profile openid email',
-          response_type: 'code',
-        },
-      },
     }),
     Credentials({
       credentials: {
