@@ -116,19 +116,12 @@ function SignInForm() {
           }
         }, 5 * 60 * 1000);
       } else {
-        // 通常のブラウザモード: 同じウィンドウで認証
-        const result = await signIn(provider, {
+        // 通常のブラウザモード: OAuth認証はプロバイダーページへの遷移が必要
+        await signIn(provider, {
           callbackUrl,
-          redirect: false,
+          redirect: true, // OAuthでは必ずtrueにする（プロバイダーページへ遷移）
         });
-
-        if (result?.error) {
-          setError(`認証に失敗しました: ${result.error}`);
-          setLoading(false);
-        } else if (result?.ok) {
-          // 認証成功、リダイレクト
-          window.location.href = callbackUrl;
-        }
+        // signInでredirect: trueの場合、この行には到達しない
       }
     } catch (err) {
       console.error('OAuth error:', err);
