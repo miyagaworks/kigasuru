@@ -184,7 +184,7 @@ function SignInForm() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-[var(--color-bg-main)] px-4">
+    <div className="min-h-screen flex items-center justify-center bg-[var(--color-bg-main)] px-4 py-8">
       <div className="max-w-md w-full bg-[var(--color-card-bg)] rounded-2xl shadow-xl p-8 border border-[var(--color-neutral-300)]">
         <div className="text-center mb-0">
           {/* eslint-disable-next-line @next/next/no-img-element */}
