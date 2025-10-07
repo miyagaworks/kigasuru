@@ -375,6 +375,30 @@ function SignInForm() {
               新規登録
             </Link>
           </div>
+
+          {/* デバッグモード切り替え（PWA用） */}
+          {isPWA && (
+            <div className="text-center mt-4">
+              {searchParams?.get('debug') === 'true' ? (
+                <>
+                  <p className="text-xs text-[var(--color-warning)] mb-2">🐛 デバッグモード有効</p>
+                  <Link
+                    href="/auth/signin"
+                    className="text-xs text-[var(--color-neutral-500)] hover:underline"
+                  >
+                    デバッグモードを無効にする
+                  </Link>
+                </>
+              ) : (
+                <Link
+                  href="/auth/signin?debug=true"
+                  className="text-xs text-[var(--color-neutral-500)] hover:underline"
+                >
+                  デバッグモードを有効にする
+                </Link>
+              )}
+            </div>
+          )}
         </div>
       </div>
     </div>
