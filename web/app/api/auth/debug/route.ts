@@ -21,13 +21,33 @@ export async function GET(request: Request) {
 
   // 長さのチェック（セキュリティのため値は表示しない）
   const envLengths = {
+    NEXTAUTH_SECRET_LENGTH: process.env.NEXTAUTH_SECRET?.length || 0,
     LINE_CHANNEL_ID_LENGTH: process.env.LINE_CHANNEL_ID?.length || 0,
     LINE_CHANNEL_SECRET_LENGTH: process.env.LINE_CHANNEL_SECRET?.length || 0,
+    GOOGLE_CLIENT_ID_LENGTH: process.env.GOOGLE_CLIENT_ID?.length || 0,
+    GOOGLE_CLIENT_SECRET_LENGTH: process.env.GOOGLE_CLIENT_SECRET?.length || 0,
   };
 
   // LINE Channel IDの形式チェック（数字のみかどうか）
   const lineChannelIdFormat = process.env.LINE_CHANNEL_ID ?
     /^\d+$/.test(process.env.LINE_CHANNEL_ID) : false;
+
+  // エラーの可能性をチェック
+  const possibleIssues = [];
+
+  if (!envCheck.NEXTAUTH_SECRET) {
+    possibleIssues.push('NEXTAUTH_SECRET is not set');
+  } else if (envLengths.NEXTAUTH_SECRET_LENGTH < 32) {
+    possibleIssues.push('NEXTAUTH_SECRET is too short (should be at least 32 chars)');
+  }
+
+  if (!envCheck.LINE_CHANNEL_ID || !envCheck.LINE_CHANNEL_SECRET) {
+    possibleIssues.push('LINE credentials are missing');
+  }
+
+  if (envCheck.LINE_CHANNEL_ID && !lineChannelIdFormat) {
+    possibleIssues.push('LINE_CHANNEL_ID should contain only numbers');
+  }
 
   return NextResponse.json({
     timestamp: new Date().toISOString(),
@@ -36,5 +56,7 @@ export async function GET(request: Request) {
     envLengths,
     lineChannelIdFormat,
     nextAuthUrl: process.env.NEXTAUTH_URL || 'Not set',
+    possibleIssues,
+    runtime: 'nodejs',
   });
 }
