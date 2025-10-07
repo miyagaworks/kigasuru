@@ -78,7 +78,7 @@ export default function SettingsPage() {
   const router = useRouter();
   const { isSupported, hasPermission, isCalibrating, gyro, requestPermission, calibrate } = useGyro();
   const [calibrationStatus, setCalibrationStatus] = useState('');
-  const [testDataStatus, setTestDataStatus] = useState('');
+  const [importStatus, setImportStatus] = useState('');
   const [exportStatus, setExportStatus] = useState('');
   const [resetStatus, setResetStatus] = useState('');
   const [threshold, setThreshold] = useState(2);
@@ -225,95 +225,100 @@ export default function SettingsPage() {
     await requestPermission();
   };
 
-  const handleAddTestData = async () => {
-    setTestDataStatus('テストデータ追加中...');
+  const handleImportCSV = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    setImportStatus('インポート中...');
     try {
-      // Generate 40 test shots with full advanced-level data
-      const slopes = ['flat', 'left-up', 'left-down', 'toe-up', 'toe-down', 'left-up-toe-up', 'left-up-toe-down', 'left-down-toe-up', 'left-down-toe-down'];
-      const lies = ['a-grade', 'good', 'normal', 'bad', 'very-bad', 'bunker'];
-      const strengths = ['full', 'normal', 'soft'];
-      const winds = ['none', 'up', 'up-weak', 'up-strong', 'down', 'down-weak', 'down-strong', 'left', 'left-weak', 'left-strong', 'right', 'right-weak', 'right-strong'];
-      const temperatures = ['summer', 'mid-season', 'winter'];
-      const feelings = ['great', 'good', 'normal', 'bad', 'unsure'];
-      const memos = [
-        'ナイスショット！',
-        '少し右に曲がった',
-        '風が強かった',
-        'ミスヒット',
-        '完璧な当たり',
-        'グリーンに乗った',
-        'バンカーに入った',
-        '',
-        '',
-        '',
-      ];
+      const text = await file.text();
+      const lines = text.split('\n').filter(line => line.trim());
 
-      const testShots = [];
-
-      for (let i = 0; i < 40; i++) {
-        const club = clubs[Math.floor(Math.random() * clubs.length)];
-        const slope = slopes[Math.floor(Math.random() * slopes.length)];
-        const lie = lies[Math.floor(Math.random() * lies.length)];
-        const strength = strengths[Math.floor(Math.random() * strengths.length)];
-        const wind = winds[Math.floor(Math.random() * winds.length)];
-        const temperature = temperatures[Math.floor(Math.random() * temperatures.length)];
-        const feeling = feelings[Math.floor(Math.random() * feelings.length)];
-        const memo = memos[Math.floor(Math.random() * memos.length)];
-
-        // Generate realistic distance based on club
-        let baseDistance = 150;
-        if (club === 'DR') baseDistance = 240;
-        else if (club === '3W') baseDistance = 220;
-        else if (club === '5W') baseDistance = 200;
-        else if (club === '7W') baseDistance = 180;
-        else if (club === 'U4') baseDistance = 190;
-        else if (club === 'U5') baseDistance = 180;
-        else if (club === '5I') baseDistance = 170;
-        else if (club === '6I') baseDistance = 160;
-        else if (club === '7I') baseDistance = 150;
-        else if (club === '8I') baseDistance = 140;
-        else if (club === '9I') baseDistance = 130;
-        else if (club === 'PW') baseDistance = 120;
-        else if (club === '50') baseDistance = 100;
-        else if (club === '52') baseDistance = 90;
-        else if (club === '54') baseDistance = 80;
-        else if (club === '56') baseDistance = 70;
-        else if (club === '58') baseDistance = 60;
-
-        // Add some variance
-        const distance = Math.round(baseDistance + (Math.random() - 0.5) * 20);
-
-        // Generate result coordinates (x: lateral, y: depth)
-        const resultX = (Math.random() - 0.5) * 20; // -10 to +10 yards lateral
-        const resultY = (Math.random() - 0.5) * 30; // -15 to +15 yards depth
-
-        testShots.push({
-          slope,
-          club,
-          lie,
-          strength,
-          wind,
-          temperature,
-          result: { x: Number(resultX.toFixed(1)), y: Number(resultY.toFixed(1)) },
-          distance,
-          feeling,
-          memo,
-          golfCourse: i % 5 === 0 ? '東京ゴルフクラブ' : (i % 3 === 0 ? '富士桜カントリー倶楽部' : ''),
-          actualTemperature: temperature === 'summer' ? 28 : (temperature === 'winter' ? 8 : 18),
-        });
+      if (lines.length < 2) {
+        setImportStatus('ファイルが空です');
+        setTimeout(() => setImportStatus(''), 3000);
+        return;
       }
 
-      for (const shot of testShots) {
-        await addShot(shot);
+      // Skip header row
+      const dataLines = lines.slice(1);
+      let importedCount = 0;
+      let skippedCount = 0;
+
+      for (const line of dataLines) {
+        try {
+          // Parse CSV line (handle quoted fields with commas)
+          const values: string[] = [];
+          let currentValue = '';
+          let inQuotes = false;
+
+          for (let i = 0; i < line.length; i++) {
+            const char = line[i];
+            if (char === '"') {
+              if (inQuotes && line[i + 1] === '"') {
+                currentValue += '"';
+                i++; // Skip next quote
+              } else {
+                inQuotes = !inQuotes;
+              }
+            } else if (char === ',' && !inQuotes) {
+              values.push(currentValue);
+              currentValue = '';
+            } else {
+              currentValue += char;
+            }
+          }
+          values.push(currentValue); // Add last value
+
+          // Parse result field (x:1.5 y:2.0 format)
+          const resultStr = values[8] || '';
+          let result = { x: 0, y: 0 };
+          const xMatch = resultStr.match(/x:([-\d.]+)/);
+          const yMatch = resultStr.match(/y:([-\d.]+)/);
+          if (xMatch && yMatch) {
+            result = {
+              x: parseFloat(xMatch[1]),
+              y: parseFloat(yMatch[1]),
+            };
+          }
+
+          const shotData = {
+            date: values[1] || new Date().toISOString(),
+            slope: values[2] || '',
+            club: values[3] || '',
+            lie: values[4] || '',
+            strength: values[5] || '',
+            wind: values[6] || '',
+            temperature: values[7] || '',
+            result,
+            distance: values[9] ? parseInt(values[9]) : undefined,
+            feeling: values[10] || '',
+            memo: values[11]?.replace(/^"|"$/g, '').replace(/""/g, '"') || '',
+          };
+
+          // Only import if club is specified
+          if (shotData.club) {
+            await addShot(shotData);
+            importedCount++;
+          } else {
+            skippedCount++;
+          }
+        } catch (error) {
+          console.error('Error parsing line:', error);
+          skippedCount++;
+        }
       }
 
-      setTestDataStatus('テストデータ追加完了！ (40ショット)');
-      setTimeout(() => setTestDataStatus(''), 3000);
-    } catch (_error) {
-      console.error('Test data error:', _error);
-      setTestDataStatus('テストデータ追加失敗');
-      setTimeout(() => setTestDataStatus(''), 3000);
+      setImportStatus(`インポート完了！ (${importedCount}件追加、${skippedCount}件スキップ)`);
+      setTimeout(() => setImportStatus(''), 5000);
+    } catch (error) {
+      console.error('Import error:', error);
+      setImportStatus('インポート失敗');
+      setTimeout(() => setImportStatus(''), 3000);
     }
+
+    // Reset file input
+    event.target.value = '';
   };
 
   const handleResetData = async () => {
@@ -745,56 +750,66 @@ export default function SettingsPage() {
           </div>
         )}
 
-        {/* Data export */}
+        {/* Data management */}
         <div className="bg-[var(--color-card-bg)] rounded-lg shadow-md p-6 mb-4">
           <h2 className="text-lg font-bold mb-4">データ管理</h2>
-          <Button
-            variant="secondary"
-            onClick={handleExportCSV}
-            className="w-full"
-          >
-            CSVエクスポート
-          </Button>
-          {exportStatus && (
-            <div className={`text-center text-sm mt-3 ${
-              exportStatus.includes('完了') ? 'text-green-600' :
-              exportStatus.includes('失敗') || exportStatus.includes('ありません') ? 'text-red-600' :
-              'text-[var(--color-neutral-600)]'
-            }`}>
-              {exportStatus}
-            </div>
-          )}
-          <p className="text-xs text-[var(--color-neutral-600)] mt-3">
-            全てのショットデータをCSVファイルとしてダウンロードします
-          </p>
-        </div>
-
-        {/* Test data */}
-        <div className="bg-[var(--color-card-bg)] rounded-lg shadow-md p-6 mb-4">
-          <h2 className="text-lg font-bold mb-4">開発者向け</h2>
 
           <div className="space-y-3">
+            {/* CSV Export */}
             <Button
               variant="secondary"
-              onClick={handleAddTestData}
+              onClick={handleExportCSV}
               className="w-full"
             >
-              テストデータを追加
+              CSVエクスポート
             </Button>
-            {testDataStatus && (
+            {exportStatus && (
               <div className={`text-center text-sm ${
-                testDataStatus.includes('完了') ? 'text-green-600' :
-                testDataStatus.includes('失敗') ? 'text-red-600' :
+                exportStatus.includes('完了') ? 'text-green-600' :
+                exportStatus.includes('失敗') || exportStatus.includes('ありません') ? 'text-red-600' :
                 'text-[var(--color-neutral-600)]'
               }`}>
-                {testDataStatus}
+                {exportStatus}
               </div>
             )}
             <p className="text-xs text-[var(--color-neutral-600)]">
-              5件のテストショットデータが追加されます
+              全てのショットデータをCSVファイルとしてダウンロードします
             </p>
 
             <div className="pt-3 border-t border-[var(--color-neutral-300)]">
+              {/* CSV Import */}
+              <label className="block">
+                <input
+                  type="file"
+                  accept=".csv"
+                  onChange={handleImportCSV}
+                  className="hidden"
+                  id="csv-import"
+                />
+                <Button
+                  variant="secondary"
+                  onClick={() => document.getElementById('csv-import')?.click()}
+                  className="w-full"
+                >
+                  CSVインポート
+                </Button>
+              </label>
+              {importStatus && (
+                <div className={`text-center text-sm mt-3 ${
+                  importStatus.includes('完了') ? 'text-green-600' :
+                  importStatus.includes('失敗') || importStatus.includes('ありません') || importStatus.includes('空') ? 'text-red-600' :
+                  'text-[var(--color-neutral-600)]'
+                }`}>
+                  {importStatus}
+                </div>
+              )}
+              <p className="text-xs text-[var(--color-neutral-600)] mt-3">
+                エクスポートしたCSVファイルからショットデータをインポートできます
+              </p>
+            </div>
+
+            <div className="pt-3 border-t border-[var(--color-neutral-300)]">
+              {/* Reset all data */}
               <Button
                 variant="outline"
                 onClick={handleResetData}
