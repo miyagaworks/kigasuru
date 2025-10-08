@@ -27,14 +27,15 @@ export async function GET() {
       return NextResponse.json({ error: 'ユーザーが見つかりません' }, { status: 404 });
     }
 
-    // 認証プロバイダーのリスト
-    const authProviders = user.accounts.map(account => account.provider);
+    // 認証プロバイダーのリスト（LINEを除外）
+    const authProviders = user.accounts
+      .map(account => account.provider)
+      .filter(provider => provider !== 'line');
 
-    // LINE認証のみで、Google/メール認証がない場合のチェック
-    const hasLineAuth = authProviders.includes('line');
+    // Google/メール認証がない場合のチェック
     const hasGoogleAuth = authProviders.includes('google');
     const hasEmailAuth = !!user.password;
-    const needsAdditionalAuth = hasLineAuth && !hasGoogleAuth && !hasEmailAuth;
+    const needsAdditionalAuth = !hasGoogleAuth && !hasEmailAuth;
 
     // 安全なユーザー情報（パスワードなどの機密情報を除く）
     const safeUser = {

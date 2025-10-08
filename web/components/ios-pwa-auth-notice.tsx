@@ -28,7 +28,7 @@ export function IosPwaAuthNotice() {
             iOS PWAでのログインについて
           </h3>
           <p className="mt-1 text-sm text-slate-700">
-            iOS PWAではLINE認証がご利用いただけません。Googleまたはメールアドレスでログインしてください。
+            iOS PWAでは一部の認証方法に制限があります。Googleまたはメールアドレスでログインしてください。
           </p>
 
           <div className="mt-3 space-y-2">
@@ -41,12 +41,6 @@ export function IosPwaAuthNotice() {
             </ul>
           </div>
 
-          <div className="mt-3 p-3 bg-yellow-50 rounded border border-yellow-200">
-            <p className="text-sm text-yellow-800">
-              <span className="font-medium">LINE認証をご利用の方へ：</span><br />
-              LINE認証で登録された方は、SafariでGoogleアカウントまたはメールアドレスを追加設定してから、PWAでログインしてください。
-            </p>
-          </div>
         </div>
       </div>
     </div>
