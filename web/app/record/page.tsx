@@ -376,13 +376,10 @@ function RecordContent() {
 
   // Sync gyro.slope immediately (no debounce for visual feedback)
   useEffect(() => {
-    console.log('[RecordPage] Gyro state:', { enabled: gyro.enabled, slope: gyro.slope });
     if (gyro.enabled && gyro.slope) {
       setDebouncedSlope(gyro.slope);
-      console.log('[RecordPage] Set debouncedSlope to:', gyro.slope);
     } else {
       setDebouncedSlope(null);
-      console.log('[RecordPage] Cleared debouncedSlope');
     }
   }, [gyro.enabled, gyro.slope]);
 
@@ -1189,7 +1186,7 @@ function RecordContent() {
               <h2 className="text-xl font-bold">結果を入力</h2>
               <p className="text-xs text-black">↑ 画面上が飛球方向</p>
             </div>
-            <p className="text-sm mb-4">狙った場所を基準に実際の位置をタップしてください</p>
+            <p className="text-sm mb-4">狙った場所を基準に実際の位置をタップして下さい</p>
 
             {/* 円形ターゲットUI */}
             <div className="relative w-full max-w-sm mx-auto mb-6" style={{ aspectRatio: '1/1' }}>

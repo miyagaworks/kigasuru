@@ -14,8 +14,6 @@ export function Providers({ children }: { children: React.ReactNode }) {
       navigator.serviceWorker
         .register('/sw.js')
         .then((registration) => {
-          console.log('Service Worker registered:', registration.scope);
-
           // Service Workerの更新チェック
           registration.addEventListener('updatefound', () => {
             const newWorker = registration.installing;

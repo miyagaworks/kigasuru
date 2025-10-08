@@ -31,8 +31,7 @@ export const requestGyroPermission = async (): Promise<boolean> => {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const permission = await (DeviceOrientationEvent as any).requestPermission();
       return permission === 'granted';
-    } catch (error) {
-      console.error('Gyro permission error:', error);
+    } catch {
       return false;
     }
   }
@@ -154,7 +153,6 @@ export const startGyroMonitoring = (
   const timeoutId = setTimeout(() => {
     if (!hasReceivedData && isActive) {
       // No data received - likely no permission
-      console.error('[gyro] Timeout: No data received within 1 second');
       isActive = false;
       window.removeEventListener('deviceorientation', handleOrientation);
       if (onError) {

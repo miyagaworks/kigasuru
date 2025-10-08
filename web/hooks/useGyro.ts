@@ -93,8 +93,6 @@ export const useGyro = () => {
 
   // Start monitoring
   const startMonitoring = useCallback(async () => {
-    console.log('[useGyro] startMonitoring called - isSupported:', isSupported, 'hasPermission:', hasPermission);
-
     if (!isSupported) {
       setError('このデバイスはジャイロセンサーに対応していません');
       return null;
@@ -102,20 +100,16 @@ export const useGyro = () => {
 
     // Check if permission was already granted (don't request again automatically)
     if (!hasPermission) {
-      console.log('[useGyro] Permission not granted, cannot start monitoring');
       setError('ジャイロセンサーの許可が必要です。設定ページで許可してください。');
       setGyroEnabled(false);
       return null;
     }
 
-    console.log('[useGyro] Starting gyro monitoring...');
     try {
       const calibration = await getCalibration();
-      console.log('[useGyro] Calibration:', calibration);
 
       const stopFn = startGyroMonitoring(
         (data) => {
-          console.log('[useGyro] Gyro data received:', data);
           updateGyro(data);
           // Note: currentShot.slope is only set when user taps a slope segment
           // Gyro data is stored in gyro.slope for highlighting only
@@ -123,7 +117,6 @@ export const useGyro = () => {
         calibration ? { xOffset: calibration.xOffset, yOffset: calibration.yOffset } : { xOffset: 0, yOffset: 0 },
         () => {
           // onError callback - no data received within timeout
-          console.error('[useGyro] Error: No data received within timeout');
           setError('ジャイロセンサーのデータが取得できません。ブラウザ設定を確認してください。');
           setGyroEnabled(false);
           setHasPermission(false);
@@ -131,11 +124,9 @@ export const useGyro = () => {
         }
       );
 
-      console.log('[useGyro] Gyro monitoring started successfully');
       setGyroEnabled(true);
       return stopFn;
-    } catch (err) {
-      console.error('[useGyro] Failed to start monitoring:', err);
+    } catch {
       setError('ジャイロセンサーの起動に失敗しました');
       setGyroEnabled(false);
       return null;

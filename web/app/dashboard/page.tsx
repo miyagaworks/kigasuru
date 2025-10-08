@@ -158,14 +158,13 @@ export default function DashboardPage() {
       // デフォルトクラブ設定
       const DEFAULT_CLUBS = ['DR', '3W', '5W', '7W', 'U4', 'U5', '5I', '6I', '7I', '8I', '9I', 'PW', '50', '52', '54', '56', '58'];
 
-      // 入力レベルと入力フィールドを確認
-      const inputLevel = await getSetting('inputLevel');
-      const inputFields = await getSetting('inputFields');
-      const clubs = await getSetting('clubs');
+      // customClubsとenabledInputFieldsを確認
+      const customClubs = await getSetting('customClubs');
+      const enabledInputFields = await getSetting('enabledInputFields');
 
       // 設定がデフォルトから変更されているかチェック
-      const levelChanged = inputLevel && inputLevel !== 'advanced';
-      const fieldsChanged = inputFields && JSON.stringify(inputFields) !== JSON.stringify({
+      const clubsChanged = customClubs && JSON.stringify(customClubs) !== JSON.stringify(DEFAULT_CLUBS);
+      const fieldsChanged = enabledInputFields && JSON.stringify(enabledInputFields) !== JSON.stringify({
         slope: true,
         lie: true,
         club: true,
@@ -175,10 +174,9 @@ export default function DashboardPage() {
         feeling: true,
         memo: true,
       });
-      const clubsChanged = clubs && JSON.stringify(clubs) !== JSON.stringify(DEFAULT_CLUBS);
 
-      // いずれかの設定が変更されていればガイドを非表示
-      if (levelChanged || fieldsChanged || clubsChanged) {
+      // クラブまたは入力フィールドのいずれかが変更されていればガイドを非表示
+      if (clubsChanged || fieldsChanged) {
         setShowSettingsGuide(false);
       }
     } catch (error) {
