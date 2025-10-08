@@ -113,90 +113,90 @@ export function PwaInstallBanner({ needsAdditionalAuth = false }: PwaInstallBann
             style={{
               top: '12px',
               right: isMobile ? '12px' : '32px',
-            width: '30px',
-            height: '30px',
-            minWidth: '30px',
-            minHeight: '30px',
-            maxWidth: '30px',
-            maxHeight: '30px',
-            backgroundColor: 'rgba(255, 255, 255, 0.7)',
-            borderRadius: '50%',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            border: 'none',
-            padding: '0',
-            cursor: 'pointer',
-          }}
-          aria-label="閉じる"
-        >
-          <svg
-            width="16"
-            height="16"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-            style={{ color: '#4B5563' }}
+              width: '30px',
+              height: '30px',
+              minWidth: '30px',
+              minHeight: '30px',
+              maxWidth: '30px',
+              maxHeight: '30px',
+              backgroundColor: 'rgba(255, 255, 255, 0.7)',
+              borderRadius: '50%',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              border: 'none',
+              padding: '0',
+              cursor: 'pointer',
+            }}
+            aria-label="閉じる"
           >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M6 18L18 6M6 6l12 12"
-            />
-          </svg>
-        </button>
-
-        <div className="flex flex-col md:flex-row items-center mt-4 gap-4">
-          <div className="flex-shrink-0">
-            <Image
-              src="/assets/images/app_icon.png"
-              alt="アプリアイコン"
-              width={96}
-              height={96}
-              className="w-24 h-24"
-            />
-          </div>
-
-          <div className="flex-1 text-center md:text-left">
-            <h3 className="text-lg font-bold text-white">
-              アプリとして使いましょう！
-            </h3>
-            <p className="text-sm text-blue-100 mt-1 text-justify">
-              ホーム画面に追加すると、アプリのようにすぐにアクセスできます。
-              {needsAdditionalAuth && (
-                <span className="text-orange-600 font-medium">
-                  {" "}
-                  PWAを利用するには、アカウント設定で追加の認証方法を設定してください。
-                </span>
-              )}
-            </p>
-          </div>
-
-          <div className="flex gap-3 mb-4">
-            {needsAdditionalAuth ? (
-              <button
-                onClick={() => (window.location.href = "/account")}
-                className="px-6 py-2 bg-[var(--color-primary-green)] text-white rounded-lg hover:bg-[var(--color-primary-dark)] transition-colors"
-              >
-                認証設定へ
-              </button>
-            ) : (
-              <button
-                onClick={handleInstallClick}
-                className="px-6 py-2 bg-[var(--color-secondary-blue)] text-white border-2 border-white rounded-lg hover:bg-blue-950 transition-colors"
-              >
-                インストール
-              </button>
-            )}
-            <button
-              onClick={handleDismiss}
-              className="px-6 py-2 border-2 border-[var(--color-secondary-blue)] text-[var(--color-secondary-blue)] bg-[var(--color-bg-main)] rounded-lg hover:bg-[var(--color-neutral-200)] transition-colors"
+            <svg
+              width="16"
+              height="16"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+              style={{ color: '#4B5563' }}
             >
-              後で
-            </button>
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M6 18L18 6M6 6l12 12"
+              />
+            </svg>
+          </button>
+
+          <div className="flex flex-col md:flex-row items-center mt-4 gap-4">
+            <div className="flex-shrink-0">
+              <Image
+                src="/assets/images/app_icon.png"
+                alt="アプリアイコン"
+                width={96}
+                height={96}
+                className="w-24 h-24"
+              />
+            </div>
+
+            <div className="flex-1 text-center md:text-left">
+              <h3 className="text-lg font-bold text-white">
+                アプリとして使いましょう！
+              </h3>
+              <p className="text-sm text-blue-100 mt-1 text-justify">
+                ホーム画面に追加すると、アプリのようにすぐにアクセスできます。
+                {needsAdditionalAuth && (
+                  <span className="text-orange-600 font-medium">
+                    {" "}
+                    PWAを利用するには、アカウント設定で追加の認証方法を設定してください。
+                  </span>
+                )}
+              </p>
+            </div>
+
+            <div className="flex gap-3 mb-4">
+              {needsAdditionalAuth ? (
+                <button
+                  onClick={() => (window.location.href = "/account")}
+                  className="px-6 py-2 bg-[var(--color-primary-green)] text-white rounded-lg hover:bg-[var(--color-primary-dark)] transition-colors"
+                >
+                  認証設定へ
+                </button>
+              ) : (
+                <button
+                  onClick={handleInstallClick}
+                  className="px-6 py-2 bg-[var(--color-secondary-blue)] text-white border-2 border-white rounded-lg hover:bg-blue-950 transition-colors"
+                >
+                  インストール
+                </button>
+              )}
+              <button
+                onClick={handleDismiss}
+                className="px-6 py-2 border-2 border-[var(--color-secondary-blue)] text-[var(--color-secondary-blue)] bg-[var(--color-bg-main)] rounded-lg hover:bg-[var(--color-neutral-200)] transition-colors"
+              >
+                後で
+              </button>
+            </div>
           </div>
-        </div>
         </div>
         {/* iOS向けインストール手順 */}
         {showInstructions && isIOS && (
