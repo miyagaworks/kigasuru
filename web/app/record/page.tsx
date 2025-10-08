@@ -10,6 +10,7 @@ import { useLocation as useGeoLocation } from '@/hooks/useLocation';
 import { addShot, getSetting, saveSetting, getShot, updateShot, getAllShots, getTodayManualLocationShots, updateLocationForShots, type Shot } from '@/lib/db';
 import { getSlopeDisplayName } from '@/lib/sensors/gyro';
 import { getWeather, getLocationName } from '@/lib/utils/weather';
+import { toast } from 'react-hot-toast';
 
 const DEFAULT_CLUBS = ['DR', '3W', '5W', '7W', 'U4', 'U5', '5I', '6I', '7I', '8I', '9I', 'PW', '50', '52', '54', '56', '58'];
 
@@ -304,7 +305,7 @@ function RecordContent() {
           }
         } catch (error) {
           console.error('Failed to load shot for editing:', error);
-          alert('データの読み込みに失敗しました');
+          toast.error('データの読み込みに失敗しました');
         }
       }
     };
@@ -440,7 +441,7 @@ function RecordContent() {
   // Handle manual input save
   const handleManualInput = () => {
     if (!manualGolfCourse || !manualTemperature) {
-      alert('ゴルフ場と気温を選択してください');
+      toast.error('ゴルフ場と気温を選択してください');
       return;
     }
 
@@ -480,12 +481,15 @@ function RecordContent() {
         latitude: currentShot.latitude,
         longitude: currentShot.longitude,
       });
-      alert(`${shotIds.length}件のショットの位置情報を更新しました`);
+      toast.success(`${shotIds.length}件のショットの位置情報を更新しました`, {
+        duration: 2000,
+        position: 'top-center',
+      });
       setShowUpdateConfirm(false);
       setManualShotsToUpdate([]);
     } catch (error) {
       console.error('Failed to update manual shots:', error);
-      alert('更新に失敗しました');
+      toast.error('更新に失敗しました');
     }
   };
 
@@ -495,13 +499,48 @@ function RecordContent() {
       if (editId) {
         // Update existing shot
         await updateShot(parseInt(editId), currentShot as Partial<Shot>);
-        alert('ショットを更新しました！');
-        // Clear edit mode and return to record page top
-        router.push('/record');
+
+        // Vibration feedback (if supported)
+        if ('vibrate' in navigator) {
+          navigator.vibrate(100);
+        }
+
+        // Show success toast
+        toast.success('更新しました', {
+          duration: 1500,
+          position: 'top-center',
+          style: {
+            background: 'var(--color-primary-green)',
+            color: 'white',
+            fontSize: '16px',
+            fontWeight: 'bold',
+          },
+        });
+
+        // Navigate after a short delay
+        setTimeout(() => {
+          router.push('/record');
+        }, 500);
       } else {
         // Create new shot
         await addShot(currentShot as Partial<Shot>);
-        alert('ショットを保存しました！');
+
+        // Vibration feedback (if supported)
+        if ('vibrate' in navigator) {
+          navigator.vibrate(100);
+        }
+
+        // Show success toast
+        toast.success('保存しました', {
+          duration: 1500,
+          position: 'top-center',
+          style: {
+            background: 'var(--color-primary-green)',
+            color: 'white',
+            fontSize: '16px',
+            fontWeight: 'bold',
+          },
+        });
 
         // Reset current shot with current location data
         setCurrentShot({
@@ -524,11 +563,17 @@ function RecordContent() {
           manualLocation: currentShot.manualLocation,
         });
 
-        setStep(1);
+        // Navigate back to first step after a short delay
+        setTimeout(() => {
+          setStep(1);
+        }, 500);
       }
     } catch (error) {
       console.error('保存失敗:', error);
-      alert(`保存に失敗しました: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      toast.error(`保存に失敗しました: ${error instanceof Error ? error.message : 'Unknown error'}`, {
+        duration: 3000,
+        position: 'top-center',
+      });
     } finally {
       setIsSaving(false);
     }
