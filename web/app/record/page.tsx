@@ -492,15 +492,16 @@ function RecordContent() {
 
   const handleSave = async () => {
     setIsSaving(true);
+
+    // Vibration feedback immediately (before async operations)
+    if ('vibrate' in navigator) {
+      navigator.vibrate(100);
+    }
+
     try {
       if (editId) {
         // Update existing shot
         await updateShot(parseInt(editId), currentShot as Partial<Shot>);
-
-        // Vibration feedback (if supported)
-        if ('vibrate' in navigator) {
-          navigator.vibrate(100);
-        }
 
         // Show success toast
         toast.success('更新しました', {
@@ -521,11 +522,6 @@ function RecordContent() {
       } else {
         // Create new shot
         await addShot(currentShot as Partial<Shot>);
-
-        // Vibration feedback (if supported)
-        if ('vibrate' in navigator) {
-          navigator.vibrate(100);
-        }
 
         // Show success toast
         toast.success('保存しました', {
