@@ -77,21 +77,6 @@ export default function DashboardPage() {
   return (
     <Layout>
       <div className="p-6">
-        {/* App title */}
-        <div className="text-center mb-8 mt-8">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src="/logo_top.svg"
-            alt="上手くなる気がするぅぅぅ PRO"
-            className="mx-auto mb-4"
-            style={{ maxWidth: "100%", height: "auto" }}
-          />
-          <p className="text-base text-[var(--color-neutral-900)] mt-2">
-            本気で自己ベスト更新を狙う人のための<br />
-            ゆるい名前の科学的ゴルフ上達アプリ
-          </p>
-        </div>
-
         {/* Quick action buttons */}
         <div className="space-y-4">
           <button
@@ -124,23 +109,13 @@ export default function DashboardPage() {
 
         {/* Getting started guide */}
         <div className="mt-8 bg-[var(--color-info-bg)] rounded-lg border border-[var(--color-info-border)] p-6">
-          <h2 className="text-lg font-bold text-[var(--color-info-text)] mb-4 flex items-center gap-2">
+          <h2 className="text-xl font-bold text-[var(--color-info-text)] mb-4 flex items-center gap-2">
             <Icon category="ui" name="settings" size={24} />
-            まずは入力設定をしましょう
+            まずは設定をしましょう
           </h2>
           <p className="text-sm text-[var(--color-info-text)] mb-4 text-justify">
             あなたのレベルに合わせて、入力する項目をカスタマイズできます。
           </p>
-
-          {/* Club settings button */}
-          <Button
-            variant="primary"
-            onClick={() => router.push('/settings')}
-            size="md"
-            className="w-full mb-4"
-          >
-            クラブ設定を変更する
-          </Button>
 
           {/* Level comparison table */}
           <div className="space-y-3 mb-4">

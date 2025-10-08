@@ -48,7 +48,8 @@ export default function LandingPage() {
               priority
             />
             <p className="text-base text-[var(--color-neutral-900)] mb-8">
-              本気で自己ベスト更新を狙う人のための<br />
+              本気で自己ベスト更新を狙う人のための
+              <br />
               ゆるい名前の科学的ゴルフ上達アプリ
             </p>
           </div>
@@ -61,16 +62,16 @@ export default function LandingPage() {
 
             <Button
               variant="primary"
-              onClick={() => router.push('/auth/signin')}
-              className="w-full py-4 text-lg font-semibold bg-[var(--color-primary-green)] hover:bg-green-700"
+              onClick={() => router.push("/auth/signin")}
+              className="w-full py-4 text-lg font-semibold bg-[var(--color-primary-green)] hover:bg-[var(--color-primary-dark)]"
             >
               ログイン
             </Button>
 
             <Button
               variant="outline"
-              onClick={() => router.push('/auth/signup')}
-              className="w-full py-4 text-lg font-semibold border-2 border-[var(--color-primary-green)] text-[var(--color-primary-green)] hover:bg-green-50"
+              onClick={() => router.push("/auth/signup")}
+              className="w-full py-4 text-lg font-semibold border-2 border-[var(--color-primary-green)] text-[var(--color-primary-green)] hover:bg-white"
             >
               新規登録
             </Button>
@@ -79,16 +80,37 @@ export default function LandingPage() {
           {/* Features */}
           <div className="mt-8 space-y-2">
             <div className="flex items-center gap-3 bg-[var(--color-card-bg)] rounded-lg p-4 shadow-sm">
-              <Icon category="ui" name="settings" size={24} className="flex-shrink-0 text-[var(--color-primary-green)]" />
-              <p className="text-base font-semibold text-[var(--color-neutral-900)]">ジャイロセンサーで傾斜を自動測定</p>
+              <Icon
+                category="ui"
+                name="settings"
+                size={24}
+                className="flex-shrink-0 text-[var(--color-primary-green)]"
+              />
+              <p className="text-base font-semibold text-[var(--color-neutral-900)]">
+                ジャイロセンサーで傾斜を自動測定
+              </p>
             </div>
             <div className="flex items-center gap-3 bg-[var(--color-card-bg)] rounded-lg p-4 shadow-sm">
-              <Icon category="ui" name="analysis" size={24} className="flex-shrink-0 text-[var(--color-primary-green)]" />
-              <p className="text-base font-semibold text-[var(--color-neutral-900)]">クラブ別の詳細なショット分析</p>
+              <Icon
+                category="ui"
+                name="analysis"
+                size={24}
+                className="flex-shrink-0 text-[var(--color-primary-green)]"
+              />
+              <p className="text-base font-semibold text-[var(--color-neutral-900)]">
+                クラブ別の詳細なショット分析
+              </p>
             </div>
             <div className="flex items-center gap-3 bg-[var(--color-card-bg)] rounded-lg p-4 shadow-sm">
-              <Icon category="ui" name="check" size={24} className="flex-shrink-0 text-[var(--color-primary-green)]" />
-              <p className="text-base font-semibold text-[var(--color-neutral-900)]">オフラインでも使える安心設計</p>
+              <Icon
+                category="ui"
+                name="check"
+                size={24}
+                className="flex-shrink-0 text-[var(--color-primary-green)]"
+              />
+              <p className="text-base font-semibold text-[var(--color-neutral-900)]">
+                オフラインでも使える安心設計
+              </p>
             </div>
           </div>
         </div>
