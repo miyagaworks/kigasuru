@@ -31,7 +31,7 @@ function AnalysisContent() {
   const [stats, setStats] = useState<Statistics | null>(null);
   const [clubs, setClubs] = useState(DEFAULT_CLUBS);
   const [golfCourses, setGolfCourses] = useState<string[]>([]);
-  const [scatterRange, setScatterRange] = useState(30); // 30yd or 70yd
+  const [scatterRange, setScatterRange] = useState(30); // 30yd or 70Yd
   const [enabledFields, setEnabledFields] = useState({
     slope: true,
     lie: true,
@@ -793,81 +793,87 @@ function AnalysisContent() {
                     className={`px-3 py-1.5 text-xs font-medium rounded transition-colors ${
                       scatterRange === 30
                         ? 'bg-[var(--color-primary-green)] text-white'
-                        : 'text-[var(--color-neutral-700)] hover:bg-[var(--color-neutral-200)]'
+                        : 'text-[var(--color-neutral-900)] hover:bg-[var(--color-neutral-200)]'
                     }`}
                   >
-                    拡大 (30yd)
+                    拡大 (30Yd)
                   </button>
                   <button
                     onClick={() => setScatterRange(70)}
                     className={`px-3 py-1.5 text-xs font-medium rounded transition-colors ${
                       scatterRange === 70
                         ? 'bg-[var(--color-primary-green)] text-white'
-                        : 'text-[var(--color-neutral-700)] hover:bg-[var(--color-neutral-200)]'
+                        : 'text-[var(--color-neutral-900)] hover:bg-[var(--color-neutral-200)]'
                     }`}
                   >
-                    全体 (70yd)
+                    全体 (70Yd)
                   </button>
                 </div>
               </div>
               <div className="flex justify-center">
-                <svg width="400" height="400" viewBox="-50 -50 400 400">
-                  {/* Target circles - dynamic based on range */}
-                  {(() => {
-                    const center = 150;
-                    // 30yd view: 182px = 30yd (拡大表示)
-                    // 70yd view: 182px = 70yd (全体表示)
-                    const baseScale = scatterRange === 30 ? 182 / 30 : 182 / 70;
-                    const circles = scatterRange === 30
-                      ? [30, 20, 10]
-                      : [70, 60, 50, 40, 30, 20, 10];
-                    const colors = ['#e5e5e5', '#d4d4d4', '#a3a3a3', '#737373', '#525252', '#404040', '#262626'];
+                <svg
+                  width="300"
+                  height="300"
+                  viewBox="-34 -42 368 375"
+                  style={{ width: '100%', maxWidth: '300px', height: 'auto' }}
+                >
+                  {/* 円形の背景（円の内側のみ） */}
+                  <circle cx="150" cy="150" r="182" fill="var(--color-card-bg)" />
 
-                    return circles.map((yards, index) => (
-                      <circle
-                        key={yards}
-                        cx={center}
-                        cy={center}
-                        r={yards * baseScale}
-                        fill="none"
-                        stroke={colors[index] || '#737373'}
-                        strokeWidth="1"
-                      />
-                    ));
-                  })()}
-                  <circle cx="150" cy="150" r="8" fill="none" stroke="#525252" strokeWidth="2" />
+                  {scatterRange === 70 ? (
+                    <>
+                      {/* 70Yd表示: 同心円（10ヤード刻みで70ヤードまで） */}
+                      <circle cx="150" cy="150" r="26" fill="none" stroke="var(--color-neutral-300)" strokeWidth="1" opacity="0.5" />
+                      <circle cx="150" cy="150" r="52" fill="none" stroke="var(--color-neutral-300)" strokeWidth="1" opacity="0.5" />
+                      <circle cx="150" cy="150" r="78" fill="none" stroke="var(--color-neutral-300)" strokeWidth="1" opacity="0.5" />
+                      <circle cx="150" cy="150" r="104" fill="none" stroke="var(--color-neutral-300)" strokeWidth="1" opacity="0.5" />
+                      <circle cx="150" cy="150" r="130" fill="none" stroke="var(--color-neutral-300)" strokeWidth="1" opacity="0.5" />
+                      <circle cx="150" cy="150" r="156" fill="none" stroke="var(--color-neutral-300)" strokeWidth="1" opacity="0.5" />
+                      <circle cx="150" cy="150" r="182" fill="none" stroke="var(--color-neutral-400)" strokeWidth="2" />
+                    </>
+                  ) : (
+                    <>
+                      {/* 30Yd表示: 5ヤード刻みで30ヤードまで */}
+                      <circle cx="150" cy="150" r="30" fill="none" stroke="var(--color-neutral-300)" strokeWidth="1" opacity="0.5" />
+                      <circle cx="150" cy="150" r="61" fill="none" stroke="var(--color-neutral-300)" strokeWidth="1" opacity="0.5" />
+                      <circle cx="150" cy="150" r="91" fill="none" stroke="var(--color-neutral-300)" strokeWidth="1" opacity="0.5" />
+                      <circle cx="150" cy="150" r="121" fill="none" stroke="var(--color-neutral-300)" strokeWidth="1" opacity="0.5" />
+                      <circle cx="150" cy="150" r="152" fill="none" stroke="var(--color-neutral-300)" strokeWidth="1" opacity="0.5" />
+                      <circle cx="150" cy="150" r="182" fill="none" stroke="var(--color-neutral-400)" strokeWidth="2" />
+                    </>
+                  )}
 
-                  {/* Center crosshair */}
-                  <line x1="145" y1="150" x2="155" y2="150" stroke="#525252" strokeWidth="1" />
-                  <line x1="150" y1="145" x2="150" y2="155" stroke="#525252" strokeWidth="1" />
+                  {/* 十字線 */}
+                  <line x1="150" y1="-32" x2="150" y2="332" stroke="var(--color-neutral-300)" strokeWidth="1" opacity="0.3" />
+                  <line x1="-32" y1="150" x2="332" y2="150" stroke="var(--color-neutral-300)" strokeWidth="1" opacity="0.3" />
 
-                  {/* Distance labels - dynamic based on range */}
-                  {(() => {
-                    const center = 150;
-                    const baseScale = scatterRange === 30 ? 182 / 30 : 182 / 70;
-                    const labels = scatterRange === 30
-                      ? [30, 20, 10]
-                      : [70, 60, 50, 40, 30, 20, 10];
+                  {/* 中心のターゲット（赤い丸） */}
+                  <circle cx="150" cy="150" r="8" fill="#b31630" />
 
-                    return labels.map((yards) => (
-                      <text
-                        key={yards}
-                        x={center}
-                        y={center - (yards * baseScale) + 8}
-                        textAnchor="middle"
-                        fontSize="12"
-                        fill="#737373"
-                      >
-                        {yards}yd
-                      </text>
-                    ));
-                  })()}
+                  {/* 距離ラベル（上が飛球方向） */}
+                  {scatterRange === 70 ? (
+                    <>
+                      <text x="150" y="128" textAnchor="middle" fontSize="12" fill="var(--color-neutral-600)" stroke="var(--color-card-bg)" strokeWidth="3" paintOrder="stroke">10Yd</text>
+                      <text x="150" y="102" textAnchor="middle" fontSize="12" fill="var(--color-neutral-600)" stroke="var(--color-card-bg)" strokeWidth="3" paintOrder="stroke">20Yd</text>
+                      <text x="150" y="76" textAnchor="middle" fontSize="12" fill="var(--color-neutral-600)" stroke="var(--color-card-bg)" strokeWidth="3" paintOrder="stroke">30Yd</text>
+                      <text x="150" y="50" textAnchor="middle" fontSize="12" fill="var(--color-neutral-600)" stroke="var(--color-card-bg)" strokeWidth="3" paintOrder="stroke">40Yd</text>
+                      <text x="150" y="24" textAnchor="middle" fontSize="12" fill="var(--color-neutral-600)" stroke="var(--color-card-bg)" strokeWidth="3" paintOrder="stroke">50Yd</text>
+                      <text x="150" y="-2" textAnchor="middle" fontSize="12" fill="var(--color-neutral-600)" stroke="var(--color-card-bg)" strokeWidth="3" paintOrder="stroke">60Yd</text>
+                      <text x="150" y="-28" textAnchor="middle" fontSize="12" fill="var(--color-neutral-600)" stroke="var(--color-card-bg)" strokeWidth="3" paintOrder="stroke">70Yd</text>
+                    </>
+                  ) : (
+                    <>
+                      <text x="150" y="124" textAnchor="middle" fontSize="12" fill="var(--color-neutral-600)" stroke="var(--color-card-bg)" strokeWidth="3" paintOrder="stroke">5Yd</text>
+                      <text x="150" y="93" textAnchor="middle" fontSize="12" fill="var(--color-neutral-600)" stroke="var(--color-card-bg)" strokeWidth="3" paintOrder="stroke">10Yd</text>
+                      <text x="150" y="63" textAnchor="middle" fontSize="12" fill="var(--color-neutral-600)" stroke="var(--color-card-bg)" strokeWidth="3" paintOrder="stroke">15Yd</text>
+                      <text x="150" y="32" textAnchor="middle" fontSize="12" fill="var(--color-neutral-600)" stroke="var(--color-card-bg)" strokeWidth="3" paintOrder="stroke">20Yd</text>
+                      <text x="150" y="2" textAnchor="middle" fontSize="12" fill="var(--color-neutral-600)" stroke="var(--color-card-bg)" strokeWidth="3" paintOrder="stroke">25Yd</text>
+                      <text x="150" y="-28" textAnchor="middle" fontSize="12" fill="var(--color-neutral-600)" stroke="var(--color-card-bg)" strokeWidth="3" paintOrder="stroke">30Yd</text>
+                    </>
+                  )}
 
                   {/* Plot shot results */}
                   {(() => {
-                    const center = 150;
-                    const baseScale = scatterRange === 30 ? 182 / 30 : 182 / 70;
-
                     // 通常のショット（位置記録があるもの）
                     const normalShots = stats.shots.filter((shot): shot is Shot & { result: { x: number; y: number } } => {
                       if (!shot.result || typeof shot.result !== 'object' || shot.result.x === undefined) {
@@ -879,25 +885,21 @@ function AnalysisContent() {
                       return true;
                     });
 
-                    return (
-                      <>
-                        {/* 通常のショットを緑の点で表示 */}
-                        {normalShots.map((shot, index) => {
-                          const plotX = center + (shot.result.x * baseScale);
-                          const plotY = center - (shot.result.y * baseScale);
-                          return (
-                            <circle
-                              key={`normal-${shot.id || index}`}
-                              cx={plotX}
-                              cy={plotY}
-                              r="3"
-                              fill="var(--color-primary-green)"
-                              opacity="0.7"
-                            />
-                          );
-                        })}
-                      </>
-                    );
+                    return normalShots.map((shot, index) => {
+                      const scale = scatterRange === 70 ? 182 / 70 : 182 / 30;
+                      const plotX = 150 + (shot.result.x * scale);
+                      const plotY = 150 - (shot.result.y * scale);
+                      return (
+                        <circle
+                          key={`normal-${shot.id || index}`}
+                          cx={plotX}
+                          cy={plotY}
+                          r="6"
+                          fill="var(--color-primary-green)"
+                          opacity="0.7"
+                        />
+                      );
+                    });
                   })()}
                 </svg>
               </div>
@@ -959,7 +961,7 @@ function AnalysisContent() {
                           <div className="flex justify-between items-start mb-2">
                             <div>
                               <span className="font-bold text-[var(--color-neutral-900)]">{shot.club}</span>
-                              <span className="text-sm text-[var(--color-neutral-600)] ml-2">{shot.distance}yd</span>
+                              <span className="text-sm text-[var(--color-neutral-600)] ml-2">{shot.distance}Yd</span>
                             </div>
                             <span className="text-xs text-[var(--color-neutral-500)]">
                               {new Date(shot.date).toLocaleDateString('ja-JP', { month: 'short', day: 'numeric' })}

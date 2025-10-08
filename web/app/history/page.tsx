@@ -230,7 +230,7 @@ export default function RoundHistoryPage() {
                           <p className="text-2xl font-bold text-[var(--color-primary-green)]">
                             {shot.distance}
                             <span className="text-sm font-normal text-[var(--color-neutral-600)] ml-1">
-                              yd
+                              Yd
                             </span>
                           </p>
                         </div>

@@ -166,7 +166,7 @@ const calculatePositionFromEvent = (svg: SVGSVGElement, clientX: number, clientY
   const yardsX = (relX / 182) * 70;
   const yardsY = -(relY / 182) * 70; // 上がプラス（飛球方向）
 
-  // 70yd以内のみ
+  // 70Yd以内のみ
   const distance = Math.sqrt(yardsX * yardsX + yardsY * yardsY);
   if (distance <= 70) {
     return { x: yardsX, y: yardsY };
@@ -1278,13 +1278,13 @@ function RecordContent() {
                 )}
 
                 {/* 距離ラベル（上が飛球方向） */}
-                <text x="150" y="128" textAnchor="middle" fontSize="12" fill="var(--color-neutral-600)">10yd</text>
-                <text x="150" y="102" textAnchor="middle" fontSize="12" fill="var(--color-neutral-600)">20yd</text>
-                <text x="150" y="76" textAnchor="middle" fontSize="12" fill="var(--color-neutral-600)">30yd</text>
-                <text x="150" y="50" textAnchor="middle" fontSize="12" fill="var(--color-neutral-600)">40yd</text>
-                <text x="150" y="24" textAnchor="middle" fontSize="12" fill="var(--color-neutral-600)">50yd</text>
-                <text x="150" y="-2" textAnchor="middle" fontSize="12" fill="var(--color-neutral-600)">60yd</text>
-                <text x="150" y="-28" textAnchor="middle" fontSize="12" fill="var(--color-neutral-600)">70yd</text>
+                <text x="150" y="128" textAnchor="middle" fontSize="12" fill="var(--color-neutral-600)" stroke="var(--color-card-bg)" strokeWidth="3" paintOrder="stroke">10Yd</text>
+                <text x="150" y="102" textAnchor="middle" fontSize="12" fill="var(--color-neutral-600)" stroke="var(--color-card-bg)" strokeWidth="3" paintOrder="stroke">20Yd</text>
+                <text x="150" y="76" textAnchor="middle" fontSize="12" fill="var(--color-neutral-600)" stroke="var(--color-card-bg)" strokeWidth="3" paintOrder="stroke">30Yd</text>
+                <text x="150" y="50" textAnchor="middle" fontSize="12" fill="var(--color-neutral-600)" stroke="var(--color-card-bg)" strokeWidth="3" paintOrder="stroke">40Yd</text>
+                <text x="150" y="24" textAnchor="middle" fontSize="12" fill="var(--color-neutral-600)" stroke="var(--color-card-bg)" strokeWidth="3" paintOrder="stroke">50Yd</text>
+                <text x="150" y="-2" textAnchor="middle" fontSize="12" fill="var(--color-neutral-600)" stroke="var(--color-card-bg)" strokeWidth="3" paintOrder="stroke">60Yd</text>
+                <text x="150" y="-28" textAnchor="middle" fontSize="12" fill="var(--color-neutral-600)" stroke="var(--color-card-bg)" strokeWidth="3" paintOrder="stroke">70Yd</text>
               </svg>
 
               {/* 選択位置の表示と取り消しボタン */}
@@ -1309,7 +1309,7 @@ function RecordContent() {
             {/* ミスショット選択肢 - resultが未設定の場合のみ表示 */}
             {!currentShot.result && (
             <div className="mt-6">
-              <h3 className="text-base font-bold mb-3">ミスショット（70yd以外の場合）</h3>
+              <h3 className="text-base font-bold mb-3">ミスショット（70Yd以外の場合）</h3>
               <div className="grid grid-cols-3 gap-2">
                 {[
                   { key: 'top', label: 'トップ' },
