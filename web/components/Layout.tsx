@@ -197,7 +197,7 @@ export const Layout: React.FC<LayoutProps> = ({ children, showNav = true }) => {
       )}
 
       {/* Main content area */}
-      <main className="pb-20" style={{ WebkitOverflowScrolling: 'touch' }}>
+      <main className="pb-24" style={{ WebkitOverflowScrolling: 'touch' }}>
         {children}
       </main>
 

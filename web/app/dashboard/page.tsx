@@ -96,28 +96,28 @@ export default function DashboardPage() {
         <div className="space-y-4">
           <button
             onClick={() => router.push("/record")}
-            className="w-full flex items-center justify-center gap-4 rounded-xl px-8 py-5 text-lg min-h-[64px] font-semibold transition-all duration-200 active:scale-98 shadow-lg bg-gradient-to-br from-primary-green to-primary-light text-white hover:shadow-xl hover:scale-[1.02]"
+            className="w-full flex items-center justify-center gap-3 rounded-xl px-6 py-4 text-base min-h-[56px] font-semibold transition-all duration-200 active:scale-98 shadow-lg bg-gradient-to-br from-primary-green to-primary-light text-white hover:shadow-xl hover:scale-[1.02]"
           >
             <Icon
               category="ui"
               name="record"
-              size={36}
+              size={28}
               style={{ filter: "brightness(0) invert(1)" }}
             />
-            <span className="text-xl font-bold">ショット記録</span>
+            <span className="text-lg font-bold">ショット記録</span>
           </button>
 
           <button
             onClick={() => router.push("/analysis")}
-            className="w-full flex items-center justify-center gap-4 rounded-xl px-8 py-5 text-lg min-h-[64px] font-semibold transition-all duration-200 active:scale-98 shadow-lg bg-gradient-to-br from-secondary-blue to-blue-600 text-white hover:shadow-xl hover:scale-[1.02]"
+            className="w-full flex items-center justify-center gap-3 rounded-xl px-6 py-4 text-base min-h-[56px] font-semibold transition-all duration-200 active:scale-98 shadow-lg bg-gradient-to-br from-secondary-blue to-blue-600 text-white hover:shadow-xl hover:scale-[1.02]"
           >
             <Icon
               category="ui"
               name="analysis"
-              size={36}
+              size={28}
               style={{ filter: "brightness(0) invert(1)" }}
             />
-            <span className="text-xl font-bold">データ分析</span>
+            <span className="text-lg font-bold">データ分析</span>
           </button>
         </div>
 
@@ -131,6 +131,16 @@ export default function DashboardPage() {
           <p className="text-sm text-[var(--color-info-text)] mb-4 text-justify">
             あなたのレベルに合わせて、入力する項目をカスタマイズできます。
           </p>
+
+          {/* Club settings button */}
+          <Button
+            variant="primary"
+            onClick={() => router.push('/settings')}
+            size="md"
+            className="w-full mb-4"
+          >
+            クラブ設定を変更する
+          </Button>
 
           {/* Level comparison table */}
           <div className="space-y-3 mb-4">

@@ -661,13 +661,13 @@ function RecordContent() {
                     <g key={slope}>
                       <path
                         d={pathData}
-                        fill={isActive ? 'var(--color-primary-green)' : isHovered ? 'var(--color-primary-light)' : 'var(--color-card-bg)'}
+                        fill={isActive || isHovered ? 'var(--color-primary-green)' : 'var(--color-card-bg)'}
                         opacity={isActive || isHovered ? '1' : '0.5'}
-                        stroke={isActive ? 'var(--color-primary-green)' : isHovered ? 'var(--color-primary-green)' : 'var(--color-primary-dark)'}
-                        strokeWidth={isActive ? '4' : isHovered ? '3' : '2'}
+                        stroke={isActive || isHovered ? 'var(--color-primary-green)' : 'var(--color-primary-dark)'}
+                        strokeWidth={isActive || isHovered ? '4' : '2'}
                         className="cursor-pointer hover:opacity-100"
                         style={{
-                          filter: isActive ? 'drop-shadow(0 0 8px rgba(40, 99, 0, 0.8))' : isHovered ? 'drop-shadow(0 0 4px rgba(40, 99, 0, 0.5))' : 'none',
+                          filter: isActive || isHovered ? 'drop-shadow(0 0 8px rgba(40, 99, 0, 0.8))' : 'none',
                           transition: 'fill 0.15s ease, opacity 0.15s ease, stroke 0.15s ease, stroke-width 0.15s ease, filter 0.15s ease',
                         }}
                         onClick={() => {
@@ -685,37 +685,20 @@ function RecordContent() {
                   cy="150"
                   r="45"
                   fill={
-                    currentShot.slope === 'flat'
+                    currentShot.slope === 'flat' || (gyro.enabled && debouncedSlope === 'flat')
                       ? 'var(--color-primary-green)'
-                      : (gyro.enabled && debouncedSlope === 'flat' && currentShot.slope !== 'flat')
-                        ? 'var(--color-primary-light)'
-                        : 'var(--color-card-bg)'
+                      : 'var(--color-card-bg)'
                   }
                   opacity={
-                    currentShot.slope === 'flat' || (gyro.enabled && debouncedSlope === 'flat' && currentShot.slope !== 'flat')
+                    currentShot.slope === 'flat' || (gyro.enabled && debouncedSlope === 'flat')
                       ? '1'
                       : '0.5'
                   }
-                  stroke={
-                    currentShot.slope === 'flat' || (gyro.enabled && debouncedSlope === 'flat' && currentShot.slope !== 'flat')
-                      ? 'var(--color-primary-green)'
-                      : 'var(--color-primary-dark)'
-                  }
-                  strokeWidth={
-                    currentShot.slope === 'flat'
-                      ? '4'
-                      : (gyro.enabled && debouncedSlope === 'flat' && currentShot.slope !== 'flat')
-                        ? '3'
-                        : '2'
-                  }
+                  stroke="var(--color-primary-dark)"
+                  strokeWidth="2"
                   className="cursor-pointer hover:opacity-100"
                   style={{
-                    filter:
-                      currentShot.slope === 'flat'
-                        ? 'drop-shadow(0 0 8px rgba(40, 99, 0, 0.8))'
-                        : (gyro.enabled && debouncedSlope === 'flat' && currentShot.slope !== 'flat')
-                          ? 'drop-shadow(0 0 4px rgba(40, 99, 0, 0.5))'
-                          : 'none',
+                    filter: 'none',
                     transition: 'fill 0.15s ease, opacity 0.15s ease, stroke 0.15s ease, stroke-width 0.15s ease, filter 0.15s ease',
                   }}
                   onClick={() => {
@@ -731,7 +714,7 @@ function RecordContent() {
                   textAnchor="middle"
                   dominantBaseline="middle"
                   fill={
-                    currentShot.slope === 'flat' || (gyro.enabled && debouncedSlope === 'flat' && currentShot.slope !== 'flat')
+                    currentShot.slope === 'flat' || (gyro.enabled && debouncedSlope === 'flat')
                       ? 'white'
                       : '#212121'
                   }

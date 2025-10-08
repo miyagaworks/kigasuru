@@ -19,8 +19,8 @@ export const Navigation: React.FC = () => {
   ];
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 bg-[var(--color-bg-menu)] border-t border-[var(--color-neutral-300)] shadow-lg">
-      <div className="flex justify-around items-center h-16">
+    <nav className="fixed bottom-0 left-0 right-0 bg-[var(--color-bg-menu)] border-t border-[var(--color-neutral-300)] shadow-lg pb-safe">
+      <div className="flex justify-around items-center h-16 pb-2">
         {navItems.map(({ path, icon, label }) => {
           const isActive = pathname === path;
           return (
