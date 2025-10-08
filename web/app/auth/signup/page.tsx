@@ -74,9 +74,10 @@ export default function SignUpPage() {
 
     try {
       // サインアップページからのGoogle認証
-      // callbackUrlにsignupパラメータを追加
+      // 特別なcallbackURLを使用して新規登録を許可
       await signIn(provider, {
-        callbackUrl: '/dashboard?from=signup',
+        callbackUrl: '/dashboard',
+        redirect: true,
       });
     } catch {
       setError('Google登録に失敗しました');

@@ -194,15 +194,77 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
             return true;
           }
 
-          // 新規ユーザーの場合 - ログインページからの場合は拒否
-          // 新規登録はsignupページからのみ許可
+          // 新規ユーザーの場合 - Google認証で新規ユーザー作成
           if (provider === 'google') {
-            // ログインページからの新規ユーザーは拒否
-            // エラーメッセージとともにエラーページへリダイレクト
-            return `/auth/error?error=UNREGISTERED_USER`;
+            try {
+              const now = new Date();
+              const trialEndsAt = new Date(now);
+              trialEndsAt.setDate(trialEndsAt.getDate() + 7); // 7日間の無料トライアル
+
+              if (!user?.email) {
+                console.error('Google authentication requires email');
+                return false;
+              }
+              const email = user.email.toLowerCase();
+
+              const newUser = await prisma.user.create({
+                data: {
+                  name: user.name || email.split('@')[0],
+                  email: email,
+                  password: null,
+                  subscriptionStatus: 'trial',
+                  trialEndsAt,
+                  emailVerified: new Date(),
+                  image: (profile as OAuthProfile)?.picture || null,
+                },
+              });
+
+              await prisma.account.create({
+                data: {
+                  userId: newUser.id,
+                  type: 'oauth',
+                  provider: provider,
+                  providerAccountId: (profile?.sub || user.id) as string,
+                  access_token: account.access_token || '',
+                  token_type: account.token_type || 'bearer',
+                  id_token: account.id_token || undefined,
+                  scope: account.scope || undefined,
+                  expires_at: account.expires_at || undefined,
+                  refresh_token: account.refresh_token || undefined,
+                },
+              });
+
+              // デフォルト設定を作成
+              await prisma.userSettings.create({
+                data: {
+                  userId: newUser.id,
+                  enabledFields: {
+                    slope: true,
+                    lie: true,
+                    club: true,
+                    strength: true,
+                    wind: true,
+                    temperature: true,
+                    feeling: true,
+                    memo: true,
+                  },
+                  clubs: ['DR', '3W', '5W', '7W', 'U4', 'U5', '5I', '6I', '7I', '8I', '9I', 'PW', '50', '52', '54', '56', '58'],
+                },
+              });
+
+              user.id = newUser.id;
+              user.name = newUser.name || user.name;
+              user.email = newUser.email || email;
+              user.image = newUser.image;
+
+              return true;
+            } catch (createError) {
+              console.error('新規ユーザー作成エラー:', createError);
+              throw new Error('アカウントの作成中にエラーが発生しました');
+            }
           }
 
-          return false;
+          return true;
         }
 
         return true;
