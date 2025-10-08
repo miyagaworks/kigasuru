@@ -34,7 +34,7 @@ declare module '@auth/core/jwt' {
   }
 }
 
-export const { handlers, auth, signIn, signOut } = NextAuth((request) => ({
+export const { handlers, auth, signIn, signOut } = NextAuth({
   secret: process.env.NEXTAUTH_SECRET,
   trustHost: true,
   session: {
@@ -92,12 +92,18 @@ export const { handlers, auth, signIn, signOut } = NextAuth((request) => ({
   },
   callbacks: {
     async redirect({ url, baseUrl }) {
+      // エラーページへのリダイレクトを許可
       if (url.includes('/auth/error')) {
         return url;
       }
 
+      // 相対URLの処理
       if (url.startsWith('/')) return `${baseUrl}${url}`;
+
+      // 同一オリジンのURLを許可
       if (new URL(url).origin === baseUrl) return url;
+
+      // その他はベースURLへ
       return baseUrl;
     },
 
@@ -188,85 +194,15 @@ export const { handlers, auth, signIn, signOut } = NextAuth((request) => ({
             return true;
           }
 
-          // 新規ユーザーの場合 - サインアップフローかチェック
-          const authFlow = request?.cookies?.get('auth_flow')?.value;
-
-          if (authFlow !== 'signup') {
-            // サインインページからの未登録ユーザーは拒否
-            return '/auth/error?error=UNREGISTERED_USER';
-          }
-
-          // サインアップフローの場合は続行して新規ユーザーを作成
+          // 新規ユーザーの場合 - ログインページからの場合は拒否
+          // 新規登録はsignupページからのみ許可
           if (provider === 'google') {
-            try {
-              const now = new Date();
-              const trialEndsAt = new Date(now);
-              trialEndsAt.setDate(trialEndsAt.getDate() + 7); // 7日間の無料トライアル
-
-              if (!user?.email) {
-                console.error('Google authentication requires email');
-                return false;
-              }
-              const email = user.email.toLowerCase();
-
-              const newUser = await prisma.user.create({
-                data: {
-                  name: user.name || email.split('@')[0],
-                  email: email,
-                  password: null,
-                  subscriptionStatus: 'trial',
-                  trialEndsAt,
-                  emailVerified: new Date(),
-                  image: (profile as OAuthProfile)?.picture || null,
-                },
-              });
-
-              await prisma.account.create({
-                data: {
-                  userId: newUser.id,
-                  type: 'oauth',
-                  provider: provider,
-                  providerAccountId: (profile?.sub || user.id) as string,
-                  access_token: account.access_token || '',
-                  token_type: account.token_type || 'bearer',
-                  id_token: account.id_token || undefined,
-                  scope: account.scope || undefined,
-                  expires_at: account.expires_at || undefined,
-                  refresh_token: account.refresh_token || undefined,
-                },
-              });
-
-              // デフォルト設定を作成
-              await prisma.userSettings.create({
-                data: {
-                  userId: newUser.id,
-                  enabledFields: {
-                    slope: true,
-                    lie: true,
-                    club: true,
-                    strength: true,
-                    wind: true,
-                    temperature: true,
-                    feeling: true,
-                    memo: true,
-                  },
-                  clubs: ['DR', '3W', '5W', '7W', 'U4', 'U5', '5I', '6I', '7I', '8I', '9I', 'PW', '50', '52', '54', '56', '58'],
-                },
-              });
-
-              user.id = newUser.id;
-              user.name = newUser.name || user.name;
-              user.email = newUser.email || email;
-              user.image = newUser.image;
-
-              return true;
-            } catch (createError) {
-              console.error('新規ユーザー作成エラー:', createError);
-              throw new Error('アカウントの作成中にエラーが発生しました');
-            }
+            // ログインページからの新規ユーザーは拒否
+            // エラーメッセージとともにエラーページへリダイレクト
+            return `/auth/error?error=UNREGISTERED_USER`;
           }
 
-          return true;
+          return false;
         }
 
         return true;
@@ -336,4 +272,4 @@ export const { handlers, auth, signIn, signOut } = NextAuth((request) => ({
   },
   providers: authConfig.providers,
   debug: process.env.NODE_ENV === 'development',
-}));
+});

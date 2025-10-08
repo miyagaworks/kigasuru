@@ -99,7 +99,7 @@ function SignInForm() {
           // iOS PWA: Google認証をサポート
           // Google認証は通常のsignInを使用
           await signIn(provider, {
-            callbackUrl,
+            callbackUrl: `${callbackUrl}?from=signin`,
             redirect: true,
           });
           return;
@@ -146,7 +146,7 @@ function SignInForm() {
       } else {
         // 通常のブラウザモード: OAuth認証はプロバイダーページへの遷移が必要
         await signIn(provider, {
-          callbackUrl,
+          callbackUrl: `${callbackUrl}?from=signin`,
           redirect: true, // OAuthでは必ずtrueにする（プロバイダーページへ遷移）
         });
         // signInでredirect: trueの場合、この行には到達しない

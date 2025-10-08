@@ -73,24 +73,12 @@ export default function SignUpPage() {
     setLoading(true);
 
     try {
-      // サインアップフローであることを示すクッキーを設定
-      const response = await fetch('/api/auth/google-signup', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to prepare Google signup');
-      }
-
-      // Google認証を開始
+      // サインアップページからのGoogle認証
+      // callbackUrlにsignupパラメータを追加
       await signIn(provider, {
-        callbackUrl: '/dashboard',
+        callbackUrl: '/dashboard?from=signup',
       });
-    } catch (error) {
-      console.error('Google signup error:', error);
+    } catch {
       setError('Google登録に失敗しました');
       setLoading(false);
     }
