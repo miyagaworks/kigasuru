@@ -33,6 +33,8 @@ function AuthErrorContent() {
         return 'メールアドレスまたはパスワードが正しくありません。';
       case 'SessionRequired':
         return 'ログインが必要です。';
+      case 'UNREGISTERED_USER':
+        return 'このGoogleアカウントは登録されていません。新規登録ページから登録してください。';
       default:
         return '認証エラーが発生しました。もう一度お試しください。';
     }
@@ -63,14 +65,29 @@ function AuthErrorContent() {
 
 
           <div className="flex flex-col gap-3">
-            <Link href="/auth/signin" className="block">
-              <Button className="w-full h-12 bg-[var(--color-primary-green)] hover:bg-[var(--color-primary-dark)] text-white">ログインページに戻る</Button>
-            </Link>
-            <Link href="/" className="block">
-              <Button variant="outline" className="w-full h-12 border-[var(--color-neutral-400)] hover:bg-[var(--color-neutral-200)]">
-                トップページへ
-              </Button>
-            </Link>
+            {error === 'UNREGISTERED_USER' ? (
+              <>
+                <Link href="/auth/signup" className="block">
+                  <Button className="w-full h-12 bg-[var(--color-primary-green)] hover:bg-[var(--color-primary-dark)] text-white">新規登録ページへ</Button>
+                </Link>
+                <Link href="/auth/signin" className="block">
+                  <Button variant="outline" className="w-full h-12 border-[var(--color-neutral-400)] hover:bg-[var(--color-neutral-200)]">
+                    ログインページに戻る
+                  </Button>
+                </Link>
+              </>
+            ) : (
+              <>
+                <Link href="/auth/signin" className="block">
+                  <Button className="w-full h-12 bg-[var(--color-primary-green)] hover:bg-[var(--color-primary-dark)] text-white">ログインページに戻る</Button>
+                </Link>
+                <Link href="/" className="block">
+                  <Button variant="outline" className="w-full h-12 border-[var(--color-neutral-400)] hover:bg-[var(--color-neutral-200)]">
+                    トップページへ
+                  </Button>
+                </Link>
+              </>
+            )}
           </div>
         </div>
       </div>

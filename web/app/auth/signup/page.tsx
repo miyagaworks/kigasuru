@@ -72,14 +72,25 @@ export default function SignUpPage() {
     setError(null);
     setLoading(true);
 
-    // サインアップフローであることを示すクッキーを設定
-    document.cookie = 'is_signup_flow=true; path=/; max-age=600';
-
     try {
+      // サインアップフローであることを示すクッキーを設定
+      const response = await fetch('/api/auth/google-signup', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to prepare Google signup');
+      }
+
+      // Google認証を開始
       await signIn(provider, {
         callbackUrl: '/dashboard',
       });
-    } catch {
+    } catch (error) {
+      console.error('Google signup error:', error);
       setError('Google登録に失敗しました');
       setLoading(false);
     }

@@ -34,7 +34,7 @@ declare module '@auth/core/jwt' {
   }
 }
 
-export const { handlers, auth, signIn, signOut } = NextAuth({
+export const { handlers, auth, signIn, signOut } = NextAuth((request) => ({
   secret: process.env.NEXTAUTH_SECRET,
   trustHost: true,
   session: {
@@ -188,9 +188,15 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
             return true;
           }
 
-          // 新規ユーザーの場合 - Google認証で明示的にユーザーを作成
+          // 新規ユーザーの場合 - サインアップフローかチェック
+          const authFlow = request?.cookies?.get('auth_flow')?.value;
 
-          // Google認証の場合も明示的にユーザーを作成
+          if (authFlow !== 'signup') {
+            // サインインページからの未登録ユーザーは拒否
+            return '/auth/error?error=UNREGISTERED_USER';
+          }
+
+          // サインアップフローの場合は続行して新規ユーザーを作成
           if (provider === 'google') {
             try {
               const now = new Date();
@@ -330,4 +336,4 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   },
   providers: authConfig.providers,
   debug: process.env.NODE_ENV === 'development',
-});
+}));
