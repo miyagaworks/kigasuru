@@ -1,6 +1,6 @@
 # OAuth認証設定ガイド
 
-PWA環境でOAuth認証を動作させるために、以下の設定が必要です。
+PWA環境でGoogle OAuth認証を動作させるために、以下の設定が必要です。
 
 ## 1. Google OAuth設定
 
@@ -33,36 +33,7 @@ GOOGLE_CLIENT_SECRET=GOCSPX-<YOUR_GOOGLE_CLIENT_SECRET>
 
 ---
 
-## 2. LINE Login設定
-
-### LINE Developers Consoleでの設定
-
-1. [LINE Developers Console](https://developers.line.biz/console/) にアクセス
-2. チャネルを選択（または新規作成）
-3. **LINE Login** タブを選択
-4. **コールバックURL** に以下を**すべて**追加：
-
-```
-http://localhost:3000/api/auth/callback/line
-https://app.kigasuru.com/api/auth/callback/line
-https://kigasuru.vercel.app/api/auth/callback/line
-```
-
-### 追加設定
-
-- **リンクされたボット**: オプション（友だち追加キャンペーン用）
-- **スコープ**: `profile`, `openid`, `email`
-
-### Vercel環境変数
-
-```bash
-LINE_CHANNEL_ID=<YOUR_LINE_CHANNEL_ID>
-LINE_CHANNEL_SECRET=<YOUR_LINE_CHANNEL_SECRET>
-```
-
----
-
-## 3. Vercel環境変数の設定
+## 2. Vercel環境変数の設定
 
 Vercelダッシュボード → プロジェクト → **Settings** → **Environment Variables**
 
@@ -80,9 +51,6 @@ NEXT_PUBLIC_APP_URL=https://app.kigasuru.com
 GOOGLE_CLIENT_ID=<YOUR_GOOGLE_CLIENT_ID>.apps.googleusercontent.com
 GOOGLE_CLIENT_SECRET=GOCSPX-<YOUR_GOOGLE_CLIENT_SECRET>
 
-# LINE Login
-LINE_CHANNEL_ID=<YOUR_LINE_CHANNEL_ID>
-LINE_CHANNEL_SECRET=<YOUR_LINE_CHANNEL_SECRET>
 
 # Database
 DATABASE_URL=<YOUR_DATABASE_URL>
@@ -91,11 +59,11 @@ DIRECT_URL=<YOUR_DIRECT_DATABASE_URL>
 
 ---
 
-## 4. PWA OAuth認証フロー
+## 3. PWA OAuth認証フロー
 
 ### PWAモード（スタンドアロン）
 
-1. ユーザーがPWAアプリでLINE/Googleボタンをタップ
+1. ユーザーがPWAアプリでGoogleボタンをタップ
 2. **ポップアップウィンドウ**（500x600）が開く
 3. ポップアップでOAuth認証を実施
 4. 認証完了後、ポップアップが自動で閉じる
@@ -103,21 +71,21 @@ DIRECT_URL=<YOUR_DIRECT_DATABASE_URL>
 
 ### ブラウザモード
 
-1. ユーザーがLINE/Googleボタンをクリック
+1. ユーザーがGoogleボタンをクリック
 2. 同じウィンドウでOAuth認証画面に遷移
 3. 認証完了後、ダッシュボードに直接遷移
 
 ---
 
-## 5. トラブルシューティング
+## 4. トラブルシューティング
 
 ### エラー: "redirect_uri_mismatch"
 
 **原因**: コールバックURLが登録されていない
 
 **解決方法**:
-1. Google/LINE ConsoleでコールバックURLを確認
-2. `https://app.kigasuru.com/api/auth/callback/google` または `/line` が登録されているか確認
+1. Google Cloud ConsoleでコールバックURLを確認
+2. `https://app.kigasuru.com/api/auth/callback/google` が登録されているか確認
 3. URLが完全一致しているか確認（末尾のスラッシュに注意）
 
 ### エラー: "認証エラー"
@@ -127,7 +95,7 @@ DIRECT_URL=<YOUR_DIRECT_DATABASE_URL>
 **解決方法**:
 1. Vercelの環境変数を確認
 2. `NEXTAUTH_URL` が正しいドメインに設定されているか確認
-3. `GOOGLE_CLIENT_ID` / `LINE_CHANNEL_ID` が正しいか確認
+3. `GOOGLE_CLIENT_ID` が正しいか確認
 4. 再デプロイ（環境変数変更後は必須）
 
 ### PWAでポップアップが開かない
@@ -141,7 +109,7 @@ DIRECT_URL=<YOUR_DIRECT_DATABASE_URL>
 
 ---
 
-## 6. 確認手順
+## 5. 確認手順
 
 ### ステップ1: ローカル環境でテスト
 
@@ -150,26 +118,26 @@ npm run dev
 ```
 
 1. http://localhost:3000 にアクセス
-2. Google/LINEでログインを試す
+2. Googleでログインを試す
 3. 正常に動作することを確認
 
 ### ステップ2: 本番環境でテスト
 
 1. Vercelにデプロイ
 2. https://app.kigasuru.com にアクセス
-3. ブラウザでGoogle/LINEログインを試す
+3. ブラウザでGoogleログインを試す
 4. 正常に動作することを確認
 
 ### ステップ3: PWAでテスト
 
 1. https://app.kigasuru.com をPWAとしてインストール
 2. ホーム画面のアイコンから起動
-3. Google/LINEログインを試す
+3. Googleログインを試す
 4. ポップアップが開き、認証後に自動的にダッシュボードに遷移することを確認
 
 ---
 
-## 7. 注意事項
+## 6. 注意事項
 
 ### セキュリティ
 
@@ -203,7 +171,7 @@ export default {
 
 ## まとめ
 
-✅ Google Cloud ConsoleとLINE Developers Consoleで**コールバックURL**を追加
+✅ Google Cloud Consoleで**コールバックURL**を追加
 ✅ Vercelで**環境変数**を設定
 ✅ 再デプロイ
 ✅ ブラウザとPWA両方でテスト

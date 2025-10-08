@@ -108,7 +108,7 @@ self.addEventListener('fetch', (event) => {
   const { request } = event;
   const url = new URL(request.url);
 
-  // 外部リソース（Google、LINE、Stripe等）はキャッシュしない
+  // 外部リソース（Google、Stripe等）はキャッシュしない
   if (!url.origin.includes(self.location.origin)) {
     return;
   }
