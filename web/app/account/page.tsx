@@ -264,7 +264,7 @@ export default function AccountPage() {
                   value={formData.name}
                   onChange={handleChange}
                   disabled={isSaving}
-                  className="w-full px-4 py-2 border border-[var(--color-neutral-300)] rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--color-primary-green)] disabled:bg-[var(--color-neutral-100)] disabled:cursor-not-allowed"
+                  className="w-full px-4 py-2 border border-[var(--color-neutral-300)] rounded-lg bg-white text-[var(--color-neutral-900)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary-green)] disabled:opacity-50 disabled:cursor-not-allowed"
                   placeholder="名前を入力"
                 />
               </div>
@@ -278,7 +278,7 @@ export default function AccountPage() {
                   name="email"
                   value={formData.email}
                   disabled={true}
-                  className="w-full px-4 py-2 border border-[var(--color-neutral-300)] rounded-lg bg-[var(--color-neutral-100)] cursor-not-allowed"
+                  className="w-full px-4 py-2 border border-[var(--color-neutral-300)] rounded-lg bg-[var(--color-neutral-100)] text-[var(--color-neutral-600)] cursor-not-allowed"
                 />
                 <p className="text-xs text-[var(--color-neutral-500)] mt-1">
                   メールアドレスは変更できません
@@ -347,7 +347,7 @@ export default function AccountPage() {
                         setPasswordData((prev) => ({ ...prev, currentPassword: sanitized }));
                       }}
                       disabled={isChangingPassword}
-                      className="w-full px-4 py-2 pr-12 border border-[var(--color-neutral-300)] rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--color-primary-green)] disabled:bg-[var(--color-neutral-100)] disabled:cursor-not-allowed"
+                      className="w-full px-4 py-2 pr-12 border border-[var(--color-neutral-300)] rounded-lg bg-white text-[var(--color-neutral-900)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary-green)] disabled:opacity-50 disabled:cursor-not-allowed"
                       placeholder="現在のパスワードを入力"
                     />
                     <button
@@ -393,7 +393,7 @@ export default function AccountPage() {
                         setPasswordData((prev) => ({ ...prev, newPassword: sanitized }));
                       }}
                       disabled={isChangingPassword}
-                      className="w-full px-4 py-2 pr-12 border border-[var(--color-neutral-300)] rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--color-primary-green)] disabled:bg-[var(--color-neutral-100)] disabled:cursor-not-allowed"
+                      className="w-full px-4 py-2 pr-12 border border-[var(--color-neutral-300)] rounded-lg bg-white text-[var(--color-neutral-900)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary-green)] disabled:opacity-50 disabled:cursor-not-allowed"
                       placeholder="新しいパスワードを入力（8文字以上）"
                     />
                     <button
@@ -439,7 +439,7 @@ export default function AccountPage() {
                         setPasswordData((prev) => ({ ...prev, confirmPassword: sanitized }));
                       }}
                       disabled={isChangingPassword}
-                      className="w-full px-4 py-2 pr-12 border border-[var(--color-neutral-300)] rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--color-primary-green)] disabled:bg-[var(--color-neutral-100)] disabled:cursor-not-allowed"
+                      className="w-full px-4 py-2 pr-12 border border-[var(--color-neutral-300)] rounded-lg bg-white text-[var(--color-neutral-900)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary-green)] disabled:opacity-50 disabled:cursor-not-allowed"
                       placeholder="新しいパスワードを再入力"
                     />
                     <button
