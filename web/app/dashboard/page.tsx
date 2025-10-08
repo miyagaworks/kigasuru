@@ -5,8 +5,9 @@ import { useRouter } from 'next/navigation';
 import { Layout } from '@/components/Layout';
 import { Button } from '@/components/Button';
 import { Icon } from '@/components/Icon';
-import { getAllShots, getStatistics, type Shot } from '@/lib/db';
+import { getAllShots, getStatistics, type Shot, getSetting } from '@/lib/db';
 import { PwaInstallBanner } from '@/components/PwaInstallBanner';
+import { SettingsGuideModal } from '@/components/SettingsGuideModal';
 
 interface Statistics {
   count: number;
@@ -24,10 +25,12 @@ export default function DashboardPage() {
   const [stats, setStats] = useState<Statistics | null>(null);
   const [loading, setLoading] = useState(true);
   const [needsAdditionalAuth, setNeedsAdditionalAuth] = useState(false);
+  const [showSettingsGuide, setShowSettingsGuide] = useState(true);
 
   useEffect(() => {
     loadData();
     checkAuthStatus();
+    checkSettingsStatus();
   }, []);
 
   const loadData = async () => {
@@ -74,6 +77,39 @@ export default function DashboardPage() {
     }
   };
 
+  const checkSettingsStatus = async () => {
+    try {
+      // デフォルトクラブ設定
+      const DEFAULT_CLUBS = ['DR', '3W', '5W', '7W', 'U4', 'U5', '5I', '6I', '7I', '8I', '9I', 'PW', '50', '52', '54', '56', '58'];
+
+      // 入力レベルと入力フィールドを確認
+      const inputLevel = await getSetting('inputLevel');
+      const inputFields = await getSetting('inputFields');
+      const clubs = await getSetting('clubs');
+
+      // 設定がデフォルトから変更されているかチェック
+      const levelChanged = inputLevel && inputLevel !== 'advanced';
+      const fieldsChanged = inputFields && JSON.stringify(inputFields) !== JSON.stringify({
+        slope: true,
+        lie: true,
+        club: true,
+        strength: true,
+        wind: true,
+        temperature: true,
+        feeling: true,
+        memo: true,
+      });
+      const clubsChanged = clubs && JSON.stringify(clubs) !== JSON.stringify(DEFAULT_CLUBS);
+
+      // いずれかの設定が変更されていればガイドを非表示
+      if (levelChanged || fieldsChanged || clubsChanged) {
+        setShowSettingsGuide(false);
+      }
+    } catch (error) {
+      console.error('Failed to check settings status:', error);
+    }
+  };
+
   return (
     <Layout>
       <div className="p-6">
@@ -107,105 +143,6 @@ export default function DashboardPage() {
         </div>
 
 
-        {/* Getting started guide */}
-        <div className="mt-8 bg-[var(--color-info-bg)] rounded-lg border border-[var(--color-info-border)] p-6">
-          <h2 className="text-xl font-bold text-[var(--color-info-text)] mb-4 flex items-center gap-2">
-            <Icon category="ui" name="settings" size={24} />
-            まずは設定をしましょう
-          </h2>
-          <p className="text-sm text-[var(--color-info-text)] mb-4 text-justify">
-            あなたのレベルに合わせて、入力する項目をカスタマイズできます。
-          </p>
-
-          {/* Level comparison table */}
-          <div className="space-y-3 mb-4">
-            {/* Beginner */}
-            <div className="bg-white/50 rounded-lg p-3">
-              <div className="font-bold text-[var(--color-info-text)] mb-2 text-sm">
-                初心者
-              </div>
-              <div className="flex flex-wrap gap-2">
-                <span className="px-4 py-1.5 bg-[var(--color-primary-green)] text-white text-xs font-medium rounded-full whitespace-nowrap">
-                  傾斜
-                </span>
-                <span className="px-4 py-1.5 bg-[var(--color-primary-green)] text-white text-xs font-medium rounded-full whitespace-nowrap">
-                  クラブ
-                </span>
-                <span className="px-4 py-1.5 bg-[var(--color-primary-green)] text-white text-xs font-medium rounded-full whitespace-nowrap">
-                  結果
-                </span>
-              </div>
-            </div>
-
-            {/* Intermediate */}
-            <div className="bg-white/50 rounded-lg p-3">
-              <div className="font-bold text-[var(--color-info-text)] mb-2 text-sm">
-                中級者
-              </div>
-              <div className="flex flex-wrap gap-2">
-                <span className="px-4 py-1.5 bg-[var(--color-secondary-blue)] text-white text-xs font-medium rounded-full whitespace-nowrap">
-                  傾斜
-                </span>
-                <span className="px-4 py-1.5 bg-[var(--color-secondary-blue)] text-white text-xs font-medium rounded-full whitespace-nowrap">
-                  クラブ
-                </span>
-                <span className="px-4 py-1.5 bg-[var(--color-secondary-blue)] text-white text-xs font-medium rounded-full whitespace-nowrap">
-                  ライ
-                </span>
-                <span className="px-4 py-1.5 bg-[var(--color-secondary-blue)] text-white text-xs font-medium rounded-full whitespace-nowrap">
-                  強度
-                </span>
-                <span className="px-4 py-1.5 bg-[var(--color-secondary-blue)] text-white text-xs font-medium rounded-full whitespace-nowrap">
-                  結果
-                </span>
-              </div>
-            </div>
-
-            {/* Advanced */}
-            <div className="bg-white/50 rounded-lg p-3">
-              <div className="font-bold text-[var(--color-info-text)] mb-2 text-sm">
-                上級者
-              </div>
-              <div className="flex flex-wrap gap-2">
-                <span className="px-4 py-1.5 bg-[var(--color-neutral-700)] text-white text-xs font-medium rounded-full whitespace-nowrap">
-                  傾斜
-                </span>
-                <span className="px-4 py-1.5 bg-[var(--color-neutral-700)] text-white text-xs font-medium rounded-full whitespace-nowrap">
-                  クラブ
-                </span>
-                <span className="px-4 py-1.5 bg-[var(--color-neutral-700)] text-white text-xs font-medium rounded-full whitespace-nowrap">
-                  ライ
-                </span>
-                <span className="px-4 py-1.5 bg-[var(--color-neutral-700)] text-white text-xs font-medium rounded-full whitespace-nowrap">
-                  強度
-                </span>
-                <span className="px-4 py-1.5 bg-[var(--color-neutral-700)] text-white text-xs font-medium rounded-full whitespace-nowrap">
-                  風向き
-                </span>
-                <span className="px-4 py-1.5 bg-[var(--color-neutral-700)] text-white text-xs font-medium rounded-full whitespace-nowrap">
-                  気温
-                </span>
-                <span className="px-4 py-1.5 bg-[var(--color-neutral-700)] text-white text-xs font-medium rounded-full whitespace-nowrap">
-                  感触
-                </span>
-                <span className="px-4 py-1.5 bg-[var(--color-neutral-700)] text-white text-xs font-medium rounded-full whitespace-nowrap">
-                  メモ
-                </span>
-                <span className="px-4 py-1.5 bg-[var(--color-neutral-700)] text-white text-xs font-medium rounded-full whitespace-nowrap">
-                  結果
-                </span>
-              </div>
-            </div>
-          </div>
-
-          <Button
-            variant="primary"
-            onClick={() => router.push("/settings#input-settings")}
-            className="w-full bg-[var(--color-secondary-blue)] hover:bg-blue-700"
-          >
-            設定ページへ
-          </Button>
-        </div>
 
         {/* Statistics summary */}
         {!loading && stats && stats.count > 0 && (
@@ -250,6 +187,10 @@ export default function DashboardPage() {
         )}
       </div>
       <PwaInstallBanner needsAdditionalAuth={needsAdditionalAuth} />
+      <SettingsGuideModal
+        isOpen={showSettingsGuide}
+        onClose={() => setShowSettingsGuide(false)}
+      />
     </Layout>
   );
 };

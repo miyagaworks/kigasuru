@@ -20,7 +20,7 @@ export const Navigation: React.FC = () => {
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 bg-[var(--color-bg-menu)] border-t border-[var(--color-neutral-300)] shadow-lg pb-safe">
-      <div className="flex justify-around items-center h-16 pb-2">
+      <div className="flex justify-around items-center h-20 pb-3">
         {navItems.map(({ path, icon, label }) => {
           const isActive = pathname === path;
           return (
@@ -48,7 +48,7 @@ export const Navigation: React.FC = () => {
                   backgroundColor: isActive ? 'var(--color-primary-green)' : 'var(--color-neutral-900)'
                 }}
               />
-              <span className="text-xs mt-1">{label}</span>
+              <span className="text-xs mt-1 pb-1">{label}</span>
             </button>
           );
         })}
