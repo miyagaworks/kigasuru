@@ -654,19 +654,20 @@ function RecordContent() {
               <svg viewBox="0 0 300 300" className="w-full h-full">
                 {/* 8つのセグメント */}
                 {SLOPE_SEGMENTS.map(({ slope, pathData }) => {
-                  const isActive = currentShot.slope ? (currentShot.slope === slope) : (gyro.enabled && debouncedSlope === slope);
+                  const isActive = currentShot.slope === slope;
+                  const isHovered = gyro.enabled && debouncedSlope === slope && !isActive;
 
                   return (
                     <g key={slope}>
                       <path
                         d={pathData}
-                        fill={isActive ? 'var(--color-primary-green)' : 'var(--color-card-bg)'}
-                        opacity={isActive ? '1' : '0.5'}
-                        stroke={isActive ? 'var(--color-primary-green)' : 'var(--color-primary-dark)'}
-                        strokeWidth={isActive ? '4' : '2'}
+                        fill={isActive ? 'var(--color-primary-green)' : isHovered ? 'var(--color-primary-light)' : 'var(--color-card-bg)'}
+                        opacity={isActive || isHovered ? '1' : '0.5'}
+                        stroke={isActive ? 'var(--color-primary-green)' : isHovered ? 'var(--color-primary-green)' : 'var(--color-primary-dark)'}
+                        strokeWidth={isActive ? '4' : isHovered ? '3' : '2'}
                         className="cursor-pointer hover:opacity-100"
                         style={{
-                          filter: isActive ? 'drop-shadow(0 0 8px rgba(40, 99, 0, 0.8))' : 'none',
+                          filter: isActive ? 'drop-shadow(0 0 8px rgba(40, 99, 0, 0.8))' : isHovered ? 'drop-shadow(0 0 4px rgba(40, 99, 0, 0.5))' : 'none',
                           transition: 'fill 0.15s ease, opacity 0.15s ease, stroke 0.15s ease, stroke-width 0.15s ease, filter 0.15s ease',
                         }}
                         onClick={() => {
@@ -683,13 +684,39 @@ function RecordContent() {
                   cx="150"
                   cy="150"
                   r="45"
-                  fill={(currentShot.slope ? (currentShot.slope === 'flat') : (gyro.enabled && debouncedSlope === 'flat')) ? 'var(--color-primary-green)' : 'var(--color-card-bg)'}
-                  opacity={(currentShot.slope ? (currentShot.slope === 'flat') : (gyro.enabled && debouncedSlope === 'flat')) ? '1' : '0.5'}
-                  stroke="var(--color-primary-dark)"
-                  strokeWidth="2"
-                  className="cursor-pointer hover:opacity-100 hover:stroke-[var(--color-primary-green)] hover:stroke-[3px]"
+                  fill={
+                    currentShot.slope === 'flat'
+                      ? 'var(--color-primary-green)'
+                      : (gyro.enabled && debouncedSlope === 'flat' && currentShot.slope !== 'flat')
+                        ? 'var(--color-primary-light)'
+                        : 'var(--color-card-bg)'
+                  }
+                  opacity={
+                    currentShot.slope === 'flat' || (gyro.enabled && debouncedSlope === 'flat' && currentShot.slope !== 'flat')
+                      ? '1'
+                      : '0.5'
+                  }
+                  stroke={
+                    currentShot.slope === 'flat' || (gyro.enabled && debouncedSlope === 'flat' && currentShot.slope !== 'flat')
+                      ? 'var(--color-primary-green)'
+                      : 'var(--color-primary-dark)'
+                  }
+                  strokeWidth={
+                    currentShot.slope === 'flat'
+                      ? '4'
+                      : (gyro.enabled && debouncedSlope === 'flat' && currentShot.slope !== 'flat')
+                        ? '3'
+                        : '2'
+                  }
+                  className="cursor-pointer hover:opacity-100"
                   style={{
-                    transition: 'fill 0.15s ease, opacity 0.15s ease',
+                    filter:
+                      currentShot.slope === 'flat'
+                        ? 'drop-shadow(0 0 8px rgba(40, 99, 0, 0.8))'
+                        : (gyro.enabled && debouncedSlope === 'flat' && currentShot.slope !== 'flat')
+                          ? 'drop-shadow(0 0 4px rgba(40, 99, 0, 0.5))'
+                          : 'none',
+                    transition: 'fill 0.15s ease, opacity 0.15s ease, stroke 0.15s ease, stroke-width 0.15s ease, filter 0.15s ease',
                   }}
                   onClick={() => {
                     updateCurrentShot('slope', 'flat');
@@ -703,7 +730,11 @@ function RecordContent() {
                   y="150"
                   textAnchor="middle"
                   dominantBaseline="middle"
-                  fill={(currentShot.slope ? (currentShot.slope === 'flat') : (gyro.enabled && debouncedSlope === 'flat')) ? 'white' : '#212121'}
+                  fill={
+                    currentShot.slope === 'flat' || (gyro.enabled && debouncedSlope === 'flat' && currentShot.slope !== 'flat')
+                      ? 'white'
+                      : '#212121'
+                  }
                   fontSize="12"
                   fontWeight="normal"
                   className="pointer-events-none select-none"
@@ -716,7 +747,8 @@ function RecordContent() {
 
                 {/* 4つの人間アイコン */}
                 {SLOPE_ICONS.map(({ slope, icon, iconX, iconY, iconSize }) => {
-                  const isActive = currentShot.slope ? (currentShot.slope === slope) : (gyro.enabled && debouncedSlope === slope);
+                  const isActive = currentShot.slope === slope;
+                  const isHovered = gyro.enabled && debouncedSlope === slope && !isActive;
 
                   return (
                     <image
@@ -726,7 +758,7 @@ function RecordContent() {
                       y={iconY}
                       width={iconSize}
                       height={iconSize}
-                      opacity={isActive ? '1' : '0.5'}
+                      opacity={isActive || isHovered ? '1' : '0.5'}
                       className="pointer-events-none"
                       style={{
                         transition: 'opacity 0.15s ease',
@@ -737,7 +769,8 @@ function RecordContent() {
 
                 {/* テキストラベル（最前面） */}
                 {SLOPE_LABELS.map(({ slope, label, labelX, labelY, fontSize, fontWeight }) => {
-                  const isActive = currentShot.slope ? (currentShot.slope === slope) : (gyro.enabled && debouncedSlope === slope);
+                  const isActive = currentShot.slope === slope;
+                  const isHovered = gyro.enabled && debouncedSlope === slope && !isActive;
 
                   return (
                     <text
@@ -746,7 +779,7 @@ function RecordContent() {
                       y={labelY}
                       textAnchor="middle"
                       dominantBaseline="middle"
-                      fill={isActive ? 'white' : '#212121'}
+                      fill={isActive || isHovered ? 'white' : '#212121'}
                       fontSize={fontSize}
                       fontWeight={fontWeight}
                       className="pointer-events-none select-none"
