@@ -22,59 +22,58 @@ export function SettingsGuideModal({ isOpen, onClose }: SettingsGuideModalProps)
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
       {/* Backdrop */}
-      <div
-        className="absolute inset-0 bg-black bg-opacity-50"
-        onClick={onClose}
-      />
+      <div className="absolute inset-0 bg-black/50" onClick={onClose} />
 
       {/* Modal */}
-      <div className="relative bg-white rounded-lg shadow-xl max-w-lg w-full mx-4 max-h-[90vh] overflow-y-auto">
+      <div className="relative bg-[var(--color-bg-main)] rounded-lg shadow-xl max-w-lg w-full mx-4 max-h-[90vh] overflow-y-auto">
+        {/* Close button - positioned absolute to the modal */}
+        <button
+          onClick={onClose}
+          className="absolute top-4 right-4 w-[30px] h-[30px] flex items-center justify-center bg-white hover:bg-gray-100 rounded-full transition-colors z-10"
+          aria-label="閉じる"
+        >
+          <svg
+            width="16"
+            height="16"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M6 18L18 6M6 6l12 12"
+            />
+          </svg>
+        </button>
+
         <div className="p-6">
           {/* Header */}
-          <div className="flex justify-between items-center mb-4">
-            <h2 className="text-xl font-bold text-[var(--color-info-text)] flex items-center gap-2">
-              <Icon category="ui" name="settings" size={24} />
+          <div className="flex items-center gap-2 mb-4 pr-10">
+            <Icon category="ui" name="settings" size={24} />
+            <h2 className="text-xl font-bold text-[var(--color-info-text)]">
               まずは設定をしましょう
             </h2>
-            <button
-              onClick={onClose}
-              className="p-2 hover:bg-gray-100 rounded-full transition-colors"
-              aria-label="閉じる"
-            >
-              <svg
-                width="24"
-                height="24"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M6 18L18 6M6 6l12 12"
-                />
-              </svg>
-            </button>
           </div>
 
           {/* Content */}
-          <div className="space-y-4">
-            <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+          <div className="space-y-4 text-justify">
+            <div className="bg-[var(--color-error-border)] border border-[var(--color-secondary-red)] rounded-lg p-4">
               <p className="font-bold text-[var(--color-secondary-red)]">
                 ⚠️ 正確な情報保存のため、以下の設定を必ず行ってください：
               </p>
               <ol className="list-decimal list-inside space-y-2 ml-4 mt-3">
-                <li className="font-semibold text-gray-700">
+                <li className="text-[var(--color-neutral-700)]">
                   <span className="font-bold">入力項目の選択</span>
-                  <p className="text-sm text-gray-600 ml-6 mt-1">
-                    あなたのゴルフレベルに合わせて、記録する項目をカスタマイズしてください
+                  <p className="text-sm text-[var(--color-neutral-900)] ml-6 mt-1">
+                    あなたのゴルフレベルに合わせて、記録する項目をカスタマイズしてください。
                   </p>
                 </li>
-                <li className="font-semibold text-gray-700">
+                <li className="text-[var(--color-neutral-700)]">
                   <span className="font-bold">クラブ設定</span>
-                  <p className="text-sm text-gray-600 ml-6 mt-1">
-                    お使いのクラブセッティングに合わせて調整してください
+                  <p className="text-sm text-[var(--color-neutral-900)] ml-6 mt-1">
+                    お使いのクラブセッティングに合わせて調整してください。
                   </p>
                 </li>
               </ol>
@@ -85,7 +84,7 @@ export function SettingsGuideModal({ isOpen, onClose }: SettingsGuideModalProps)
               <h3 className="font-bold text-gray-700">レベル別の入力項目例</h3>
 
               {/* Beginner */}
-              <div className="bg-green-50 rounded-lg p-3">
+              <div className="bg-[var(--color-success-border)] border border-[var(--color-neutral-100)] rounded-lg p-3">
                 <div className="font-bold text-[var(--color-primary-green)] mb-2 text-sm">
                   初心者
                 </div>
@@ -103,7 +102,7 @@ export function SettingsGuideModal({ isOpen, onClose }: SettingsGuideModalProps)
               </div>
 
               {/* Intermediate */}
-              <div className="bg-blue-50 rounded-lg p-3">
+              <div className="bg-[var(--color-info-border)] border border-[var(--color-neutral-100)] rounded-lg p-3">
                 <div className="font-bold text-[var(--color-secondary-blue)] mb-2 text-sm">
                   中級者
                 </div>
@@ -127,7 +126,7 @@ export function SettingsGuideModal({ isOpen, onClose }: SettingsGuideModalProps)
               </div>
 
               {/* Advanced */}
-              <div className="bg-gray-100 rounded-lg p-3">
+              <div className="bg-[var(--color-muted-border)] border border-[var(--color-neutral-100)] rounded-lg p-3">
                 <div className="font-bold text-[var(--color-neutral-700)] mb-2 text-sm">
                   上級者
                 </div>
@@ -173,14 +172,14 @@ export function SettingsGuideModal({ isOpen, onClose }: SettingsGuideModalProps)
             <Button
               variant="primary"
               onClick={handleSettingsClick}
-              className="flex-1"
+              className="flex-1 text-sm"
             >
               設定ページへ
             </Button>
             <Button
               variant="secondary"
               onClick={onClose}
-              className="flex-1"
+              className="flex-1 text-sm"
             >
               後で設定
             </Button>

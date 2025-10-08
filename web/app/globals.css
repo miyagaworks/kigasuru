@@ -36,19 +36,19 @@
   /* ステータス背景色（渋めの色調） */
   --color-info-bg: #d4dae3;
   --color-info-text: #1a3a5c;
-  --color-info-border: #b8c5d4;
+  --color-info-border: #d2e2ee;
 
   --color-error-bg: #e8d4d8;
   --color-error-text: #7a1f2f;
-  --color-error-border: #d4b5bb;
+  --color-error-border: #e9d8d8;
 
   --color-success-bg: #d8e4cd;
   --color-success-text: #1f4d0c;
-  --color-success-border: #c3d4b8;
+  --color-success-border: #c3dfc3;
 
   --color-muted-bg: #e5e0d5;
   --color-muted-text: #5a5248;
-  --color-muted-border: #d0c9ba;
+  --color-muted-border: #e0dcd2;
 }
 
 /* グローバルスタイル */
