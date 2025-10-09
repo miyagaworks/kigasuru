@@ -29,12 +29,13 @@ export function SettingsGuideModal({ isOpen, onClose }: SettingsGuideModalProps)
         {/* Close button - positioned absolute to the modal */}
         <button
           onClick={onClose}
-          className="absolute top-3 right-3 w-8 h-8 flex items-center justify-center bg-white hover:bg-gray-100 rounded-full transition-colors z-10"
+          className="absolute flex items-center justify-center bg-white hover:bg-gray-100 rounded-full transition-colors z-10"
+          style={{ width: '30px', height: '30px', minWidth: '30px', minHeight: '30px', top: '16px', right: '16px' }}
           aria-label="閉じる"
         >
           <svg
-            width="16"
-            height="16"
+            width="21"
+            height="21"
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
@@ -148,9 +149,6 @@ export function SettingsGuideModal({ isOpen, onClose }: SettingsGuideModalProps)
                   </span>
                   <span className="px-3 py-1 bg-[var(--color-neutral-700)] text-white text-xs font-medium rounded-full">
                     気温
-                  </span>
-                  <span className="px-3 py-1 bg-[var(--color-neutral-700)] text-white text-xs font-medium rounded-full">
-                    感触
                   </span>
                   <span className="px-3 py-1 bg-[var(--color-neutral-700)] text-white text-xs font-medium rounded-full">
                     メモ

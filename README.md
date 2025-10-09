@@ -1,186 +1,36 @@
-# 上手くなる気がするぅぅぅ PRO
+This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
-科学的ゴルフ上達アプリ - 6次元データ分析システム
+## Getting Started
 
----
+First, run the development server:
 
-## プロジェクト概要
-
-本気で自己ベスト更新を狙う人のための、ゆるい名前の科学的ゴルフ上達アプリ。
-ジャイロセンサー自動傾斜認識、6次元データ分析、完全オフライン動作を実現。
-
-### 主要機能
-
-1. **ジャイロセンサー傾斜自動認識** - スマホを向けるだけで8方向の傾斜を自動判定
-2. **6次元データ分析** - 傾斜×クラブ×ライ×強度×風向き×気温の完全記録
-3. **最短2タップ入力** - プリセット機能で超高速記録
-4. **完全オフライン対応** - 電波不要での確実な記録・分析
-
----
-
-## ディレクトリ構造
-
-```
-kigasuru/
-├── doc/                          # ドキュメント
-│   ├── golf-app-plan.md          # 総合企画書
-│   ├── icon-design-guide.md      # アイコンデザインガイドライン
-│   └── icon-list.md              # アイコン一覧表
-│
-├── assets/                       # アセット（画像・アイコン等）
-│   └── icons/                    # SVGアイコン
-│       ├── slope/                # 傾斜アイコン（8+1種類）
-│       ├── clubs/                # クラブアイコン（14種類）
-│       ├── lie/                  # ライ状況アイコン（6種類）
-│       ├── strength/             # ショット強度アイコン（3種類）
-│       ├── wind/                 # 風向きアイコン（6種類）
-│       ├── result/               # 結果入力アイコン（6種類）
-│       ├── gyro/                 # ジャイロセンサー関連（5種類）
-│       ├── weather/              # 天候・気温アイコン（3種類）
-│       ├── ui/                   # UI要素（12種類）
-│       └── preset/               # プリセット関連（4種類）
-│
-└── src/                          # ソースコード
-    └── components/               # Reactコンポーネント
+```bash
+npm run dev
+# or
+yarn dev
+# or
+pnpm dev
+# or
+bun dev
 ```
 
----
+Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
-## アイコン仕様
+You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
 
-### SVGサイズ
+This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
 
-- **基本アイコン**: 24x24px (`viewBox="0 0 24 24"`)
-- **大型ボタン**: 48x48px (`viewBox="0 0 48 48"`)
-- **特大ボタン**: 64x64px (`viewBox="0 0 64 64"`)
+## Learn More
 
-### 保存場所とファイル名
+To learn more about Next.js, take a look at the following resources:
 
-```
-/assets/icons/[カテゴリ]/[カテゴリ]-[名前]-[バリエーション].svg
+- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
+- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
 
-例:
-- /assets/icons/slope/slope-flat.svg
-- /assets/icons/clubs/club-7i.svg
-- /assets/icons/lie/lie-a-grade.svg
-```
+You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
 
-### 作成済みサンプルアイコン
+## Deploy on Vercel
 
-#### 傾斜アイコン（Slope）
-- ✅ `slope-flat.svg` - 平坦
-- ✅ `slope-left-up.svg` - 左足上がり
-- ✅ `slope-auto-detect.svg` - 自動認識
+The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
 
-#### クラブアイコン（Clubs）
-- ✅ `club-7i.svg` - 7番アイアン
-
-#### ライ状況アイコン（Lie）
-- ✅ `lie-a-grade.svg` - A級（好条件）
-
-#### ショット強度アイコン（Strength）
-- ✅ `strength-full.svg` - フルショット（100%）
-
-#### 風向きアイコン（Wind）
-- ✅ `wind-against.svg` - アゲインスト（向かい風）
-
-#### 結果アイコン（Result）
-- ✅ `result-just.svg` - ジャスト距離（±10Y以内）
-
-#### ジャイロセンサーアイコン（Gyro）
-- ✅ `gyro-detect.svg` - ジャイロ測定中
-
-**作成済み**: 8個 / 74個
-
----
-
-## 開発フェーズ
-
-### Phase 1（6ヶ月）- Web版プロトタイプ開発
-- 月1-2: 基盤システム構築
-- 月3-4: **ジャイロセンサー実装**（革新機能）
-- 月5-6: 高度分析機能
-
-### Phase 2（2ヶ月）- 無料版簡素化
-- UI簡素化
-- 機能制限実装
-
-### Phase 3（1ヶ月）- 課金システム
-- プラン切り替え機能
-- 課金システム実装
-
-### Phase 4（1ヶ月）- Web版リリース
-- ベータテスト
-- PWA対応
-
-### Phase 5（3-6ヶ月）- ネイティブアプリ化
-- iOS/Android開発（React Native / Flutter）
-- ジャイロセンサー精度向上
-
-**総開発期間**: 13-16ヶ月
-
----
-
-## 技術スタック（予定）
-
-### Web版
-- **フロントエンド**: React / Next.js
-- **状態管理**: Zustand / Redux
-- **ローカルDB**: IndexedDB / Dexie.js
-- **センサーAPI**: DeviceOrientation / DeviceMotion API
-- **PWA**: Service Worker, Web App Manifest
-
-### ネイティブアプリ
-- **フレームワーク**: React Native / Flutter
-- **センサー**: Core Motion (iOS) / SensorManager (Android)
-- **ローカルDB**: SQLite / Realm
-
----
-
-## 次のステップ
-
-### 優先度: 最高（Phase 1）
-1. ✅ プロジェクト構造の作成
-2. ✅ アイコンデザインガイドラインの作成
-3. ✅ アイコン一覧表の作成
-4. ✅ サンプルアイコンの作成（8個）
-5. ⬜️ 残りのコアアイコンの作成（42個）
-   - 傾斜: 7個
-   - クラブ: 13個
-   - ライ: 5個
-   - 強度: 2個
-   - 風向き: 5個
-   - 結果: 5個
-   - ジャイロ: 4個
-
-### 次の作業
-- [ ] Webアプリの基盤構築（React + Vite）
-- [ ] ジャイロセンサーAPIの実装
-- [ ] 傾斜自動認識アルゴリズムの開発
-- [ ] データベース設計
-
----
-
-## ドキュメント
-
-詳細は以下のドキュメントを参照してください：
-
-- **総合企画書**: `/doc/golf-app-plan.md`
-- **アイコンデザインガイドライン**: `/doc/icon-design-guide.md`
-- **アイコン一覧表**: `/doc/icon-list.md`
-
----
-
-## ライセンス
-
-TBD
-
----
-
-## 開発者
-
-miyagawakiyomi
-
----
-
-最終更新: 2025-10-02
+Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.

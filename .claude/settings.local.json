@@ -1,0 +1,19 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm create:*)",
+      "Bash(npm install)",
+      "Bash(npm install:*)",
+      "Bash(npx tailwindcss init:*)",
+      "Bash(./node_modules/.bin/tailwindcss:*)",
+      "Bash(npm run lint:*)",
+      "Bash(git add:*)",
+      "Bash(git commit -m \"$(cat <<''EOF''\nMigrate core infrastructure from Vite to Next.js\n\n- Add IndexedDB layer with Dexie (lib/db/index.ts)\n- Add Zustand state management (lib/store/index.ts)\n- Add gyroscope sensor integration (lib/sensors/gyro.ts)\n- Add custom hooks: useGyro, useLocation (hooks/)\n- Add weather utilities (lib/utils/weather.ts)\n- Add common components: Icon, Layout, Navigation\n- Copy icon assets from original app to public/assets/\n\nAll TypeScript types properly defined and ESLint passes.\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>\nEOF\n)\")",
+      "Bash(npm run build:*)",
+      "Bash(git commit -m \"$(cat <<''EOF''\nAdd main application pages (Record, Analysis, Settings, History)\n\n- RecordPage: Multi-step shot recording with gyro integration\n- AnalysisPage: Statistics and club-based data visualization  \n- SettingsPage: Gyro calibration, club management, test data tools\n- HistoryPage: Calendar view of shots grouped by date\n\nFixed TypeScript build errors:\n- NextAuth v5 handlers export\n- Type compatibility between CurrentShot and Shot\n- LINE provider style properties\n- useGyro permission state handling\n\nAll pages functional with IndexedDB offline support.\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>\nEOF\n)\")",
+      "Bash(npx next:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

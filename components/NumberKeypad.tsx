@@ -43,26 +43,26 @@ export function NumberKeypad({ value, onChange, max = 999, label = '距離 (Yd)'
   return (
     <div className="w-full">
       {/* 入力表示エリア */}
-      <div className="mb-6 bg-white rounded-2xl border-2 border-[var(--color-primary-green)] p-6 shadow-lg">
-        <div className="text-center">
-          <p className="text-sm text-[var(--color-neutral-600)] mb-2">{label}</p>
-          <div className="flex items-center justify-center gap-2">
-            <span className="text-6xl font-bold text-[var(--color-primary-green)] min-w-[200px] text-center">
+      <div className="mb-4 bg-white rounded-xl border-2 border-[var(--color-primary-green)] p-4 shadow-md">
+        <div className="flex items-center justify-between">
+          <span className="text-sm font-medium text-[var(--color-neutral-700)]">{label}</span>
+          <div className="flex items-baseline gap-1">
+            <span className="text-3xl font-bold text-[var(--color-primary-green)] min-w-[80px] text-right">
               {displayValue || '0'}
             </span>
-            <span className="text-2xl text-[var(--color-neutral-500)]">Yd</span>
+            <span className="text-lg text-[var(--color-neutral-500)]">Yd</span>
           </div>
         </div>
       </div>
 
       {/* 数字キーパッド */}
-      <div className="grid grid-cols-3 gap-3">
+      <div className="grid grid-cols-3 gap-2">
         {/* 数字ボタン 1-9 */}
         {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((num) => (
           <button
             key={num}
             onClick={() => handleNumberClick(num.toString())}
-            className="aspect-square rounded-2xl bg-white border-2 border-[var(--color-neutral-300)] text-4xl font-bold text-[var(--color-neutral-900)] hover:bg-[var(--color-neutral-100)] hover:border-[var(--color-primary-green)] active:scale-95 transition-all shadow-sm"
+            className="h-14 rounded-xl bg-white border-2 border-[var(--color-neutral-300)] text-xl font-bold text-[var(--color-neutral-900)] hover:bg-[var(--color-neutral-100)] hover:border-[var(--color-primary-green)] active:scale-95 transition-all shadow-sm"
           >
             {num}
           </button>
@@ -71,7 +71,7 @@ export function NumberKeypad({ value, onChange, max = 999, label = '距離 (Yd)'
         {/* クリアボタン */}
         <button
           onClick={handleClear}
-          className="aspect-square rounded-2xl bg-[var(--color-neutral-200)] border-2 border-[var(--color-neutral-300)] text-lg font-bold text-[var(--color-neutral-700)] hover:bg-[var(--color-neutral-300)] active:scale-95 transition-all shadow-sm flex items-center justify-center"
+          className="h-14 rounded-xl bg-[var(--color-info-border)] border-2 border-[var(--color-secondary-blue)] text-xl font-bold text-[var(--color-secondary-blue)] hover:opacity-90 active:scale-95 transition-all shadow-sm flex items-center justify-center"
         >
           C
         </button>
@@ -79,7 +79,7 @@ export function NumberKeypad({ value, onChange, max = 999, label = '距離 (Yd)'
         {/* 0ボタン */}
         <button
           onClick={() => handleNumberClick('0')}
-          className="aspect-square rounded-2xl bg-white border-2 border-[var(--color-neutral-300)] text-4xl font-bold text-[var(--color-neutral-900)] hover:bg-[var(--color-neutral-100)] hover:border-[var(--color-primary-green)] active:scale-95 transition-all shadow-sm"
+          className="h-14 rounded-xl bg-white border-2 border-[var(--color-neutral-300)] text-xl font-bold text-[var(--color-neutral-900)] hover:bg-[var(--color-neutral-100)] hover:border-[var(--color-primary-green)] active:scale-95 transition-all shadow-sm"
         >
           0
         </button>
@@ -87,10 +87,10 @@ export function NumberKeypad({ value, onChange, max = 999, label = '距離 (Yd)'
         {/* 削除ボタン */}
         <button
           onClick={handleDelete}
-          className="aspect-square rounded-2xl bg-[var(--color-secondary-red)] border-2 border-[var(--color-secondary-red)] hover:opacity-90 active:scale-95 transition-all shadow-sm flex items-center justify-center"
+          className="h-14 rounded-xl bg-[var(--color-secondary-red)] border-2 border-[var(--color-secondary-red)] hover:opacity-90 active:scale-95 transition-all shadow-sm flex items-center justify-center"
         >
           <svg
-            className="w-10 h-10 text-white"
+            className="w-7 h-7 text-white"
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"

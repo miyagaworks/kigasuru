@@ -66,7 +66,7 @@ export async function POST(request: Request) {
 
     await sendEmail({
       to: [normalizedEmail],
-      subject: 'Kigasuru - メールアドレスの確認',
+      subject: '【気がするぅぅぅ】メールアドレスの確認',
       html,
     });
 

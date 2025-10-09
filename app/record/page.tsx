@@ -1283,6 +1283,15 @@ function RecordContent() {
                 <line x1="150" y1="-32" x2="150" y2="332" stroke="var(--color-neutral-300)" strokeWidth="1" opacity="0.3" />
                 <line x1="-32" y1="150" x2="332" y2="150" stroke="var(--color-neutral-300)" strokeWidth="1" opacity="0.3" />
 
+                {/* 距離ラベル（上が飛球方向） */}
+                <text x="150" y="128" textAnchor="middle" fontSize="12" fill="var(--color-neutral-600)" stroke="var(--color-card-bg)" strokeWidth="3" paintOrder="stroke">10Yd</text>
+                <text x="150" y="102" textAnchor="middle" fontSize="12" fill="var(--color-neutral-600)" stroke="var(--color-card-bg)" strokeWidth="3" paintOrder="stroke">20Yd</text>
+                <text x="150" y="76" textAnchor="middle" fontSize="12" fill="var(--color-neutral-600)" stroke="var(--color-card-bg)" strokeWidth="3" paintOrder="stroke">30Yd</text>
+                <text x="150" y="50" textAnchor="middle" fontSize="12" fill="var(--color-neutral-600)" stroke="var(--color-card-bg)" strokeWidth="3" paintOrder="stroke">40Yd</text>
+                <text x="150" y="24" textAnchor="middle" fontSize="12" fill="var(--color-neutral-600)" stroke="var(--color-card-bg)" strokeWidth="3" paintOrder="stroke">50Yd</text>
+                <text x="150" y="-2" textAnchor="middle" fontSize="12" fill="var(--color-neutral-600)" stroke="var(--color-card-bg)" strokeWidth="3" paintOrder="stroke">60Yd</text>
+                <text x="150" y="-28" textAnchor="middle" fontSize="12" fill="var(--color-neutral-600)" stroke="var(--color-card-bg)" strokeWidth="3" paintOrder="stroke">70Yd</text>
+
                 {/* 中心のターゲット（赤い丸） */}
                 <circle cx="150" cy="150" r="8" fill="#b31630" />
 
@@ -1295,15 +1304,6 @@ function RecordContent() {
                     fill="var(--color-primary-green)"
                   />
                 )}
-
-                {/* 距離ラベル（上が飛球方向） */}
-                <text x="150" y="128" textAnchor="middle" fontSize="12" fill="var(--color-neutral-600)" stroke="var(--color-card-bg)" strokeWidth="3" paintOrder="stroke">10Yd</text>
-                <text x="150" y="102" textAnchor="middle" fontSize="12" fill="var(--color-neutral-600)" stroke="var(--color-card-bg)" strokeWidth="3" paintOrder="stroke">20Yd</text>
-                <text x="150" y="76" textAnchor="middle" fontSize="12" fill="var(--color-neutral-600)" stroke="var(--color-card-bg)" strokeWidth="3" paintOrder="stroke">30Yd</text>
-                <text x="150" y="50" textAnchor="middle" fontSize="12" fill="var(--color-neutral-600)" stroke="var(--color-card-bg)" strokeWidth="3" paintOrder="stroke">40Yd</text>
-                <text x="150" y="24" textAnchor="middle" fontSize="12" fill="var(--color-neutral-600)" stroke="var(--color-card-bg)" strokeWidth="3" paintOrder="stroke">50Yd</text>
-                <text x="150" y="-2" textAnchor="middle" fontSize="12" fill="var(--color-neutral-600)" stroke="var(--color-card-bg)" strokeWidth="3" paintOrder="stroke">60Yd</text>
-                <text x="150" y="-28" textAnchor="middle" fontSize="12" fill="var(--color-neutral-600)" stroke="var(--color-card-bg)" strokeWidth="3" paintOrder="stroke">70Yd</text>
               </svg>
 
               {/* 選択位置の表示と取り消しボタン */}
@@ -1407,32 +1407,6 @@ function RecordContent() {
                   label="ターゲット距離"
                 />
               </div>
-
-              {enabledFields.feeling && (
-                <div>
-                  <label className="block text-sm font-medium mb-2">感触</label>
-                  <div className="grid grid-cols-5 gap-1.5">
-                    {[
-                      { key: 'great', label: '最高', emoji: '😄' },
-                      { key: 'good', label: '良い', emoji: '🙂' },
-                      { key: 'normal', label: '普通', emoji: '😐' },
-                      { key: 'bad', label: '悪い', emoji: '😞' },
-                      { key: 'unsure', label: '?', emoji: '🤔' },
-                    ].map(({ key, label, emoji }) => (
-                      <Button
-                        key={key}
-                        variant={currentShot.feeling === key ? 'primary' : 'outline'}
-                        onClick={() => updateCurrentShot('feeling', key)}
-                        size="sm"
-                        className="flex flex-col items-center gap-0.5 py-3 px-1 min-w-0"
-                      >
-                        <span className="text-lg leading-none">{emoji}</span>
-                        <span className="text-[12px] mt-1 leading-tight whitespace-nowrap">{label}</span>
-                      </Button>
-                    ))}
-                  </div>
-                </div>
-              )}
 
               {enabledFields.memo && (
                 <div>

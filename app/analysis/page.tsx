@@ -659,56 +659,6 @@ function AnalysisContent() {
               </div>
             )}
 
-            {/* Feeling filter */}
-            {enabledFields.feeling && (
-              <div className="border border-[var(--color-neutral-300)] rounded-lg">
-                <button
-                  onClick={() => toggleExpanded('feeling')}
-                  className="w-full flex items-center justify-between p-3 hover:bg-[var(--color-neutral-100)] transition-colors rounded-lg"
-                >
-                  <div className="flex items-center gap-2">
-                    <span className="font-medium text-[var(--color-neutral-900)]">感触</span>
-                    {filters.feeling.length > 0 && (
-                      <span className="px-2 py-0.5 bg-[var(--color-primary-green)] text-white text-xs rounded-full">
-                        {filters.feeling.length}
-                      </span>
-                    )}
-                  </div>
-                  <svg
-                    className={`w-5 h-5 text-[var(--color-neutral-600)] transition-transform ${expandedFilters.feeling ? 'rotate-180' : ''}`}
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                  </svg>
-                </button>
-                {expandedFilters.feeling && (
-                  <div className="p-3 pt-0 border-t border-[var(--color-neutral-200)]">
-              <div className="flex flex-wrap gap-2">
-                {[
-                  { value: 'great', label: '😄 最高' },
-                  { value: 'good', label: '🙂 良い' },
-                  { value: 'normal', label: '😐 普通' },
-                  { value: 'bad', label: '😞 悪い' },
-                  { value: 'unsure', label: '🤔 微妙' },
-                ].map(({ value, label }) => (
-                  <label key={value} className="flex items-center gap-2 cursor-pointer">
-                    <input
-                      type="checkbox"
-                      checked={filters.feeling.includes(value)}
-                      onChange={() => toggleFilter('feeling', value)}
-                      className="w-4 h-4 text-[var(--color-primary-green)] rounded"
-                    />
-                    <span className="text-sm">{label}</span>
-                  </label>
-                ))}
-              </div>
-                  </div>
-                )}
-              </div>
-            )}
-
             {/* Golf Course filter */}
             {golfCourses.length > 0 && (
               <div className="border border-[var(--color-neutral-300)] rounded-lg">
@@ -847,9 +797,6 @@ function AnalysisContent() {
                   <line x1="150" y1="-32" x2="150" y2="332" stroke="var(--color-neutral-300)" strokeWidth="1" opacity="0.3" />
                   <line x1="-32" y1="150" x2="332" y2="150" stroke="var(--color-neutral-300)" strokeWidth="1" opacity="0.3" />
 
-                  {/* 中心のターゲット（赤い丸） */}
-                  <circle cx="150" cy="150" r="8" fill="#b31630" />
-
                   {/* 距離ラベル（上が飛球方向） */}
                   {scatterRange === 70 ? (
                     <>
@@ -871,6 +818,9 @@ function AnalysisContent() {
                       <text x="150" y="-28" textAnchor="middle" fontSize="12" fill="var(--color-neutral-600)" stroke="var(--color-card-bg)" strokeWidth="3" paintOrder="stroke">30Yd</text>
                     </>
                   )}
+
+                  {/* 中心のターゲット（赤い丸） */}
+                  <circle cx="150" cy="150" r="8" fill="#b31630" />
 
                   {/* Plot shot results */}
                   {(() => {

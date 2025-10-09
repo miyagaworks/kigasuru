@@ -397,7 +397,6 @@ export default function SettingsPage() {
       strength: '強度',
       wind: '風向き',
       temperature: '気温',
-      feeling: '感触',
       memo: 'メモ'
     };
 
@@ -430,7 +429,6 @@ export default function SettingsPage() {
         '気温',
         '結果',
         '飛距離',
-        '感触',
         'メモ',
       ];
 
@@ -453,7 +451,6 @@ export default function SettingsPage() {
           shot.temperature || '',
           resultStr,
           shot.distance || '',
-          shot.feeling || '',
           `"${(shot.memo || '').replace(/"/g, '""')}"`, // メモはエスケープ
         ];
         csvRows.push(row.join(','));
@@ -626,7 +623,6 @@ export default function SettingsPage() {
                   { key: 'strength' as keyof InputFieldsConfig, label: '強度' },
                   { key: 'wind' as keyof InputFieldsConfig, label: '風向き' },
                   { key: 'temperature' as keyof InputFieldsConfig, label: '気温' },
-                  { key: 'feeling' as keyof InputFieldsConfig, label: '感触' },
                   { key: 'memo' as keyof InputFieldsConfig, label: 'メモ' },
                 ].map(({ key, label }) => (
                   <label key={key} className="flex items-center gap-2 cursor-pointer">

@@ -61,7 +61,7 @@ export async function POST(request: Request) {
 
     await sendEmail({
       to: [user.email],
-      subject: 'Kigasuru - パスワードリセットのご案内',
+      subject: '【気がするぅぅぅ】パスワードリセットのご案内',
       html,
     });
 
@@ -127,7 +127,7 @@ function getPasswordResetTemplate({ resetUrl, email }: { resetUrl: string; email
   `;
 
   const text = `
-Kigasuru - パスワードリセットのご案内
+【気がするぅぅぅ】パスワードリセットのご案内
 
 パスワードリセットのリクエストを受け付けました。
 以下のURLにアクセスして、新しいパスワードを設定してください。

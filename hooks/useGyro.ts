@@ -46,7 +46,10 @@ export const useGyro = () => {
     const loadCalibrationData = async () => {
       try {
         const calibration = await getCalibration();
-        setGyroCalibrated(!!calibration);
+        console.log('[useGyro] Loaded calibration:', calibration);
+        const isCalibrated = !!calibration;
+        console.log('[useGyro] Setting calibrated to:', isCalibrated);
+        setGyroCalibrated(isCalibrated);
       } catch (err) {
         console.error('Failed to load calibration:', err);
         setGyroCalibrated(false);
