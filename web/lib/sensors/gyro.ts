@@ -24,6 +24,7 @@ export const getFlatThreshold = () => {
  * Request permission for iOS 13+
  */
 export const requestGyroPermission = async (): Promise<boolean> => {
+  // iOS 13+ requires explicit permission
   if (typeof DeviceOrientationEvent !== 'undefined' &&
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       typeof (DeviceOrientationEvent as any).requestPermission === 'function') {
@@ -35,8 +36,34 @@ export const requestGyroPermission = async (): Promise<boolean> => {
       return false;
     }
   }
-  // For non-iOS or older versions, assume permission granted
-  return true;
+
+  // For non-iOS (Android, etc.), test if DeviceOrientation API works
+  // This serves as implicit permission check
+  if (typeof DeviceOrientationEvent !== 'undefined') {
+    return new Promise((resolve) => {
+      let hasReceived = false;
+
+      const handler = (event: DeviceOrientationEvent) => {
+        // Check if we're receiving actual sensor data
+        if (event.alpha !== null || event.beta !== null || event.gamma !== null) {
+          hasReceived = true;
+          window.removeEventListener('deviceorientation', handler);
+          clearTimeout(timeout);
+          resolve(true);
+        }
+      };
+
+      // Set timeout - if no data after 1 second, assume not available
+      const timeout = setTimeout(() => {
+        window.removeEventListener('deviceorientation', handler);
+        resolve(hasReceived);
+      }, 1000);
+
+      window.addEventListener('deviceorientation', handler);
+    });
+  }
+
+  return false;
 };
 
 /**

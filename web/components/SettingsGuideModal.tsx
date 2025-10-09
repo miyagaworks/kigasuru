@@ -29,7 +29,7 @@ export function SettingsGuideModal({ isOpen, onClose }: SettingsGuideModalProps)
         {/* Close button - positioned absolute to the modal */}
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 w-[24px] h-[24px] flex items-center justify-center bg-white hover:bg-gray-100 rounded-full transition-colors z-10"
+          className="absolute top-3 right-3 w-8 h-8 flex items-center justify-center bg-white hover:bg-gray-100 rounded-full transition-colors z-10"
           aria-label="閉じる"
         >
           <svg

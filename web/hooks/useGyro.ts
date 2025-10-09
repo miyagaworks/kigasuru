@@ -30,10 +30,12 @@ export const useGyro = () => {
   useEffect(() => {
     const loadPermission = async () => {
       try {
-        const savedPermission = await getSetting<boolean>('gyroPermission', false);
-        setHasPermission(savedPermission || false);
+        const savedPermission = await getSetting<boolean>('gyroPermission');
+        // Only set to true if explicitly saved as true
+        setHasPermission(savedPermission === true);
       } catch (err) {
         console.error('Failed to load permission state:', err);
+        setHasPermission(false);
       }
     };
     loadPermission();
@@ -44,11 +46,10 @@ export const useGyro = () => {
     const loadCalibrationData = async () => {
       try {
         const calibration = await getCalibration();
-        if (calibration) {
-          setGyroCalibrated(true);
-        }
+        setGyroCalibrated(!!calibration);
       } catch (err) {
         console.error('Failed to load calibration:', err);
+        setGyroCalibrated(false);
       }
     };
     loadCalibrationData();
