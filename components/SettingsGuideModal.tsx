@@ -20,12 +20,14 @@ export function SettingsGuideModal({ isOpen, onClose }: SettingsGuideModalProps)
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center">
+    <div className="fixed inset-0 z-50 overflow-y-auto">
       {/* Backdrop */}
-      <div className="absolute inset-0 bg-black/50" onClick={onClose} />
+      <div className="fixed inset-0 bg-black/50" onClick={onClose} />
 
-      {/* Modal */}
-      <div className="relative bg-[var(--color-bg-main)] rounded-lg shadow-xl max-w-lg w-full mx-4 max-h-[90vh] overflow-y-auto">
+      {/* Modal Container - allows scrolling from top */}
+      <div className="min-h-full flex items-start justify-center p-4 pt-20 pb-20">
+        {/* Modal */}
+        <div className="relative bg-[var(--color-bg-main)] rounded-lg shadow-xl max-w-lg w-full">
         {/* Close button - positioned absolute to the modal */}
         <button
           onClick={onClose}
@@ -182,6 +184,7 @@ export function SettingsGuideModal({ isOpen, onClose }: SettingsGuideModalProps)
               後で設定
             </Button>
           </div>
+        </div>
         </div>
       </div>
     </div>

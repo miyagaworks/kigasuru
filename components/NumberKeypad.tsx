@@ -45,10 +45,12 @@ export function NumberKeypad({ value, onChange, max = 999, label = '距離 (Yd)'
       {/* 入力表示エリア */}
       <div className="mb-4 bg-white rounded-xl border-2 border-[var(--color-primary-green)] p-4 shadow-md">
         <div className="flex items-center justify-between">
-          <span className="text-sm font-medium text-[var(--color-neutral-700)]">{label}</span>
+          <span className="text-sm font-medium text-[var(--color-neutral-700)]">
+            {label}
+          </span>
           <div className="flex items-baseline gap-1">
             <span className="text-3xl font-bold text-[var(--color-primary-green)] min-w-[80px] text-right">
-              {displayValue || '0'}
+              {displayValue || "0"}
             </span>
             <span className="text-lg text-[var(--color-neutral-500)]">Yd</span>
           </div>
@@ -71,14 +73,14 @@ export function NumberKeypad({ value, onChange, max = 999, label = '距離 (Yd)'
         {/* クリアボタン */}
         <button
           onClick={handleClear}
-          className="h-14 rounded-xl bg-[var(--color-info-border)] border-2 border-[var(--color-secondary-blue)] text-xl font-bold text-[var(--color-secondary-blue)] hover:opacity-90 active:scale-95 transition-all shadow-sm flex items-center justify-center"
+          className="h-14 rounded-xl bg-[var(--color-success-border)] border-2 border-[var(--color-primary-green)] text-xl font-bold text-[var(--color-primary-green)] hover:opacity-90 active:scale-95 transition-all shadow-sm flex items-center justify-center"
         >
           C
         </button>
 
         {/* 0ボタン */}
         <button
-          onClick={() => handleNumberClick('0')}
+          onClick={() => handleNumberClick("0")}
           className="h-14 rounded-xl bg-white border-2 border-[var(--color-neutral-300)] text-xl font-bold text-[var(--color-neutral-900)] hover:bg-[var(--color-neutral-100)] hover:border-[var(--color-primary-green)] active:scale-95 transition-all shadow-sm"
         >
           0

@@ -1305,25 +1305,25 @@ function RecordContent() {
                   />
                 )}
               </svg>
-
-              {/* 選択位置の表示と取り消しボタン */}
-              {currentShot.result && currentShot.result.x !== undefined && (
-                <div className="text-center mt-2">
-                  <div className="text-sm text-[var(--color-neutral-700)] mb-2">
-                    選択位置:
-                    {currentShot.result.x > 0 ? ' 右' : currentShot.result.x < 0 ? ' 左' : ''} {Math.abs(currentShot.result.x).toFixed(1)}y
-                    {', '}
-                    {currentShot.result.y > 0 ? 'オーバー' : currentShot.result.y < 0 ? 'ショート' : 'ジャスト'} {Math.abs(currentShot.result.y).toFixed(1)}y
-                  </div>
-                  <button
-                    onClick={() => updateCurrentShot('result', null)}
-                    className="px-4 py-2 bg-[var(--color-neutral-300)] text-[var(--color-neutral-900)] text-sm rounded-lg hover:bg-[var(--color-neutral-400)] transition-colors"
-                  >
-                    タップを取り消す
-                  </button>
-                </div>
-              )}
             </div>
+
+            {/* 選択位置の表示と取り消しボタン */}
+            {currentShot.result && currentShot.result.x !== undefined && (
+              <div className="text-center mb-6">
+                <div className="text-sm text-[var(--color-neutral-700)] mb-2">
+                  選択位置：
+                  {currentShot.result.x > 0 ? ' 右' : currentShot.result.x < 0 ? ' 左' : ''} {Math.abs(currentShot.result.x).toFixed(1)}Yd
+                  {'・'}
+                  {currentShot.result.y > 0 ? 'オーバー' : currentShot.result.y < 0 ? 'ショート' : 'ジャスト'} {Math.abs(currentShot.result.y).toFixed(1)}Yd
+                </div>
+                <button
+                  onClick={() => updateCurrentShot('result', null)}
+                  className="px-4 py-2 bg-[var(--color-neutral-700)] text-white text-sm rounded-lg hover:bg-[var(--color-neutral-800)] transition-colors"
+                >
+                  タップを取り消す
+                </button>
+              </div>
+            )}
 
             {/* ミスショット選択肢 - resultが未設定の場合のみ表示 */}
             {!currentShot.result && (
