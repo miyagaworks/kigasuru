@@ -129,14 +129,19 @@ export default function AdminPage() {
         fetch('/api/admin/system-info'),
       ]);
 
+      let statsData = null;
       if (statsRes.ok) {
-        const statsData = await statsRes.json();
+        statsData = await statsRes.json();
         setStats(statsData.stats);
       }
 
       if (systemInfoRes.ok) {
         const systemInfoData = await systemInfoRes.json();
-        setSystemInfo(systemInfoData);
+        // statsからtotalUsersを使用してsystem-infoのAPIコールを削減
+        setSystemInfo({
+          ...systemInfoData,
+          totalUsers: statsData?.stats?.users?.total || 0,
+        });
       }
     } catch (error) {
       console.error('Failed to load admin data:', error);

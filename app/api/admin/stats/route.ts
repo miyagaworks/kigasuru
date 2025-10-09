@@ -4,10 +4,12 @@ import { NextResponse } from 'next/server';
 import { auth } from '@/auth';
 import { prisma } from '@/lib/prisma';
 import { isAdmin } from '@/lib/admin';
+import { cache } from '@/lib/cache';
 
 /**
  * GET /api/admin/stats
  * 使用状況統計を取得（管理者のみ）
+ * 5分間キャッシュ
  */
 export async function GET() {
   try {
@@ -18,6 +20,17 @@ export async function GET() {
         { error: '管理者権限が必要です' },
         { status: 403 }
       );
+    }
+
+    // キャッシュをチェック
+    const cacheKey = 'admin:stats';
+    const cachedData = cache.get(cacheKey);
+    if (cachedData) {
+      return NextResponse.json({
+        success: true,
+        stats: cachedData,
+        cached: true,
+      });
     }
 
     // 各種統計を取得
@@ -81,29 +94,35 @@ export async function GET() {
       },
     });
 
+    const stats = {
+      users: {
+        total: totalUsers,
+        trial: trialUsers,
+        active: activeUsers,
+        permanent: permanentUsers,
+        recent: recentUsers,
+      },
+      shots: {
+        total: totalShots,
+        averagePerUser: totalUsers > 0 ? Math.round(totalShots / totalUsers) : 0,
+      },
+      payments: {
+        total: totalPayments._count,
+        totalAmount: totalPayments._sum.amount || 0,
+      },
+      plans: planDistribution.map(p => ({
+        plan: p.plan,
+        count: p._count,
+      })),
+    };
+
+    // キャッシュに保存（5分間）
+    cache.set(cacheKey, stats, 300);
+
     return NextResponse.json({
       success: true,
-      stats: {
-        users: {
-          total: totalUsers,
-          trial: trialUsers,
-          active: activeUsers,
-          permanent: permanentUsers,
-          recent: recentUsers,
-        },
-        shots: {
-          total: totalShots,
-          averagePerUser: totalUsers > 0 ? Math.round(totalShots / totalUsers) : 0,
-        },
-        payments: {
-          total: totalPayments._count,
-          totalAmount: totalPayments._sum.amount || 0,
-        },
-        plans: planDistribution.map(p => ({
-          plan: p.plan,
-          count: p._count,
-        })),
-      },
+      stats,
+      cached: false,
     });
   } catch (error) {
     console.error('[Admin Stats API] Error:', error);

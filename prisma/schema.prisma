@@ -44,6 +44,8 @@ model User {
 
   @@index([email])
   @@index([stripeCustomerId])
+  @@index([subscriptionStatus])
+  @@index([createdAt])
 }
 
 model Account {
@@ -191,6 +193,8 @@ model Subscription {
 
   @@index([userId])
   @@index([status])
+  @@index([plan])
+  @@index([status, plan])
 }
 
 model Payment {

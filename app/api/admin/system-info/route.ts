@@ -4,10 +4,12 @@ import { NextResponse } from 'next/server';
 import { auth } from '@/auth';
 import { prisma } from '@/lib/prisma';
 import { isAdmin } from '@/lib/admin';
+import { cache } from '@/lib/cache';
 
 /**
  * GET /api/admin/system-info
  * システム情報を取得（管理者のみ）
+ * 5分間キャッシュ
  */
 export async function GET() {
   try {
@@ -20,14 +22,21 @@ export async function GET() {
       );
     }
 
+    // キャッシュをチェック
+    const cacheKey = 'admin:system-info';
+    const cachedData = cache.get(cacheKey);
+    if (cachedData) {
+      return NextResponse.json({
+        ...cachedData,
+        lastUpdate: new Date().toLocaleString('ja-JP'),
+        cached: true,
+      });
+    }
+
     const [
-      totalUsers,
       activeSubscriptions,
       pendingRequests,
     ] = await Promise.all([
-      // 総ユーザー数
-      prisma.user.count(),
-
       // アクティブなサブスクリプション数
       prisma.subscription.count({
         where: {
@@ -43,11 +52,18 @@ export async function GET() {
       }),
     ]);
 
-    return NextResponse.json({
-      totalUsers,
+    const systemInfo = {
       activeSubscriptions,
       pendingRequests,
+    };
+
+    // キャッシュに保存（5分間）
+    cache.set(cacheKey, systemInfo, 300);
+
+    return NextResponse.json({
+      ...systemInfo,
       lastUpdate: new Date().toLocaleString('ja-JP'),
+      cached: false,
     });
   } catch (error) {
     console.error('[Admin System Info API] Error:', error);
