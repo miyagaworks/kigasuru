@@ -2,9 +2,8 @@ export const dynamic = 'force-dynamic';
 
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { Resend } from 'resend';
-
-const resend = new Resend(process.env.RESEND_API_KEY);
+import { sendEmail, getLogoAttachment } from '@/lib/email';
+import { getEmailVerificationTemplate } from '@/lib/email/templates/email-verification';
 
 /**
  * POST /api/auth/resend-verification
@@ -56,27 +55,22 @@ export async function POST(request: Request) {
     });
 
     // 確認メールを送信
-    const verificationUrl = `${process.env.NEXTAUTH_URL}/api/auth/verify-email?token=${token}&email=${encodeURIComponent(email)}`;
+    const baseUrl = process.env.AUTH_URL || process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+    const verificationUrl = `${baseUrl}/api/auth/verify-email?token=${token}`;
 
-    await resend.emails.send({
-      from: process.env.EMAIL_FROM || 'noreply@kigasuru.com',
-      to: email,
-      subject: 'メールアドレスの確認',
-      html: `
-        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-          <h2>メールアドレスの確認</h2>
-          <p>以下のリンクをクリックして、メールアドレスを確認してください。</p>
-          <p>
-            <a href="${verificationUrl}" style="display: inline-block; padding: 12px 24px; background-color: #22c55e; color: white; text-decoration: none; border-radius: 6px;">
-              メールアドレスを確認
-            </a>
-          </p>
-          <p style="color: #666; font-size: 14px;">
-            このリンクは24時間有効です。<br>
-            このメールに心当たりがない場合は、無視してください。
-          </p>
-        </div>
-      `,
+    const { html } = getEmailVerificationTemplate({
+      verificationUrl,
+      email: email.toLowerCase(),
+    });
+
+    const logoAttachment = getLogoAttachment();
+    const attachments = logoAttachment ? [logoAttachment] : undefined;
+
+    await sendEmail({
+      to: [email],
+      subject: 'Kigasuru - メールアドレスの確認',
+      html,
+      attachments,
     });
 
     return NextResponse.json({

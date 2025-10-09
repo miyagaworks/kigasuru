@@ -1,4 +1,6 @@
 import { Resend } from 'resend';
+import fs from 'fs';
+import path from 'path';
 
 // ビルド時に環境変数がない場合はダミー値を使用
 const resend = new Resend(process.env.RESEND_API_KEY || 'dummy-key-for-build');
@@ -8,6 +10,11 @@ export interface SendEmailOptions {
   subject: string;
   html: string;
   from?: string;
+  attachments?: Array<{
+    filename: string;
+    content: Buffer;
+    cid?: string;
+  }>;
 }
 
 /**
@@ -18,6 +25,7 @@ export async function sendEmail({
   subject,
   html,
   from = '上手くなる気がするぅぅぅ <noreply@kigasuru.com>',
+  attachments,
 }: SendEmailOptions) {
   try {
     const data = await resend.emails.send({
@@ -25,12 +33,32 @@ export async function sendEmail({
       to,
       subject,
       html,
+      attachments,
     });
 
     return { success: true, data };
   } catch (error) {
     console.error('[Send Email] Error:', error);
     return { success: false, error };
+  }
+}
+
+/**
+ * ロゴ画像を読み込んで添付ファイルとして返す
+ */
+export function getLogoAttachment() {
+  try {
+    const logoPath = path.join(process.cwd(), 'public', 'assets', 'images', 'logo_w.png');
+    const logoBuffer = fs.readFileSync(logoPath);
+
+    return {
+      filename: 'logo.png',
+      content: logoBuffer,
+      cid: 'logo', // HTMLで cid:logo として参照可能
+    };
+  } catch (error) {
+    console.error('[Get Logo] Error:', error);
+    return null;
   }
 }
 

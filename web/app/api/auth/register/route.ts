@@ -2,7 +2,7 @@
 import { NextResponse } from 'next/server';
 import bcrypt from 'bcryptjs';
 import { prisma } from '@/lib/db/prisma';
-import { sendEmail } from '@/lib/email';
+import { sendEmail, getLogoAttachment } from '@/lib/email';
 import { getEmailVerificationTemplate } from '@/lib/email/templates/email-verification';
 
 export async function POST(request: Request) {
@@ -61,10 +61,14 @@ export async function POST(request: Request) {
       email: normalizedEmail,
     });
 
+    const logoAttachment = getLogoAttachment();
+    const attachments = logoAttachment ? [logoAttachment] : undefined;
+
     await sendEmail({
       to: [normalizedEmail],
       subject: 'Kigasuru - メールアドレスの確認',
       html,
+      attachments,
     });
 
     return NextResponse.json(

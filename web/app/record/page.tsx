@@ -4,6 +4,7 @@ import React, { useState, useEffect, useMemo, useRef, Suspense } from 'react';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import { Layout } from '@/components/Layout';
 import { Button } from '@/components/Button';
+import { NumberKeypad } from '@/components/NumberKeypad';
 import { useStore } from '@/lib/store';
 import { useGyro } from '@/hooks/useGyro';
 import { useLocation as useGeoLocation } from '@/hooks/useLocation';
@@ -1397,14 +1398,13 @@ function RecordContent() {
             )}
 
             <div className="mt-6 space-y-4">
+              {/* 数字キーパッドで距離入力 */}
               <div>
-                <label className="block text-sm font-medium mb-2">ターゲット距離 (Yd)</label>
-                <input
-                  type="number"
-                  value={currentShot.distance || ''}
-                  onChange={(e) => updateCurrentShot('distance', parseInt(e.target.value))}
-                  className="w-full px-4 py-3 border-2 border-[var(--color-neutral-300)] rounded-lg bg-[var(--color-card-bg)]"
-                  placeholder="150"
+                <NumberKeypad
+                  value={currentShot.distance || null}
+                  onChange={(value) => updateCurrentShot('distance', value)}
+                  max={999}
+                  label="ターゲット距離"
                 />
               </div>
 
