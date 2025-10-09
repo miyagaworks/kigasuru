@@ -50,7 +50,12 @@ function VerifyRequestContent() {
         {/* アイコン */}
         <div className="flex justify-center mb-6">
           <div className="w-16 h-16 rounded-full bg-[var(--color-info-bg)] flex items-center justify-center">
-            <Icon category="ui" name="mail" size={32} className="text-[var(--color-info-text)]" />
+            <Icon
+              category="ui"
+              name="mail"
+              size={32}
+              className="text-[var(--color-secondary-blue)]"
+            />
           </div>
         </div>
 
@@ -70,7 +75,9 @@ function VerifyRequestContent() {
         <ul className="space-y-3 mb-6 text-[var(--color-neutral-700)]">
           <li className="flex">
             <span className="mr-2 flex-shrink-0">•</span>
-            <span className="flex-1">メールが届かない場合は、迷惑メールフォルダをご確認ください</span>
+            <span className="flex-1">
+              メールが届かない場合は、迷惑メールフォルダをご確認ください
+            </span>
           </li>
           <li className="flex">
             <span className="mr-2 flex-shrink-0">•</span>
@@ -85,16 +92,17 @@ function VerifyRequestContent() {
           disabled={isResending || !email}
           className="w-full mb-4"
         >
-          {isResending ? '送信中...' : 'もう一度メールを送信'}
+          {isResending ? "送信中..." : "もう一度メールを送信"}
         </Button>
 
         {/* 再送信メッセージ */}
         {resendMessage && (
           <div
             className={`p-3 rounded-lg text-sm text-center ${
-              resendMessage.includes('成功') || resendMessage.includes('再送信しました')
-                ? 'bg-[var(--color-success-bg)] text-[var(--color-success-text)]'
-                : 'bg-[var(--color-error-bg)] text-[var(--color-error-text)]'
+              resendMessage.includes("成功") ||
+              resendMessage.includes("再送信しました")
+                ? "bg-[var(--color-success-bg)] text-[var(--color-success-text)]"
+                : "bg-[var(--color-error-bg)] text-[var(--color-error-text)]"
             }`}
           >
             {resendMessage}

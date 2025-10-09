@@ -16,7 +16,7 @@ function VerifyEmailContent() {
         <div className="mb-6">
           <div className="w-20 h-20 mx-auto bg-blue-100 rounded-full flex items-center justify-center">
             <svg
-              className="w-12 h-12 text-blue-500"
+              className="w-12 h-12 text-[var(--color-secondary-blue)]"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -50,7 +50,9 @@ function VerifyEmailContent() {
             <strong>ご注意：</strong>
           </p>
           <ul className="text-sm text-[var(--color-neutral-700)] mt-2 space-y-1 list-disc list-inside text-justify">
-            <li>メールが届かない場合は、迷惑メールフォルダをご確認ください。</li>
+            <li>
+              メールが届かない場合は、迷惑メールフォルダをご確認ください。
+            </li>
             <li>リンクの有効期限は24時間です。</li>
           </ul>
         </div>

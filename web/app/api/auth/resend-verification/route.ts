@@ -2,7 +2,7 @@ export const dynamic = 'force-dynamic';
 
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { sendEmail, getLogoAttachment } from '@/lib/email';
+import { sendEmail, getLogoBase64 } from '@/lib/email';
 import { getEmailVerificationTemplate } from '@/lib/email/templates/email-verification';
 
 /**
@@ -58,19 +58,18 @@ export async function POST(request: Request) {
     const baseUrl = process.env.AUTH_URL || process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
     const verificationUrl = `${baseUrl}/api/auth/verify-email?token=${token}`;
 
+    const logoBase64 = getLogoBase64();
+
     const { html } = getEmailVerificationTemplate({
       verificationUrl,
       email: email.toLowerCase(),
+      logoBase64: logoBase64 || undefined,
     });
-
-    const logoAttachment = getLogoAttachment();
-    const attachments = logoAttachment ? [logoAttachment] : undefined;
 
     await sendEmail({
       to: [email],
       subject: 'Kigasuru - メールアドレスの確認',
       html,
-      attachments,
     });
 
     return NextResponse.json({

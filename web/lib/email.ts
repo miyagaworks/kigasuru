@@ -63,6 +63,21 @@ export function getLogoAttachment() {
 }
 
 /**
+ * ロゴ画像をBase64エンコードして返す
+ */
+export function getLogoBase64() {
+  try {
+    const logoPath = path.join(process.cwd(), 'public', 'assets', 'images', 'logo_w.png');
+    const logoBuffer = fs.readFileSync(logoPath);
+    const base64 = logoBuffer.toString('base64');
+    return `data:image/png;base64,${base64}`;
+  } catch (error) {
+    console.error('[Get Logo Base64] Error:', error);
+    return null;
+  }
+}
+
+/**
  * バルクメール送信（複数の宛先に個別送信）
  */
 export async function sendBulkEmail({

@@ -1,12 +1,14 @@
 export interface EmailVerificationTemplateProps {
   verificationUrl: string;
   email: string;
+  logoBase64?: string;
 }
 
 export function getEmailVerificationTemplate({
   verificationUrl,
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   email: _email,
+  logoBase64,
 }: EmailVerificationTemplateProps) {
   const html = `
 <!DOCTYPE html>
@@ -14,23 +16,39 @@ export function getEmailVerificationTemplate({
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="color-scheme" content="light dark">
+  <meta name="supported-color-schemes" content="light dark">
   <title>メールアドレスの確認</title>
+  <style>
+    /* ダークモード対策 - 背景色を強制 */
+    @media (prefers-color-scheme: dark) {
+      .email-header,
+      .email-button {
+        background: linear-gradient(to bottom, #286300 0%, #415a1d 50%, #609f00 100%) !important;
+        color: #ffffff !important;
+      }
+      .email-body {
+        background-color: #ffffff !important;
+        color: #333333 !important;
+      }
+    }
+  </style>
 </head>
 <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #f5f5f5;">
-  <div style="background: linear-gradient(to bottom, #286300 0%, #415a1d 50%, #609f00 100%); padding: 40px; text-align: center; border-radius: 10px 10px 0 0;">
-    <img src="cid:logo" alt="Kigasuru" style="max-width: 200px; height: auto;" />
+  <div class="email-header" style="background: linear-gradient(to bottom, #286300 0%, #415a1d 50%, #609f00 100%) !important; padding: 40px; text-align: center; border-radius: 10px 10px 0 0;">
+    ${logoBase64 ? `<img src="${logoBase64}" alt="Kigasuru" style="max-width: 200px; height: auto; display: block; margin: 0 auto;" />` : '<div style="color: #ffffff; font-size: 32px; font-weight: bold;">Kigasuru</div>'}
   </div>
 
-  <div style="background: #ffffff; padding: 40px; border-radius: 0 0 10px 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
-    <h2 style="color: #286300; margin-top: 0; font-size: 24px;">メールアドレスの確認</h2>
+  <div class="email-body" style="background: #ffffff !important; padding: 40px; border-radius: 0 0 10px 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+    <h2 style="color: #286300 !important; margin-top: 0; font-size: 24px;">メールアドレスの確認</h2>
 
-    <p style="font-size: 16px; color: #333;">上手くなる気がするぅぅぅにご登録いただきありがとうございます！</p>
+    <p style="font-size: 16px; color: #333 !important;">上手くなる気がするぅぅぅにご登録いただきありがとうございます！</p>
 
-    <p style="font-size: 16px; color: #333;">以下のボタンをクリックして、メールアドレスの確認を完了してください：</p>
+    <p style="font-size: 16px; color: #333 !important;">以下のボタンをクリックして、メールアドレスの確認を完了してください：</p>
 
     <div style="text-align: center; margin: 30px 0;">
-      <a href="${verificationUrl}"
-         style="display: inline-block; background: linear-gradient(to bottom, #286300 0%, #415a1d 50%, #609f00 100%); color: white; padding: 16px 48px; text-decoration: none; border-radius: 30px; font-weight: bold; font-size: 16px; box-shadow: 0 4px 6px rgba(40, 99, 0, 0.2);">
+      <a href="${verificationUrl}" class="email-button"
+         style="display: inline-block; background: linear-gradient(to bottom, #286300 0%, #415a1d 50%, #609f00 100%) !important; color: #ffffff !important; padding: 16px 48px; text-decoration: none; border-radius: 30px; font-weight: bold; font-size: 16px; box-shadow: 0 4px 6px rgba(40, 99, 0, 0.2);">
         メールアドレスを確認
       </a>
     </div>
