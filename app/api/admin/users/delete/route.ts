@@ -102,10 +102,24 @@ export async function POST(req: NextRequest) {
         });
       });
 
-      return NextResponse.json({
+      // 削除成功時のレスポンスに、セッション破棄の指示を含める
+      const response = NextResponse.json({
         success: true,
         message: `ユーザー「${user.name || user.email}」を削除しました`,
+        shouldSignOut: true, // クライアント側でサインアウトさせる
       });
+
+      // NextAuthのセッションCookieを削除
+      response.cookies.set('next-auth.session-token', '', {
+        maxAge: 0,
+        path: '/',
+      });
+      response.cookies.set('__Secure-next-auth.session-token', '', {
+        maxAge: 0,
+        path: '/',
+      });
+
+      return response;
     } catch (dbError) {
       console.error('[Admin Delete User API] Database Error:', dbError);
       const errorMessage = dbError instanceof Error ? dbError.message : String(dbError);

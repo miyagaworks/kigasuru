@@ -315,9 +315,25 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
             where: { id: token.sub },
             select: { subscriptionStatus: true, image: true },
           });
-          session.user.subscriptionStatus = dbUser?.subscriptionStatus || 'trial';
-          session.user.image = dbUser?.image || null;
-        } catch {
+
+          // ユーザーが削除されている場合、セッションを無効化
+          if (!dbUser) {
+            console.warn(`[Session] User ${token.sub} not found in database - session invalidated`);
+            return {
+              ...session,
+              user: {
+                ...session.user,
+                id: '',
+                email: '',
+                name: '',
+              },
+            };
+          }
+
+          session.user.subscriptionStatus = dbUser.subscriptionStatus || 'trial';
+          session.user.image = dbUser.image || null;
+        } catch (error) {
+          console.error('[Session] Database error:', error);
           session.user.subscriptionStatus = 'trial';
           session.user.image = null;
         }

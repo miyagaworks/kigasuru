@@ -146,6 +146,14 @@ export default function AdminUsersPage() {
       if (response.ok) {
         alert(data.message || 'ユーザーを削除しました');
         setDeleteConfirmUser(null);
+
+        // 削除されたユーザーが現在ログイン中の場合、強制サインアウト
+        if (data.shouldSignOut && session?.user?.id === deleteConfirmUser.id) {
+          // 自分自身を削除した場合（通常は防止されているが念のため）
+          window.location.href = '/auth/signin';
+          return;
+        }
+
         loadUsers();
       } else {
         alert(data.error || 'ユーザー削除に失敗しました');
