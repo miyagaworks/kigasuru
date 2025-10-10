@@ -170,12 +170,12 @@ export default function AdminUsersPage() {
     return matchesSearch && matchesFilter;
   });
 
-  // 検索・フィルターが適用されていない場合は最新20人のみ表示
+  // 検索・フィルターが適用されていない場合は最新10人のみ表示
   const displayUsers = searchQuery || filterStatus !== 'all'
     ? filteredUsers
-    : filteredUsers.slice(0, 20);
+    : filteredUsers.slice(0, 10);
 
-  const isLimitedView = !searchQuery && filterStatus === 'all' && filteredUsers.length > 20;
+  const isLimitedView = !searchQuery && filterStatus === 'all' && filteredUsers.length > 10;
 
   if (isLoading) {
     return (
@@ -257,7 +257,7 @@ export default function AdminUsersPage() {
             <div className="mb-4 bg-[var(--color-info-border)] border border-[var(--color-secondary-blue)] rounded-lg p-3">
               <p className="text-sm text-[var(--color-info-text)]">
                 <Icon category="ui" name="info" size={16} className="inline mr-1" style={{ filter: 'invert(23%) sepia(29%) saturate(1825%) hue-rotate(185deg) brightness(95%) contrast(96%)' }} />
-                最新の20人を表示しています。他のユーザーを表示するには、検索またはステータスフィルターを使用してください。
+                最新の10人を表示しています。他のユーザーを表示するには、検索またはステータスフィルターを使用してください。
               </p>
             </div>
           )}

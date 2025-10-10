@@ -261,7 +261,7 @@ export default function AdminPage() {
 
         {/* 管理メニュー */}
         <div className="mb-8">
-          <h2 className="text-lg font-bold text-[var(--color-neutral-900)] mb-4">
+          <h2 className="text-lg font-bold text-[var(--color-neutral-900)] mb-4 text-justify">
             管理メニュー
           </h2>
 
@@ -271,7 +271,6 @@ export default function AdminPage() {
               icon={<Icon category="ui" name="analysis" size={24} />}
               description="ユーザーの使用状況、ショットデータ、収益レポートなどを確認できます"
               onClick={() => router.push('/admin/analytics')}
-              disabled={true}
             />
 
             <AdminMenuCard
