@@ -21,7 +21,7 @@ export async function GET(request: Request) {
     }
 
     const { searchParams } = new URL(request.url);
-    const email = searchParams.get('email');
+    const searchQuery = searchParams.get('email'); // 'email'パラメータだが、名前とメールの両方で検索
     const userId = searchParams.get('userId');
     const detailUserId = searchParams.get('detailUserId'); // 詳細統計を取得するユーザーID
 
@@ -69,10 +69,25 @@ export async function GET(request: Request) {
 
     // 検索されたユーザーを取得
     let searchedUser = null;
-    if (email || userId) {
+    if (searchQuery || userId) {
       searchedUser = await prisma.user.findFirst({
-        where: email
-          ? { email: { contains: email, mode: 'insensitive' as const } }
+        where: searchQuery
+          ? {
+              OR: [
+                {
+                  email: {
+                    contains: searchQuery,
+                    mode: 'insensitive' as const,
+                  },
+                },
+                {
+                  name: {
+                    contains: searchQuery,
+                    mode: 'insensitive' as const,
+                  },
+                },
+              ],
+            }
           : userId
             ? { id: userId }
             : undefined,

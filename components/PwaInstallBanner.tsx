@@ -15,9 +15,11 @@ interface PwaInstallBannerProps {
 export function PwaInstallBanner({ needsAdditionalAuth = false }: PwaInstallBannerProps) {
   const [showBanner, setShowBanner] = useState(false);
   const [showInstructions, setShowInstructions] = useState(false);
+  const [showVideo, setShowVideo] = useState(false);
   const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
   const [isIOS, setIsIOS] = useState(false);
   const [isMobile, setIsMobile] = useState(true);
+  const [videoEnded, setVideoEnded] = useState(false);
 
   useEffect(() => {
     const checkInstallability = () => {
@@ -27,6 +29,8 @@ export function PwaInstallBanner({ needsAdditionalAuth = false }: PwaInstallBann
 
       // iOSかどうかチェック
       const iOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+      console.log('[PWA Banner] User Agent:', navigator.userAgent);
+      console.log('[PWA Banner] iOS detected:', iOS);
       setIsIOS(iOS);
 
       // モバイルかどうかチェック
@@ -162,7 +166,7 @@ export function PwaInstallBanner({ needsAdditionalAuth = false }: PwaInstallBann
               <h3 className="text-lg font-bold text-white">
                 アプリとして使いましょう！
               </h3>
-              <p className="text-sm text-blue-100 mt-1 text-justify">
+              <p className="text-sm text-blue-100 text-justify mt-1">
                 ホーム画面に追加すると、アプリのようにすぐにアクセスできます。
                 {needsAdditionalAuth && (
                   <span className="text-orange-600 font-medium">
@@ -200,13 +204,30 @@ export function PwaInstallBanner({ needsAdditionalAuth = false }: PwaInstallBann
         </div>
         {/* iOS向けインストール手順 */}
         {showInstructions && isIOS && (
-          <div className="mt-4 p-4 bg-blue-50 rounded-lg">
-            <h4 className="font-medium text-blue-900 mb-2">
-              iOSでのインストール方法
-            </h4>
+          <div className="mt-4 p-4 bg-blue-50 rounded-t-xl">
+            <div className="flex items-center justify-between mb-2">
+              <h4 className="font-medium text-blue-900">
+                iOSでのインストール方法
+              </h4>
+              <button
+                onClick={() => setShowVideo(true)}
+                className="flex-shrink-0 w-10 h-10 bg-[var(--color-secondary-blue)] hover:opacity-90 rounded-full flex items-center justify-center transition-colors mr-2 mt-2"
+                aria-label="インストール方法の動画を見る"
+              >
+                <svg
+                  width="24"
+                  height="24"
+                  fill="currentColor"
+                  viewBox="0 0 24 24"
+                  className="text-white"
+                >
+                  <path d="M8 5v14l11-7z" />
+                </svg>
+              </button>
+            </div>
             <ol className="list-decimal list-inside space-y-1 text-sm text-blue-700">
               <li>Safariブラウザで開いてください</li>
-              <li className="flex items-center">
+              <li>
                 画面下部の共有ボタン
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
@@ -228,6 +249,74 @@ export function PwaInstallBanner({ needsAdditionalAuth = false }: PwaInstallBann
           </div>
         )}
       </div>
+
+      {/* 動画モーダル */}
+      {showVideo && (
+        <div
+          className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-[60]"
+          onClick={() => setShowVideo(false)}
+        >
+          <div
+            className="relative bg-white w-full max-w-2xl mx-4 rounded-t-xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button
+              onClick={() => setShowVideo(false)}
+              className="absolute -top-10 right-0 w-8 h-8 bg-white rounded-full flex items-center justify-center hover:bg-gray-200 transition-colors"
+              aria-label="閉じる"
+            >
+              <svg
+                width="20"
+                height="20"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M6 18L18 6M6 6l12 12"
+                />
+              </svg>
+            </button>
+            <div className="p-4">
+              <h3 className="text-lg font-bold text-[var(--color-neutral-900)] mb-4">
+                インストール方法
+              </h3>
+              <div className="relative">
+                <video
+                  controls
+                  autoPlay
+                  className="w-full"
+                  src="/assets/images/pwa.mp4"
+                  onEnded={() => {
+                    console.log('[PWA Banner] Video ended');
+                    setVideoEnded(true);
+                  }}
+                  onPlay={() => console.log('[PWA Banner] Video playing')}
+                  onLoadedData={() => console.log('[PWA Banner] Video loaded')}
+                >
+                  お使いのブラウザは動画タグに対応していません。
+                </video>
+                {videoEnded && (
+                  <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50">
+                    <button
+                      onClick={() => {
+                        setShowVideo(false);
+                        setVideoEnded(false);
+                      }}
+                      className="px-8 py-3 bg-[var(--color-secondary-blue)] text-white text-lg font-bold rounded-lg hover:opacity-90 transition-opacity shadow-lg"
+                    >
+                      閉じる
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -95,32 +95,39 @@ export default function AdminAnalyticsPage() {
     }
   };
 
-  const handleSearch = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!searchQuery.trim()) return;
-
-    setIsSearching(true);
-    try {
-      const response = await fetch(`/api/admin/analytics?email=${encodeURIComponent(searchQuery)}`);
-      if (response.ok) {
-        const data = await response.json();
-        setSearchedUser(data.searchedUser);
-        if (!data.searchedUser) {
-          alert('ユーザーが見つかりませんでした');
-        }
+  // 検索処理（リアルタイム検索）
+  useEffect(() => {
+    const searchUser = async () => {
+      if (!searchQuery.trim()) {
+        setSearchedUser(null);
+        return;
       }
-    } catch (error) {
-      console.error('Failed to search user:', error);
-      alert('検索に失敗しました');
-    } finally {
-      setIsSearching(false);
-    }
-  };
 
-  const clearSearch = () => {
-    setSearchQuery('');
-    setSearchedUser(null);
-  };
+      setIsSearching(true);
+      try {
+        const response = await fetch(`/api/admin/analytics?email=${encodeURIComponent(searchQuery)}`);
+        if (response.ok) {
+          const data = await response.json();
+          setSearchedUser(data.searchedUser);
+        } else {
+          console.error('Search error');
+          setSearchedUser(null);
+        }
+      } catch (error) {
+        console.error('Failed to search user:', error);
+        setSearchedUser(null);
+      } finally {
+        setIsSearching(false);
+      }
+    };
+
+    // デバウンス処理
+    const timeoutId = setTimeout(() => {
+      searchUser();
+    }, 300);
+
+    return () => clearTimeout(timeoutId);
+  }, [searchQuery]);
 
   const handleOpenDetailModal = (user: UserAnalytics) => {
     setSelectedUser({
@@ -288,10 +295,17 @@ export default function AdminAnalyticsPage() {
       {/* 詳細ボタン */}
       <Button
         variant="outline"
+        size="md"
         onClick={() => handleOpenDetailModal(user)}
-        className="w-full flex items-center justify-center gap-2"
+        className="group w-full hover:bg-[var(--color-primary-green)] hover:text-white flex items-center justify-center"
       >
-        <Icon category="ui" name="analysis" size={16} />
+        <Icon
+          category="ui"
+          name="analysis"
+          size={18}
+          style={{ filter: 'invert(37%) sepia(93%) saturate(370%) hue-rotate(54deg) brightness(94%) contrast(97%)' }}
+          className="mr-1 group-hover:!brightness-0 group-hover:!invert transition-all"
+        />
         詳細統計を表示
       </Button>
     </div>
@@ -299,7 +313,7 @@ export default function AdminAnalyticsPage() {
 
   if (isLoading) {
     return (
-      <Layout showNav={true}>
+      <Layout showNav={false}>
         <div className="p-6">
           <div className="flex items-center justify-center min-h-[400px]">
             <div className="text-center">
@@ -313,7 +327,7 @@ export default function AdminAnalyticsPage() {
   }
 
   return (
-    <Layout showNav={true}>
+    <Layout showNav={false}>
       <div className="p-6 max-w-7xl mx-auto">
         {/* ヘッダー */}
         <div className="flex items-center gap-3 mb-6">
@@ -329,40 +343,19 @@ export default function AdminAnalyticsPage() {
         </div>
 
         {/* 検索フォーム */}
-        <div className="bg-[var(--color-card-bg)] rounded-lg shadow-md p-6 mb-6">
-          <form onSubmit={handleSearch} className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-[var(--color-neutral-700)] mb-2">
-                ユーザー検索
-              </label>
-              <div className="flex gap-3">
-                <input
-                  type="text"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="メールアドレスで検索"
-                  className="flex-1 px-4 py-3 border-2 border-[var(--color-neutral-300)] rounded-lg focus:border-[var(--color-primary-green)] focus:outline-none"
-                />
-                <Button
-                  type="submit"
-                  variant="primary"
-                  disabled={isSearching || !searchQuery.trim()}
-                  className="px-6"
-                >
-                  {isSearching ? '検索中...' : '検索'}
-                </Button>
-                {searchedUser && (
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={clearSearch}
-                  >
-                    クリア
-                  </Button>
-                )}
-              </div>
-            </div>
-          </form>
+        <div className="bg-[var(--color-card-bg)] rounded-lg shadow-md p-4 mb-6">
+          <div>
+            <label className="block text-sm font-medium text-[var(--color-neutral-700)] mb-2">
+              検索
+            </label>
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="名前またはメールアドレスで検索"
+              className="w-full px-4 py-3 border-2 border-[var(--color-neutral-300)] rounded-lg focus:border-[var(--color-primary-green)] focus:outline-none"
+            />
+          </div>
         </div>
 
         {/* 検索結果 */}

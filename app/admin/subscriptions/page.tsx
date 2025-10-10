@@ -99,7 +99,7 @@ export default function AdminSubscriptionsPage() {
 
   if (isLoading) {
     return (
-      <Layout showNav={true}>
+      <Layout showNav={false}>
         <div className="p-6">
           <div className="flex items-center justify-center min-h-[400px]">
             <div className="text-center">
@@ -113,7 +113,7 @@ export default function AdminSubscriptionsPage() {
   }
 
   return (
-    <Layout showNav={true}>
+    <Layout showNav={false}>
       <div className="p-6 max-w-7xl mx-auto">
         {/* ヘッダー */}
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 gap-3">

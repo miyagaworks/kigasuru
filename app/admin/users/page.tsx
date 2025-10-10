@@ -179,7 +179,7 @@ export default function AdminUsersPage() {
 
   if (isLoading) {
     return (
-      <Layout showNav={true}>
+      <Layout showNav={false}>
         <div className="p-6">
           <div className="flex items-center justify-center min-h-[400px]">
             <div className="text-center">
@@ -193,7 +193,7 @@ export default function AdminUsersPage() {
   }
 
   return (
-    <Layout showNav={true}>
+    <Layout showNav={false}>
       <div className="p-6 max-w-7xl mx-auto">
         {/* ヘッダー */}
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 gap-3">
@@ -352,14 +352,14 @@ export default function AdminUsersPage() {
                       {user.subscriptionStatus !== "permanent" ? (
                         <Button
                           variant="outline"
-                          size="sm"
+                          size="md"
                           onClick={() => setSelectedUser(user)}
-                          className="group flex-1 text-xs hover:bg-[var(--color-primary-green)] hover:text-white w-full sm:w-auto flex items-center justify-center"
+                          className="group flex-1 hover:bg-[var(--color-primary-green)] hover:text-white w-full sm:w-auto flex items-center justify-center"
                         >
                           <Icon
                             category="ui"
                             name="check"
-                            size={16}
+                            size={18}
                             style={{ filter: 'invert(37%) sepia(93%) saturate(370%) hue-rotate(54deg) brightness(94%) contrast(97%)' }}
                             className="mr-1 group-hover:!brightness-0 group-hover:!invert transition-all"
                           />
@@ -368,14 +368,14 @@ export default function AdminUsersPage() {
                       ) : (
                         <Button
                           variant="outline"
-                          size="sm"
+                          size="md"
                           onClick={() => setRevokeUser(user)}
-                          className="group flex-1 text-xs border-[var(--color-secondary-orange)] text-[var(--color-secondary-orange)] hover:bg-[var(--color-secondary-orange)] hover:text-white w-full sm:w-auto flex items-center justify-center"
+                          className="group flex-1 border-[var(--color-secondary-orange)] text-[var(--color-secondary-orange)] hover:bg-[var(--color-secondary-orange)] hover:text-white w-full sm:w-auto flex items-center justify-center"
                         >
                           <Icon
                             category="ui"
                             name="close"
-                            size={16}
+                            size={18}
                             style={{ filter: 'invert(45%) sepia(74%) saturate(1846%) hue-rotate(360deg) brightness(95%) contrast(99%)' }}
                             className="mr-1 group-hover:!brightness-0 group-hover:!invert transition-all"
                           />
@@ -384,14 +384,14 @@ export default function AdminUsersPage() {
                       )}
                       <Button
                         variant="outline"
-                        size="sm"
+                        size="md"
                         onClick={() => setDeleteConfirmUser(user)}
-                        className="group text-xs border-[var(--color-secondary-red)] text-[var(--color-secondary-red)] hover:bg-[var(--color-secondary-red)] hover:text-white w-full sm:w-auto flex items-center justify-center"
+                        className="group border-[var(--color-secondary-red)] text-[var(--color-secondary-red)] hover:bg-[var(--color-secondary-red)] hover:text-white w-full sm:w-auto flex items-center justify-center"
                       >
                         <Icon
                           category="ui"
                           name="delete"
-                          size={16}
+                          size={18}
                           style={{ filter: 'invert(17%) sepia(73%) saturate(2529%) hue-rotate(336deg) brightness(88%) contrast(93%)' }}
                           className="mr-1 group-hover:!brightness-0 group-hover:!invert transition-all"
                         />

@@ -1,10 +1,13 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { useSession } from 'next-auth/react';
+import { useRouter } from 'next/navigation';
 import { Layout } from '@/components/Layout';
 import { getAllShots, type Shot, getSetting } from '@/lib/db';
 import { PwaInstallBanner } from '@/components/PwaInstallBanner';
 import { SettingsGuideModal } from '@/components/SettingsGuideModal';
+import { isAdmin } from '@/lib/admin';
 
 interface Statistics {
   count: number;
@@ -23,6 +26,8 @@ interface ClubPerformance {
  * Dashboard page - Main entry point after login
  */
 export default function DashboardPage() {
+  const { data: session } = useSession();
+  const router = useRouter();
   const [todayStats, setTodayStats] = useState<Statistics | null>(null);
   const [allStats, setAllStats] = useState<Statistics | null>(null);
   const [todayClubPerformance, setTodayClubPerformance] = useState<ClubPerformance[]>([]);
@@ -37,6 +42,18 @@ export default function DashboardPage() {
     checkAuthStatus();
     checkSettingsStatus();
   }, []);
+
+  // 管理者の場合は管理者ページにリダイレクト
+  useEffect(() => {
+    if (session?.user?.email && isAdmin(session.user.email)) {
+      router.replace('/admin');
+    }
+  }, [session, router]);
+
+  // 管理者の場合は何も表示しない
+  if (session?.user?.email && isAdmin(session.user.email)) {
+    return null;
+  }
 
   const loadData = async () => {
     try {

@@ -152,7 +152,7 @@ export default function AdminPage() {
 
   if (isLoading) {
     return (
-      <Layout showNav={true}>
+      <Layout showNav={false}>
         <div className="p-6">
           <div className="flex items-center justify-center min-h-[400px]">
             <div className="text-center">
@@ -166,7 +166,7 @@ export default function AdminPage() {
   }
 
   return (
-    <Layout showNav={true}>
+    <Layout showNav={false}>
       <div className="p-6 max-w-7xl mx-auto">
         <h1 className="text-xl sm:text-2xl font-bold text-[var(--color-neutral-900)] mb-6 flex items-center gap-2">
           <Icon category="ui" name="settings" size={28} />
