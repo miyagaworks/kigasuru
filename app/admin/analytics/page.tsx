@@ -7,6 +7,7 @@ import { Layout } from '@/components/Layout';
 import { Button } from '@/components/Button';
 import { Icon } from '@/components/Icon';
 import { isAdmin } from '@/lib/admin';
+import { UserDetailModal } from '@/components/UserDetailModal';
 
 interface Shot {
   id: string;
@@ -63,6 +64,8 @@ export default function AdminAnalyticsPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [isSearching, setIsSearching] = useState(false);
+  const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
+  const [selectedUser, setSelectedUser] = useState<{ id: string; name: string | null; email: string } | null>(null);
 
   useEffect(() => {
     if (!session) {
@@ -117,6 +120,20 @@ export default function AdminAnalyticsPage() {
   const clearSearch = () => {
     setSearchQuery('');
     setSearchedUser(null);
+  };
+
+  const handleOpenDetailModal = (user: UserAnalytics) => {
+    setSelectedUser({
+      id: user.id,
+      name: user.name,
+      email: user.email,
+    });
+    setIsDetailModalOpen(true);
+  };
+
+  const handleCloseDetailModal = () => {
+    setIsDetailModalOpen(false);
+    setSelectedUser(null);
   };
 
   const renderUserCard = (user: UserAnalytics, isSearchResult = false) => (
@@ -243,7 +260,7 @@ export default function AdminAnalyticsPage() {
 
       {/* 支払い履歴（検索結果の場合のみ表示） */}
       {isSearchResult && user.payments && user.payments.length > 0 && (
-        <div>
+        <div className="mb-4">
           <h4 className="text-sm font-bold text-[var(--color-neutral-900)] mb-2">
             支払い履歴
           </h4>
@@ -267,6 +284,16 @@ export default function AdminAnalyticsPage() {
           </div>
         </div>
       )}
+
+      {/* 詳細ボタン */}
+      <Button
+        variant="outline"
+        onClick={() => handleOpenDetailModal(user)}
+        className="w-full flex items-center justify-center gap-2"
+      >
+        <Icon category="ui" name="analysis" size={16} />
+        詳細統計を表示
+      </Button>
     </div>
   );
 
@@ -369,6 +396,17 @@ export default function AdminAnalyticsPage() {
             </div>
           )}
         </div>
+
+        {/* 詳細統計モーダル */}
+        {selectedUser && (
+          <UserDetailModal
+            isOpen={isDetailModalOpen}
+            onClose={handleCloseDetailModal}
+            userId={selectedUser.id}
+            userName={selectedUser.name}
+            userEmail={selectedUser.email}
+          />
+        )}
       </div>
     </Layout>
   );
