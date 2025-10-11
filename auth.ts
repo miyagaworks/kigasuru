@@ -203,33 +203,18 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
               }
               const email = user.email.toLowerCase();
 
-              // PendingRegistrationをチェック
+              // PendingRegistrationをチェック（あれば使用、なくてもOK）
               const pendingRegistration = await prisma.pendingRegistration.findUnique({
                 where: { email },
               });
 
-              if (!pendingRegistration) {
-                console.error('Google authentication failed: Email not in pending registrations', email);
-                return '/auth/error?error=UNREGISTERED_EMAIL';
-              }
-
-              // 期限切れチェック
               const now = new Date();
-              if (pendingRegistration.expires < now) {
-                console.error('Google authentication failed: Pending registration expired', email);
-                // 期限切れのPendingを削除
-                await prisma.pendingRegistration.delete({
-                  where: { email },
-                });
-                return '/auth/error?error=REGISTRATION_EXPIRED';
-              }
-
               const trialEndsAt = new Date(now);
               trialEndsAt.setDate(trialEndsAt.getDate() + 7); // 7日間の無料トライアル
 
               const newUser = await prisma.user.create({
                 data: {
-                  name: user.name || pendingRegistration.name || email.split('@')[0],
+                  name: user.name || pendingRegistration?.name || email.split('@')[0],
                   email: email,
                   password: null,
                   subscriptionStatus: 'trial',
@@ -272,10 +257,12 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
                 },
               });
 
-              // PendingRegistrationを削除（登録完了）
-              await prisma.pendingRegistration.delete({
-                where: { email },
-              });
+              // PendingRegistrationがあれば削除（登録完了）
+              if (pendingRegistration) {
+                await prisma.pendingRegistration.delete({
+                  where: { email },
+                });
+              }
 
               user.id = newUser.id;
               user.name = newUser.name || user.name;
