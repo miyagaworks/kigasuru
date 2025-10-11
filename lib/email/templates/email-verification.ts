@@ -20,7 +20,7 @@ export function getEmailVerificationTemplate({
   <meta name="supported-color-schemes" content="light dark">
   <title>メールアドレスの確認</title>
   <style>
-    /* ダークモード対策 - ヘッダーとボタンのみ色を保持 */
+    /* ダークモード対策 - テキストを白に、ヘッダーとボタンの色を保持 */
     @media (prefers-color-scheme: dark) {
       .email-header {
         background: linear-gradient(to bottom, #286300 0%, #415a1d 50%, #609f00 100%) !important;
@@ -28,6 +28,19 @@ export function getEmailVerificationTemplate({
       .email-button {
         background: linear-gradient(to bottom, #286300 0%, #415a1d 50%, #609f00 100%) !important;
         color: #ffffff !important;
+      }
+      .email-text {
+        color: #ffffff !important;
+      }
+      .email-text-secondary {
+        color: #cccccc !important;
+      }
+      .email-text-muted {
+        color: #999999 !important;
+      }
+      .email-url-box {
+        background: #2a2a2a !important;
+        color: #86c232 !important;
       }
     }
   </style>
@@ -38,11 +51,11 @@ export function getEmailVerificationTemplate({
   </div>
 
   <div style="background: #ffffff; padding: 40px; border-radius: 0 0 10px 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
-    <h2 style="color: #286300; margin-top: 0; font-size: 24px;">メールアドレスの確認</h2>
+    <h2 class="email-text" style="color: #286300; margin-top: 0; font-size: 24px;">メールアドレスの確認</h2>
 
-    <p style="font-size: 16px; color: #333;">上手くなる気がするぅぅぅにご登録いただきありがとうございます！</p>
+    <p class="email-text" style="font-size: 16px; color: #333;">上手くなる気がするぅぅぅにご登録いただきありがとうございます！</p>
 
-    <p style="font-size: 16px; color: #333;">以下のボタンをクリックして、メールアドレスの確認を完了してください：</p>
+    <p class="email-text" style="font-size: 16px; color: #333;">以下のボタンをクリックして、メールアドレスの確認を完了してください：</p>
 
     <div style="text-align: center; margin: 30px 0;">
       <a href="${verificationUrl}" class="email-button"
@@ -51,25 +64,25 @@ export function getEmailVerificationTemplate({
       </a>
     </div>
 
-    <p style="color: #666; font-size: 14px;">ボタンをクリックできない場合は、以下のURLをコピーしてブラウザに貼り付けてください：</p>
-    <p style="color: #415a1d; word-break: break-all; font-size: 14px; background: #f9f9f9; padding: 10px; border-radius: 5px;">${verificationUrl}</p>
+    <p class="email-text-secondary" style="color: #666; font-size: 14px;">ボタンをクリックできない場合は、以下のURLをコピーしてブラウザに貼り付けてください：</p>
+    <p class="email-url-box" style="color: #415a1d; word-break: break-all; font-size: 14px; background: #f9f9f9; padding: 10px; border-radius: 5px;">${verificationUrl}</p>
 
     <hr style="border: none; border-top: 1px solid #eee; margin: 30px 0;">
 
-    <p style="color: #999; font-size: 12px; margin-bottom: 0;">
+    <p class="email-text-muted" style="color: #999; font-size: 12px; margin-bottom: 0;">
       このメールに心当たりがない場合は、無視していただいて問題ありません。<br>
       このリンクは24時間後に無効になります。
     </p>
   </div>
 
   <div style="background: #ffffff; padding: 30px; margin-top: 20px; border-radius: 10px; border-left: 4px solid #609f00;">
-    <p style="margin: 0 0 10px 0; color: #286300; font-weight: bold; font-size: 14px;">気がするぅぅぅチーム</p>
-    <p style="margin: 0 0 5px 0; color: #666; font-size: 13px;">あなたのゴルフライフをサポートします</p>
-    <p style="margin: 0; color: #999; font-size: 12px;">スイングデータを記録・分析して、さらなる上達を目指しましょう！</p>
+    <p class="email-text" style="margin: 0 0 10px 0; color: #286300; font-weight: bold; font-size: 14px;">気がするぅぅぅチーム</p>
+    <p class="email-text-secondary" style="margin: 0 0 5px 0; color: #666; font-size: 13px;">あなたのゴルフライフをサポートします</p>
+    <p class="email-text-muted" style="margin: 0; color: #999; font-size: 12px;">スイングデータを記録・分析して、さらなる上達を目指しましょう！</p>
   </div>
 
-  <div style="text-align: center; margin-top: 20px; color: #999; font-size: 12px;">
-    <p>© ${new Date().getFullYear()} Kigasuru. All rights reserved.</p>
+  <div class="email-text-muted" style="text-align: center; margin-top: 20px; color: #999; font-size: 12px;">
+    <p>© ${new Date().getFullYear()} 上手くなる気がするぅぅぅ. All rights reserved.</p>
   </div>
 </body>
 </html>
@@ -90,7 +103,7 @@ ${verificationUrl}
 あなたのゴルフライフをサポートします
 スイングデータを記録・分析して、さらなる上達を目指しましょう！
 
-© ${new Date().getFullYear()} Kigasuru. All rights reserved.
+© ${new Date().getFullYear()} 上手くなる気がするぅぅぅ. All rights reserved.
   `.trim();
 
   return { html, text };
