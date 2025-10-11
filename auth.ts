@@ -338,17 +338,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           let subscriptionStatus = dbUser.subscriptionStatus || 'trial';
           const now = new Date();
 
-          // トライアル期間チェック
-          if (subscriptionStatus === 'trial' && dbUser.trialEndsAt && dbUser.trialEndsAt < now) {
-            // トライアル期限切れの場合、ステータスを更新
-            subscriptionStatus = 'canceled';
-            await prisma.user.update({
-              where: { id: token.sub },
-              data: { subscriptionStatus: 'canceled' },
-            });
-          }
-
-          // サブスクリプション期間チェック（active/permanentの場合）
+          // サブスクリプション期間チェック（activeの場合のみ）
           if (subscriptionStatus === 'active' && dbUser.subscriptionEndsAt && dbUser.subscriptionEndsAt < now) {
             // サブスクリプション期限切れの場合、ステータスを更新
             subscriptionStatus = 'canceled';

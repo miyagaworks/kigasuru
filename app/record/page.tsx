@@ -494,37 +494,66 @@ function RecordContent() {
   const handleSave = async () => {
     setIsSaving(true);
 
-    // Haptic/Vibration feedback immediately (before async operations)
-    // iOS doesn't support Vibration API, so we try vibrate for Android
-    // and use AudioContext for iOS as fallback
-    if ('vibrate' in navigator) {
-      navigator.vibrate(100);
-    } else {
-      // iOS fallback: play a short click sound
-      try {
-        const AudioContextClass = window.AudioContext || (window as Window & { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
-        if (AudioContextClass) {
-          const audioContext = new AudioContextClass();
-          const oscillator = audioContext.createOscillator();
-          const gainNode = audioContext.createGain();
-
-          oscillator.connect(gainNode);
-          gainNode.connect(audioContext.destination);
-
-          oscillator.frequency.value = 1000;
-          oscillator.type = 'sine';
-          gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
-          gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.05);
-
-          oscillator.start(audioContext.currentTime);
-          oscillator.stop(audioContext.currentTime + 0.05);
-        }
-      } catch {
-        // Ignore audio errors
-      }
-    }
-
     try {
+      // トライアルユーザーの場合、記録可能かチェック（編集時は除く）
+      if (!editId) {
+        const trialCheckResponse = await fetch('/api/trial/validate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ shotDate: currentShot.date || new Date().toISOString() }),
+        });
+
+        if (!trialCheckResponse.ok) {
+          throw new Error('トライアルチェックに失敗しました');
+        }
+
+        const trialCheck = await trialCheckResponse.json();
+
+        if (!trialCheck.canRecord) {
+          // トライアル制限に達している場合
+          const confirmUpgrade = window.confirm(
+            `${trialCheck.message}\n\nサブスクリプションページに移動しますか？`
+          );
+
+          if (confirmUpgrade) {
+            router.push('/subscription');
+          }
+
+          setIsSaving(false);
+          return;
+        }
+      }
+
+      // Haptic/Vibration feedback immediately (before async operations)
+      // iOS doesn't support Vibration API, so we try vibrate for Android
+      // and use AudioContext for iOS as fallback
+      if ('vibrate' in navigator) {
+        navigator.vibrate(100);
+      } else {
+        // iOS fallback: play a short click sound
+        try {
+          const AudioContextClass = window.AudioContext || (window as Window & { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
+          if (AudioContextClass) {
+            const audioContext = new AudioContextClass();
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+
+            oscillator.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+
+            oscillator.frequency.value = 1000;
+            oscillator.type = 'sine';
+            gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.05);
+
+            oscillator.start(audioContext.currentTime);
+            oscillator.stop(audioContext.currentTime + 0.05);
+          }
+        } catch {
+          // Ignore audio errors
+        }
+      }
+
       if (editId) {
         // Update existing shot
         await updateShot(parseInt(editId), currentShot as Partial<Shot>);
