@@ -61,6 +61,16 @@ export async function POST(req: NextRequest) {
     // トランザクションを使用してユーザーとすべての関連データを削除
     try {
       await prisma.$transaction(async (tx) => {
+        // メール認証トークンを削除
+        await tx.emailVerificationToken.deleteMany({
+          where: { userId: userId },
+        });
+
+        // パスワードリセットトークンを削除
+        await tx.passwordResetToken.deleteMany({
+          where: { userId: userId },
+        });
+
         // ユーザー設定を削除
         await tx.userSettings.deleteMany({
           where: { userId: userId },
