@@ -313,7 +313,12 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         try {
           const dbUser = await prisma.user.findUnique({
             where: { id: token.sub },
-            select: { subscriptionStatus: true, image: true },
+            select: {
+              subscriptionStatus: true,
+              image: true,
+              trialEndsAt: true,
+              subscriptionEndsAt: true,
+            },
           });
 
           // ユーザーが削除されている場合、セッションを無効化
@@ -330,7 +335,30 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
             };
           }
 
-          session.user.subscriptionStatus = dbUser.subscriptionStatus || 'trial';
+          let subscriptionStatus = dbUser.subscriptionStatus || 'trial';
+          const now = new Date();
+
+          // トライアル期間チェック
+          if (subscriptionStatus === 'trial' && dbUser.trialEndsAt && dbUser.trialEndsAt < now) {
+            // トライアル期限切れの場合、ステータスを更新
+            subscriptionStatus = 'canceled';
+            await prisma.user.update({
+              where: { id: token.sub },
+              data: { subscriptionStatus: 'canceled' },
+            });
+          }
+
+          // サブスクリプション期間チェック（active/permanentの場合）
+          if (subscriptionStatus === 'active' && dbUser.subscriptionEndsAt && dbUser.subscriptionEndsAt < now) {
+            // サブスクリプション期限切れの場合、ステータスを更新
+            subscriptionStatus = 'canceled';
+            await prisma.user.update({
+              where: { id: token.sub },
+              data: { subscriptionStatus: 'canceled' },
+            });
+          }
+
+          session.user.subscriptionStatus = subscriptionStatus;
           session.user.image = dbUser.image || null;
         } catch (error) {
           console.error('[Session] Database error:', error);

@@ -8,6 +8,7 @@ export default auth((req) => {
 
   const isAuthRoute = nextUrl.pathname.startsWith('/auth');
   const isApiAuthRoute = nextUrl.pathname.startsWith('/api/auth');
+  const isAdminRoute = nextUrl.pathname.startsWith('/admin');
 
   // PWA and static files that should be publicly accessible
   const isStaticAsset =
@@ -30,6 +31,22 @@ export default auth((req) => {
   // 認証済みユーザーが認証ページにアクセスした場合、ダッシュボードにリダイレクト
   if (isLoggedIn && isAuthRoute && !nextUrl.pathname.includes('/auth/error')) {
     return NextResponse.redirect(new URL('/dashboard', nextUrl));
+  }
+
+  // サブスクリプションチェック（管理者ルートと公開ルートを除く）
+  if (isLoggedIn && !isPublicRoute && !isAdminRoute) {
+    const subscriptionStatus = req.auth?.user?.subscriptionStatus;
+
+    // 有効なサブスクリプションステータス
+    const validStatuses = ['active', 'permanent', 'trial'];
+
+    // subscriptionStatusが無効または期限切れの場合
+    if (!subscriptionStatus || !validStatuses.includes(subscriptionStatus)) {
+      // サブスクリプションページ以外からアクセスしている場合、サブスクリプションページにリダイレクト
+      if (!nextUrl.pathname.startsWith('/subscription')) {
+        return NextResponse.redirect(new URL('/subscription', nextUrl));
+      }
+    }
   }
 
   return NextResponse.next();
