@@ -348,7 +348,7 @@ export default function EmailsPage() {
                       onChange={(e) => setSubject(e.target.value)}
                       required
                       className="w-full px-3 py-2 border border-[var(--color-neutral-300)] rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--color-neutral-500)]"
-                      placeholder="例: 【Kigasuru】新機能リリースのお知らせ"
+                      placeholder="例: 【上手くなる気がするぅぅぅ】新機能リリースのお知らせ"
                     />
                   </div>
 
@@ -379,7 +379,7 @@ export default function EmailsPage() {
                       rows={10}
                       className="w-full px-3 py-2 border border-[var(--color-neutral-300)] rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--color-neutral-500)] font-mono text-sm"
                       placeholder={`<h1>新機能のお知らせ</h1>
-<p>いつもKigasuruをご利用いただきありがとうございます。</p>
+<p>いつも上手くなる気がするぅぅぅをご利用いただきありがとうございます。</p>
 <p>この度、以下の新機能をリリースいたしました：</p>
 <ul>
   <li>機能1</li>

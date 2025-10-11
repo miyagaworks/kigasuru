@@ -22,8 +22,8 @@ export async function POST(request: Request) {
     if (resend && process.env.RESEND_API_KEY) {
       try {
         await resend.emails.send({
-          from: 'Kigasuru <noreply@kigasuru.com>',
-          to: 'support@kigasuru.com',
+          from: "上手くなる気がするぅぅぅ <noreply@kigasuru.com>",
+          to: "support@kigasuru.com",
           replyTo: email,
           subject: `【お問い合わせ】${name}様より`,
           html: `
@@ -31,7 +31,7 @@ export async function POST(request: Request) {
             <p><strong>お名前:</strong> ${name}</p>
             <p><strong>メールアドレス:</strong> ${email}</p>
             <p><strong>お問い合わせ内容:</strong></p>
-            <p>${message.replace(/\n/g, '<br>')}</p>
+            <p>${message.replace(/\n/g, "<br>")}</p>
           `,
         });
       } catch (emailError) {

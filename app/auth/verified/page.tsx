@@ -33,7 +33,9 @@ export default function VerifiedPage() {
         <p className="text-[var(--color-neutral-700)] mb-8">
           メールアドレスの認証が完了しました。
           <br />
-          ログインしてKigasuruをお楽しみください。
+          データとともに、あなたのゴルフは進化し続けます。
+          <br />
+          ガンガン記録していってください！
         </p>
 
         <Link href="/auth/signin">

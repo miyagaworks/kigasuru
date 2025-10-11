@@ -98,11 +98,11 @@ function getPasswordResetTemplate({ resetUrl, email }: { resetUrl: string; email
       <body>
         <div class="container">
           <div class="header">
-            <h1>Kigasuru</h1>
+            <h1>上手くなる気がするぅぅぅ</h1>
           </div>
           <div class="content">
             <h2>パスワードリセットのご案内</h2>
-            <p>Kigasuruをご利用いただきありがとうございます。</p>
+            <p>上手くなる気がするぅぅぅをご利用いただきありがとうございます。</p>
             <p>パスワードリセットのリクエストを受け付けました。<br>以下のボタンをクリックして、新しいパスワードを設定してください。</p>
             <div style="text-align: center;">
               <a href="${resetUrl}" class="button">パスワードをリセットする</a>
@@ -119,7 +119,7 @@ function getPasswordResetTemplate({ resetUrl, email }: { resetUrl: string; email
           </div>
           <div class="footer">
             <p>このメールは ${email} 宛に送信されました。</p>
-            <p>&copy; 2025 Kigasuru. All rights reserved.</p>
+            <p>&copy; 2025 上手くなる気がするぅぅぅ. All rights reserved.</p>
           </div>
         </div>
       </body>
@@ -140,7 +140,7 @@ ${resetUrl}
 
 ---
 このメールは ${email} 宛に送信されました。
-© 2025 Kigasuru. All rights reserved.
+© 2025 上手くなる気がするぅぅぅ. All rights reserved.
   `;
 
   return { html, text };
