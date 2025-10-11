@@ -197,19 +197,39 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           // 新規ユーザーの場合 - Google認証で新規ユーザー作成
           if (provider === 'google') {
             try {
-              const now = new Date();
-              const trialEndsAt = new Date(now);
-              trialEndsAt.setDate(trialEndsAt.getDate() + 7); // 7日間の無料トライアル
-
               if (!user?.email) {
                 console.error('Google authentication requires email');
                 return false;
               }
               const email = user.email.toLowerCase();
 
+              // PendingRegistrationをチェック
+              const pendingRegistration = await prisma.pendingRegistration.findUnique({
+                where: { email },
+              });
+
+              if (!pendingRegistration) {
+                console.error('Google authentication failed: Email not in pending registrations', email);
+                return '/auth/error?error=UNREGISTERED_EMAIL';
+              }
+
+              // 期限切れチェック
+              const now = new Date();
+              if (pendingRegistration.expires < now) {
+                console.error('Google authentication failed: Pending registration expired', email);
+                // 期限切れのPendingを削除
+                await prisma.pendingRegistration.delete({
+                  where: { email },
+                });
+                return '/auth/error?error=REGISTRATION_EXPIRED';
+              }
+
+              const trialEndsAt = new Date(now);
+              trialEndsAt.setDate(trialEndsAt.getDate() + 7); // 7日間の無料トライアル
+
               const newUser = await prisma.user.create({
                 data: {
-                  name: user.name || email.split('@')[0],
+                  name: user.name || pendingRegistration.name || email.split('@')[0],
                   email: email,
                   password: null,
                   subscriptionStatus: 'trial',
@@ -250,6 +270,11 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
                   },
                   clubs: ['DR', '3W', '5W', '7W', 'U4', 'U5', '5I', '6I', '7I', '8I', '9I', 'PW', '50', '52', '54', '56', '58'],
                 },
+              });
+
+              // PendingRegistrationを削除（登録完了）
+              await prisma.pendingRegistration.delete({
+                where: { email },
               });
 
               user.id = newUser.id;
