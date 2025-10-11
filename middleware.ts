@@ -18,7 +18,18 @@ export default auth((req) => {
     nextUrl.pathname === '/apple-touch-icon.png' ||
     nextUrl.pathname === '/og-image.png';
 
-  const isPublicRoute = nextUrl.pathname === '/' || nextUrl.pathname === '/landing' || isAuthRoute || isApiAuthRoute || isStaticAsset;
+  const isPublicRoute = nextUrl.pathname === '/landing' || isAuthRoute || isApiAuthRoute || isStaticAsset;
+
+  // トップページへのアクセス処理
+  if (nextUrl.pathname === '/') {
+    if (isLoggedIn) {
+      // 認証済みユーザーはダッシュボードへ
+      return NextResponse.redirect(new URL('/dashboard', nextUrl));
+    } else {
+      // 未認証ユーザーは新規登録ページへ
+      return NextResponse.redirect(new URL('/auth/signup', nextUrl));
+    }
+  }
 
   // 認証されていないユーザーを保護されたルートから除外
   if (!isLoggedIn && !isPublicRoute) {
