@@ -34,6 +34,11 @@ export async function GET() {
         stripeSubscriptionId: true,
         createdAt: true,
         updatedAt: true,
+        shots: {
+          select: {
+            date: true,
+          },
+        },
         _count: {
           select: {
             shots: true,
@@ -47,10 +52,35 @@ export async function GET() {
       },
     });
 
+    // 各ユーザーのトライアル使用日数を計算
+    const usersWithTrialUsage = users.map((user) => {
+      let trialDaysUsed = 0;
+
+      // トライアルユーザーの場合のみ計算
+      if (user.subscriptionStatus === 'trial') {
+        // ユニークな日付（YYYY-MM-DD）を抽出
+        const uniqueDates = new Set(
+          user.shots.map((shot) => {
+            const date = new Date(shot.date);
+            return date.toISOString().split('T')[0]; // YYYY-MM-DD
+          })
+        );
+        trialDaysUsed = uniqueDates.size;
+      }
+
+      // shots配列は返さない（サイズが大きいため）
+      const { shots, ...userWithoutShots } = user;
+
+      return {
+        ...userWithoutShots,
+        trialDaysUsed,
+      };
+    });
+
     return NextResponse.json({
       success: true,
-      users,
-      total: users.length,
+      users: usersWithTrialUsage,
+      total: usersWithTrialUsage.length,
     });
   } catch (error) {
     console.error('[Admin Users API] Error:', error);

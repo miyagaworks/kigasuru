@@ -20,6 +20,7 @@ interface User {
   stripeSubscriptionId: string | null;
   createdAt: Date;
   updatedAt: Date;
+  trialDaysUsed: number;
   _count: {
     shots: number;
     subscriptions: number;
@@ -332,6 +333,36 @@ export default function AdminUsersPage() {
                       {new Date(user.createdAt).toLocaleDateString("ja-JP")}
                     </div>
                   </div>
+
+                  {/* トライアルユーザーの場合、記録日数を表示 */}
+                  {user.subscriptionStatus === 'trial' && (
+                    <div className="mb-3">
+                      <div className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium ${
+                        user.trialDaysUsed >= 3
+                          ? 'bg-[var(--color-error-bg)] text-[var(--color-error-text)]'
+                          : user.trialDaysUsed >= 2
+                            ? 'bg-orange-100 text-orange-700'
+                            : 'bg-[var(--color-info-bg)] text-[var(--color-info-text)]'
+                      }`}>
+                        <Icon
+                          category="ui"
+                          name="calendar"
+                          size={16}
+                          style={{
+                            filter: user.trialDaysUsed >= 3
+                              ? 'invert(17%) sepia(73%) saturate(2529%) hue-rotate(336deg) brightness(88%) contrast(93%)'
+                              : user.trialDaysUsed >= 2
+                                ? 'invert(45%) sepia(74%) saturate(1846%) hue-rotate(360deg) brightness(95%) contrast(99%)'
+                                : 'invert(23%) sepia(29%) saturate(1825%) hue-rotate(185deg) brightness(95%) contrast(96%)'
+                          }}
+                        />
+                        <span>記録日数: {user.trialDaysUsed} / 3日</span>
+                        {user.trialDaysUsed >= 3 && (
+                          <span className="ml-1">（制限到達）</span>
+                        )}
+                      </div>
+                    </div>
+                  )}
 
                   {user.trialEndsAt && (
                     <p className="text-xs text-[var(--color-neutral-600)] mb-2">
