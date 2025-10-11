@@ -61,10 +61,21 @@ export default function AdminUsersPage() {
   const loadUsers = async () => {
     try {
       const response = await fetch('/api/admin/users');
-      if (response.ok) {
-        const data = await response.json();
-        setUsers(data.users);
+      if (!response.ok) {
+        console.error('Failed to load users: HTTP', response.status);
+        return;
       }
+
+      const contentType = response.headers.get('content-type');
+      if (!contentType || !contentType.includes('application/json')) {
+        console.error('Failed to load users: Expected JSON but got', contentType);
+        const text = await response.text();
+        console.error('Response body:', text.substring(0, 200));
+        return;
+      }
+
+      const data = await response.json();
+      setUsers(data.users);
     } catch (error) {
       console.error('Failed to load users:', error);
     } finally {
