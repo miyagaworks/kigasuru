@@ -155,16 +155,11 @@ export default function DashboardPage() {
 
   const checkSettingsStatus = async () => {
     try {
+      console.log('[Dashboard] Checking settings status...');
+
       // デフォルトクラブ設定
       const DEFAULT_CLUBS = ['DR', '3W', '5W', '7W', 'U4', 'U5', '5I', '6I', '7I', '8I', '9I', 'PW', '50', '52', '54', '56', '58'];
-
-      // customClubsとenabledInputFieldsを確認
-      const customClubs = await getSetting('customClubs');
-      const enabledInputFields = await getSetting('enabledInputFields');
-
-      // 設定がデフォルトから変更されているかチェック
-      const clubsChanged = customClubs && JSON.stringify(customClubs) !== JSON.stringify(DEFAULT_CLUBS);
-      const fieldsChanged = enabledInputFields && JSON.stringify(enabledInputFields) !== JSON.stringify({
+      const DEFAULT_FIELDS = {
         slope: true,
         lie: true,
         club: true,
@@ -173,14 +168,39 @@ export default function DashboardPage() {
         temperature: true,
         feeling: true,
         memo: true,
-      });
+      };
+
+      // customClubsとenabledInputFieldsを確認
+      const customClubs = await getSetting('customClubs');
+      const enabledInputFields = await getSetting('enabledInputFields');
+
+      console.log('[Dashboard] Settings loaded:', { customClubs, enabledInputFields });
+
+      // 設定が存在しない場合（新規ユーザー）はガイドを表示
+      if (!customClubs && !enabledInputFields) {
+        console.log('[Dashboard] No settings found - showing guide');
+        setShowSettingsGuide(true);
+        return;
+      }
+
+      // 設定がデフォルトから変更されているかチェック
+      const clubsChanged = customClubs && JSON.stringify(customClubs) !== JSON.stringify(DEFAULT_CLUBS);
+      const fieldsChanged = enabledInputFields && JSON.stringify(enabledInputFields) !== JSON.stringify(DEFAULT_FIELDS);
+
+      console.log('[Dashboard] Settings changed:', { clubsChanged, fieldsChanged });
 
       // クラブまたは入力フィールドのいずれかが変更されていればガイドを非表示
       if (clubsChanged || fieldsChanged) {
+        console.log('[Dashboard] Settings modified - hiding guide');
         setShowSettingsGuide(false);
+      } else {
+        console.log('[Dashboard] Settings not modified - showing guide');
+        setShowSettingsGuide(true);
       }
     } catch (error) {
-      console.error('Failed to check settings status:', error);
+      console.error('[Dashboard] Failed to check settings status:', error);
+      // エラー時はガイドを表示
+      setShowSettingsGuide(true);
     }
   };
 

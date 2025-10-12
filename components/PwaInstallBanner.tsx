@@ -23,9 +23,12 @@ export function PwaInstallBanner({ needsAdditionalAuth = false }: PwaInstallBann
 
   useEffect(() => {
     const checkInstallability = () => {
+      console.log('[PWA Banner] Checking installability...');
+
       // PWAかどうかチェック
       const isPWA = window.matchMedia('(display-mode: standalone)').matches ||
                     ('standalone' in window.navigator && (window.navigator as { standalone?: boolean }).standalone === true);
+      console.log('[PWA Banner] Is PWA:', isPWA);
 
       // iOSかどうかチェック
       const iOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
@@ -38,7 +41,10 @@ export function PwaInstallBanner({ needsAdditionalAuth = false }: PwaInstallBann
 
       // PWAではない場合のみバナーを表示
       if (!isPWA) {
+        console.log('[PWA Banner] Not PWA - will show banner');
         setShowBanner(true);
+      } else {
+        console.log('[PWA Banner] Already PWA - hiding banner');
       }
     };
 
@@ -89,11 +95,20 @@ export function PwaInstallBanner({ needsAdditionalAuth = false }: PwaInstallBann
   // バナーが非表示設定されている場合はチェック
   useEffect(() => {
     const dismissedTime = localStorage.getItem('pwa-banner-dismissed');
+    console.log('[PWA Banner] Dismissed time:', dismissedTime);
+
     if (dismissedTime) {
       const daysSinceDismissed = (Date.now() - parseInt(dismissedTime)) / (1000 * 60 * 60 * 24);
+      console.log('[PWA Banner] Days since dismissed:', daysSinceDismissed);
+
       if (daysSinceDismissed < 30) {
+        console.log('[PWA Banner] Banner was dismissed recently - hiding');
         setShowBanner(false);
+      } else {
+        console.log('[PWA Banner] Banner dismiss expired - showing');
       }
+    } else {
+      console.log('[PWA Banner] Banner never dismissed - showing');
     }
   }, []);
 
