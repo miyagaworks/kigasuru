@@ -3,6 +3,7 @@ import NextAuth from 'next-auth';
 import authConfig from './auth.config';
 import { prisma } from '@/lib/prisma';
 import type { DefaultSession } from 'next-auth';
+import { cookies } from 'next/headers';
 
 // OAuth profile interface
 interface OAuthProfile {
@@ -192,6 +193,18 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
             user.email = existingUser.email;
             user.image = existingUser.image;
             return true;
+          }
+
+          // 新規ユーザーの場合 - Cookie判定で新規登録を許可
+          const cookieStore = await cookies();
+          const signupCookie = cookieStore.get('is_signup_flow');
+          const isSignupFlow = signupCookie?.value === 'true';
+
+          if (!isSignupFlow) {
+            // サインインページからの場合は新規登録を拒否
+            throw new Error(
+              'このメールアドレスは登録されていません。新規登録ページから登録してください。'
+            );
           }
 
           // 新規ユーザーの場合 - Google認証で新規ユーザー作成

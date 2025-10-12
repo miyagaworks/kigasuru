@@ -27,19 +27,43 @@ export async function sendEmail({
   from = '上手くなる気がするぅぅぅ <noreply@kigasuru.com>',
   attachments,
 }: SendEmailOptions) {
+  // 環境変数チェック
+  if (!process.env.RESEND_API_KEY || process.env.RESEND_API_KEY === 'dummy-key-for-build') {
+    console.error('[Send Email] RESEND_API_KEY is not configured properly');
+    throw new Error('RESEND_API_KEY is not configured');
+  }
+
+  // 開発環境ではResendのデフォルトアドレスを使用（ドメイン認証不要）
+  const isProduction = process.env.NODE_ENV === 'production';
+  const actualFrom = isProduction ? from : 'onboarding@resend.dev';
+
   try {
-    const data = await resend.emails.send({
-      from,
+    console.log('[Send Email] Attempting to send email:', {
+      to,
+      subject,
+      from: actualFrom,
+      environment: process.env.NODE_ENV,
+    });
+
+    const result = await resend.emails.send({
+      from: actualFrom,
       to,
       subject,
       html,
       attachments,
     });
 
-    return { success: true, data };
+    // Resend APIはエラーを返すことがある
+    if ('error' in result && result.error) {
+      console.error('[Send Email] Resend API error:', result.error);
+      throw new Error(`Resend API error: ${JSON.stringify(result.error)}`);
+    }
+
+    console.log('[Send Email] Success:', result);
+    return { success: true, data: result.data };
   } catch (error) {
     console.error('[Send Email] Error:', error);
-    return { success: false, error };
+    throw error;
   }
 }
 

@@ -73,14 +73,35 @@ export default function SignUpPage() {
     setLoading(true);
 
     try {
-      // サインアップページからのGoogle認証
-      // 特別なcallbackURLを使用して新規登録を許可
-      await signIn(provider, {
-        callbackUrl: '/dashboard',
-        redirect: true,
+      // Step 1: Cookieを設定（新規登録フローであることを示す）
+      const cookieResponse = await fetch('/api/auth/google-signup', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
       });
-    } catch {
-      setError('Google登録に失敗しました');
+
+      if (!cookieResponse.ok) {
+        const data = await cookieResponse.json();
+        setError(data.error || 'エラーが発生しました');
+        setLoading(false);
+        return;
+      }
+
+      // Step 2: Google認証を開始
+      const result = await signIn(provider, {
+        callbackUrl: '/dashboard',
+        redirect: false, // まずは結果を確認
+      });
+
+      if (result?.error) {
+        setError('Google認証でエラーが発生しました');
+        setLoading(false);
+      } else if (result?.url) {
+        // 成功したらリダイレクト
+        window.location.href = result.url;
+      }
+    } catch (error) {
+      console.error('Google signup error:', error);
+      setError('Google登録でエラーが発生しました');
       setLoading(false);
     }
   };
