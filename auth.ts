@@ -339,9 +339,17 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
 
         // 管理者判定（メールアドレスで判定）
         const ADMIN_EMAIL = 'admin@kigasuru.com';
-        session.user.isAdmin = session.user.email?.toLowerCase() === ADMIN_EMAIL.toLowerCase();
+        const isAdminUser = session.user.email?.toLowerCase() === ADMIN_EMAIL.toLowerCase();
+        session.user.isAdmin = isAdminUser;
 
-        // subscriptionStatusと画像はここでDBから取得（JWTサイズを最小化するため）
+        // 管理者の場合は即座にセッションを返す（DB不要、高速化）
+        if (isAdminUser) {
+          session.user.subscriptionStatus = 'permanent';
+          session.user.image = null;
+          return session;
+        }
+
+        // 一般ユーザーのみDBから取得（JWTサイズを最小化するため）
         try {
           const dbUser = await prisma.user.findUnique({
             where: { id: token.sub },
@@ -353,20 +361,9 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
             },
           });
 
-          // ユーザーが削除されている場合
+          // ユーザーが削除されている場合はセッションを無効化
           if (!dbUser) {
             console.warn(`[Session] User ${token.sub} not found in database`);
-
-            // 管理者の場合はセッションを維持（ユーザー管理を継続できるように）
-            const ADMIN_EMAIL = 'admin@kigasuru.com';
-            if (session.user.email?.toLowerCase() === ADMIN_EMAIL.toLowerCase()) {
-              console.log('[Session] Admin user - maintaining session despite user deletion');
-              session.user.subscriptionStatus = 'permanent'; // 管理者は常にアクセス可能
-              session.user.image = null;
-              return session;
-            }
-
-            // 一般ユーザーの場合はセッションを無効化
             return {
               ...session,
               user: {
@@ -395,6 +392,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           session.user.image = dbUser.image || null;
         } catch (error) {
           console.error('[Session] Database error:', error);
+          // DB接続エラーの場合もセッションを維持（オフライン耐性）
           session.user.subscriptionStatus = 'trial';
           session.user.image = null;
         }
