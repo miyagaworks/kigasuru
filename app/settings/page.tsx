@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
+import { useSession } from 'next-auth/react';
 import { Layout } from '@/components/Layout';
 import { Button } from '@/components/Button';
 import { Icon } from '@/components/Icon';
@@ -74,6 +75,7 @@ const ClubItem = React.memo(({ club, index, totalClubs, onMoveUp, onMoveDown, on
 ClubItem.displayName = 'ClubItem';
 
 export default function SettingsPage() {
+  const { data: session } = useSession();
   const { isSupported, hasPermission, isCalibrating, gyro, requestPermission, calibrate } = useGyro();
   const [calibrationStatus, setCalibrationStatus] = useState('');
   const [importStatus, setImportStatus] = useState('');
@@ -134,21 +136,32 @@ export default function SettingsPage() {
   };
 
   const loadInputSettings = async () => {
+    console.log('[Settings] Loading input settings... User ID:', session?.user?.id);
     const savedLevel = (await getSetting<string>('inputLevel', 'advanced')) ?? 'advanced';
     const savedFields = (await getSetting<InputFieldsConfig>('customInputFields', INPUT_LEVEL_PRESETS.advanced.fields)) ?? INPUT_LEVEL_PRESETS.advanced.fields;
+    console.log('[Settings] Loaded from IndexedDB - inputLevel:', savedLevel, 'customInputFields:', savedFields);
     setInputLevel(savedLevel);
     setCustomInputFields(savedFields);
   };
 
-  // Load threshold, clubs, and input settings on mount
+  // Load threshold, clubs, and input settings on mount (wait for session)
   useEffect(() => {
-    loadThreshold();
-    loadClubs();
-    loadInputSettings();
-    // 設定ページを訪れたことを記録
-    saveSetting('settingsVisited', true);
+    if (session?.user?.id) {
+      console.log('[Settings] Session ready, loading settings for user:', session.user.id);
+      loadThreshold();
+      loadClubs();
+      loadInputSettings();
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [session?.user?.id]);
+
+  // 設定ページを訪れたことを記録（セッションが利用可能になってから）
+  useEffect(() => {
+    if (session?.user?.id) {
+      console.log('[Settings] Recording settings visit for user:', session.user.id);
+      saveSetting('settingsVisited', true);
+    }
+  }, [session?.user?.id]);
 
   // Cleanup debounce timer on unmount
   useEffect(() => {
@@ -172,15 +185,18 @@ export default function SettingsPage() {
   }, []);
 
   const handleInputLevelChange = useCallback(async (level: string) => {
+    console.log('[Settings] Changing input level to:', level, 'User ID:', session?.user?.id);
     setInputLevel(level);
     await saveSetting('inputLevel', level);
+    console.log('[Settings] Saved inputLevel to IndexedDB');
     if (level !== 'custom') {
       const fields = INPUT_LEVEL_PRESETS[level as keyof typeof INPUT_LEVEL_PRESETS].fields;
       setCustomInputFields(fields);
       await saveSetting('customInputFields', fields);
       await saveSetting('enabledInputFields', fields);
+      console.log('[Settings] Saved customInputFields and enabledInputFields to IndexedDB');
     }
-  }, [INPUT_LEVEL_PRESETS]);
+  }, [INPUT_LEVEL_PRESETS, session?.user?.id]);
 
   const handleCustomFieldToggle = useCallback(async (field: keyof InputFieldsConfig) => {
     setCustomInputFields(prev => {
