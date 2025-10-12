@@ -20,11 +20,37 @@ export async function POST(request: Request) {
       );
     }
 
-    const { userId } = await request.json();
+    const { userId, reason } = await request.json();
 
     if (!userId) {
       return NextResponse.json(
         { error: 'ユーザーIDが必要です' },
+        { status: 400 }
+      );
+    }
+
+    // ユーザー存在確認
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: {
+        id: true,
+        subscriptionStatus: true,
+        subscriptions: {
+          select: { id: true, plan: true },
+        },
+      },
+    });
+
+    if (!user) {
+      return NextResponse.json(
+        { error: 'ユーザーが見つかりません' },
+        { status: 404 }
+      );
+    }
+
+    if (user.subscriptionStatus === 'permanent') {
+      return NextResponse.json(
+        { error: 'このユーザーは既に永久利用権を持っています' },
         { status: 400 }
       );
     }
@@ -41,19 +67,40 @@ export async function POST(request: Request) {
         },
       });
 
-      // 永久利用権サブスクリプションを作成
+      // 永久利用権サブスクリプションを作成または更新
+      const now = new Date();
       const endDate = new Date();
       endDate.setFullYear(endDate.getFullYear() + 100); // 100年後
 
-      const subscription = await tx.subscription.create({
-        data: {
-          userId,
-          plan: 'permanent',
-          status: 'active',
-          startDate: new Date(),
-          endDate,
-        },
-      });
+      let subscription;
+      if (user.subscriptions && user.subscriptions.length > 0) {
+        // 既存のサブスクリプションを更新
+        subscription = await tx.subscription.update({
+          where: { id: user.subscriptions[0].id },
+          data: {
+            plan: 'permanent_personal',
+            status: 'active',
+            startDate: now,
+            endDate,
+          },
+        });
+      } else {
+        // 新規サブスクリプションを作成
+        subscription = await tx.subscription.create({
+          data: {
+            userId,
+            plan: 'permanent_personal',
+            status: 'active',
+            startDate: now,
+            endDate,
+          },
+        });
+      }
+
+      // 理由をログに記録
+      if (reason) {
+        console.log(`[Grant Permanent] User: ${userId}, Reason: ${reason}`);
+      }
 
       return { user: updatedUser, subscription };
     });
