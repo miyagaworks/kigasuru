@@ -233,15 +233,21 @@ export const getStatistics = async (filters: Partial<Shot> = {}) => {
  * Save setting
  */
 export const saveSetting = async (key: string, value: unknown): Promise<string> => {
-  return await getDB().settings.put({ key, value });
+  console.log('[DB] saveSetting called - key:', key, 'value:', value, 'currentUserId:', currentUserId);
+  const result = await getDB().settings.put({ key, value });
+  console.log('[DB] saveSetting completed - key:', key, 'result:', result);
+  return result;
 };
 
 /**
  * Get setting
  */
 export const getSetting = async <T = unknown>(key: string, defaultValue: T | null = null): Promise<T | null> => {
+  console.log('[DB] getSetting called - key:', key, 'defaultValue:', defaultValue, 'currentUserId:', currentUserId);
   const setting = await getDB().settings.get(key);
-  return setting ? setting.value as T : defaultValue;
+  const result = setting ? setting.value as T : defaultValue;
+  console.log('[DB] getSetting result - key:', key, 'value:', result);
+  return result;
 };
 
 /**
