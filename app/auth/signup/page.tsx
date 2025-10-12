@@ -163,6 +163,11 @@ export default function SignUpPage() {
             Googleで登録
           </Button>
 
+          <p className="text-xs text-center text-[var(--color-neutral-600)] mt-2">
+            ※ LINEやInstagramアプリ内ブラウザでは<br className="sm:hidden" />Google認証が利用できません。<br />
+            SafariまたはChromeで開くか、<br className="sm:hidden" />メールアドレスで登録してください。
+          </p>
+
           <div className="relative my-6">
             <div className="absolute inset-0 flex items-center">
               <div className="w-full border-t border-[var(--color-neutral-400)]"></div>

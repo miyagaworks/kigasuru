@@ -158,63 +158,26 @@ export default function DashboardPage() {
     try {
       console.log('[Dashboard] Checking settings status...');
 
-      // デフォルトクラブ設定
-      const DEFAULT_CLUBS = ['DR', '3W', '5W', '7W', 'U4', 'U5', '5I', '6I', '7I', '8I', '9I', 'PW', '50', '52', '54', '56', '58'];
-      const DEFAULT_FIELDS = {
-        slope: true,
-        lie: true,
-        club: true,
-        strength: true,
-        wind: true,
-        temperature: true,
-        feeling: true,
-        memo: true,
-      };
-
-      // customClubsとenabledInputFieldsを確認
+      // ユーザーが設定ページを訪れたかチェック（inputLevelが存在するか）
+      const inputLevel = await getSetting('inputLevel');
       const customClubs = await getSetting('customClubs');
-      const enabledInputFields = await getSetting('enabledInputFields');
+      const customInputFields = await getSetting('customInputFields');
 
-      console.log('[Dashboard] Settings loaded:', { customClubs, enabledInputFields });
+      console.log('[Dashboard] Settings loaded:', {
+        inputLevel,
+        customClubs,
+        customInputFields
+      });
 
-      // 設定が存在しない場合（新規ユーザー）はガイドを表示
-      if (!customClubs && !enabledInputFields) {
-        console.log('[Dashboard] No settings found - showing guide');
-        setShowSettingsGuide(true);
-        return;
-      }
+      // inputLevel、customClubs、customInputFieldsのいずれかが存在すれば
+      // ユーザーは設定ページを訪れて設定を保存している
+      const hasVisitedSettings = !!(inputLevel || customClubs || customInputFields);
 
-      // 配列の内容比較（順序も考慮）
-      const arraysEqual = (a: unknown[], b: unknown[]) => {
-        if (a.length !== b.length) return false;
-        return a.every((val, idx) => val === b[idx]);
-      };
-
-      // オブジェクトの内容比較（プロパティ単位）
-      const objectsEqual = (a: Record<string, unknown>, b: Record<string, unknown>) => {
-        const keysA = Object.keys(a).sort();
-        const keysB = Object.keys(b).sort();
-        if (keysA.length !== keysB.length) return false;
-        if (!keysA.every((key, idx) => key === keysB[idx])) return false;
-        return keysA.every(key => a[key] === b[key]);
-      };
-
-      // 設定がデフォルトから変更されているかチェック
-      const clubsChanged = customClubs
-        ? !arraysEqual(customClubs as string[], DEFAULT_CLUBS)
-        : false;
-      const fieldsChanged = enabledInputFields
-        ? !objectsEqual(enabledInputFields as Record<string, boolean>, DEFAULT_FIELDS)
-        : false;
-
-      console.log('[Dashboard] Settings changed:', { clubsChanged, fieldsChanged });
-
-      // クラブまたは入力フィールドのいずれかが変更されていればガイドを非表示
-      if (clubsChanged || fieldsChanged) {
-        console.log('[Dashboard] Settings modified - hiding guide');
+      if (hasVisitedSettings) {
+        console.log('[Dashboard] User has configured settings - hiding guide');
         setShowSettingsGuide(false);
       } else {
-        console.log('[Dashboard] Settings not modified - showing guide');
+        console.log('[Dashboard] User has not configured settings - showing guide');
         setShowSettingsGuide(true);
       }
     } catch (error) {
