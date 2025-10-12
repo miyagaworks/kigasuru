@@ -353,9 +353,20 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
             },
           });
 
-          // ユーザーが削除されている場合、セッションを無効化
+          // ユーザーが削除されている場合
           if (!dbUser) {
-            console.warn(`[Session] User ${token.sub} not found in database - session invalidated`);
+            console.warn(`[Session] User ${token.sub} not found in database`);
+
+            // 管理者の場合はセッションを維持（ユーザー管理を継続できるように）
+            const ADMIN_EMAIL = 'admin@kigasuru.com';
+            if (session.user.email?.toLowerCase() === ADMIN_EMAIL.toLowerCase()) {
+              console.log('[Session] Admin user - maintaining session despite user deletion');
+              session.user.subscriptionStatus = 'permanent'; // 管理者は常にアクセス可能
+              session.user.image = null;
+              return session;
+            }
+
+            // 一般ユーザーの場合はセッションを無効化
             return {
               ...session,
               user: {

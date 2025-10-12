@@ -102,9 +102,16 @@ export default function AdminUsersPage() {
 
       if (response.ok) {
         alert('永久利用権を付与しました');
+
+        // UIを即座に更新
+        setUsers(users.map(u =>
+          u.id === selectedUser.id
+            ? { ...u, subscriptionStatus: 'permanent' }
+            : u
+        ));
+
         setSelectedUser(null);
         setGrantReason('');
-        loadUsers();
       } else {
         alert('永久利用権の付与に失敗しました');
       }
@@ -128,8 +135,15 @@ export default function AdminUsersPage() {
 
       if (response.ok) {
         alert('永久利用権を解除しました');
+
+        // UIを即座に更新
+        setUsers(users.map(u =>
+          u.id === revokeUser.id
+            ? { ...u, subscriptionStatus: 'expired' }
+            : u
+        ));
+
         setRevokeUser(null);
-        loadUsers();
       } else {
         const data = await response.json();
         alert(data.error || '永久利用権の解除に失敗しました');
@@ -157,6 +171,9 @@ export default function AdminUsersPage() {
 
       if (response.ok) {
         alert(data.message || 'ユーザーを削除しました');
+
+        // UIを即座に更新（削除されたユーザーをリストから除去）
+        setUsers(users.filter(u => u.id !== deleteConfirmUser.id));
         setDeleteConfirmUser(null);
 
         // 削除されたユーザーが現在ログイン中の場合、強制サインアウト
@@ -165,8 +182,6 @@ export default function AdminUsersPage() {
           window.location.href = '/auth/signin';
           return;
         }
-
-        loadUsers();
       } else {
         alert(data.error || 'ユーザー削除に失敗しました');
       }
