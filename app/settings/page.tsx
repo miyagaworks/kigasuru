@@ -145,6 +145,8 @@ export default function SettingsPage() {
     loadThreshold();
     loadClubs();
     loadInputSettings();
+    // 設定ページを訪れたことを記録
+    saveSetting('settingsVisited', true);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 

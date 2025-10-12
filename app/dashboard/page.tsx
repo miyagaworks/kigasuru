@@ -158,26 +158,16 @@ export default function DashboardPage() {
     try {
       console.log('[Dashboard] Checking settings status...');
 
-      // ユーザーが設定ページを訪れたかチェック（inputLevelが存在するか）
-      const inputLevel = await getSetting('inputLevel');
-      const customClubs = await getSetting('customClubs');
-      const customInputFields = await getSetting('customInputFields');
+      // ユーザーが設定ページを訪れたかチェック（settingsVisitedフラグを確認）
+      const settingsVisited = await getSetting('settingsVisited');
 
-      console.log('[Dashboard] Settings loaded:', {
-        inputLevel,
-        customClubs,
-        customInputFields
-      });
+      console.log('[Dashboard] settingsVisited flag:', settingsVisited);
 
-      // inputLevel、customClubs、customInputFieldsのいずれかが存在すれば
-      // ユーザーは設定ページを訪れて設定を保存している
-      const hasVisitedSettings = !!(inputLevel || customClubs || customInputFields);
-
-      if (hasVisitedSettings) {
-        console.log('[Dashboard] User has configured settings - hiding guide');
+      if (settingsVisited) {
+        console.log('[Dashboard] User has visited settings - hiding guide');
         setShowSettingsGuide(false);
       } else {
-        console.log('[Dashboard] User has not configured settings - showing guide');
+        console.log('[Dashboard] User has not visited settings - showing guide');
         setShowSettingsGuide(true);
       }
     } catch (error) {
