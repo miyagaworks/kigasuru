@@ -2,7 +2,7 @@ export const dynamic = 'force-dynamic';
 
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { sendEmail, getLogoBase64 } from '@/lib/email';
+import { sendEmail } from '@/lib/email';
 import { getEmailVerificationTemplate } from '@/lib/email/templates/email-verification';
 
 /**
@@ -58,12 +58,13 @@ export async function POST(request: Request) {
     const baseUrl = process.env.AUTH_URL || process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
     const verificationUrl = `${baseUrl}/api/auth/verify-email?token=${token}`;
 
-    const logoBase64 = getLogoBase64();
+    // 本番環境のロゴURL（HTTPSで参照）
+    const logoUrl = `${baseUrl}/assets/images/logo_w.png`;
 
     const { html } = getEmailVerificationTemplate({
       verificationUrl,
       email: email.toLowerCase(),
-      logoBase64: logoBase64 || undefined,
+      logoUrl,
     });
 
     await sendEmail({

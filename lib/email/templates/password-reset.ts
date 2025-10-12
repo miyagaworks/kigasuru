@@ -1,15 +1,14 @@
-export interface EmailVerificationTemplateProps {
-  verificationUrl: string;
+export interface PasswordResetTemplateProps {
+  resetUrl: string;
   email: string;
   logoUrl?: string;
 }
 
-export function getEmailVerificationTemplate({
-  verificationUrl,
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  email: _email,
+export function getPasswordResetTemplate({
+  resetUrl,
+  email,
   logoUrl,
-}: EmailVerificationTemplateProps) {
+}: PasswordResetTemplateProps) {
   const html = `
 <!DOCTYPE html>
 <html lang="ja">
@@ -18,7 +17,7 @@ export function getEmailVerificationTemplate({
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="color-scheme" content="light dark">
   <meta name="supported-color-schemes" content="light dark">
-  <title>メールアドレスの確認</title>
+  <title>パスワードリセットのご案内</title>
   <style>
     /* ダークモード対策 - テキストを白に、ヘッダーとボタンの色を保持 */
     @media (prefers-color-scheme: dark) {
@@ -42,6 +41,10 @@ export function getEmailVerificationTemplate({
         background: #2a2a2a !important;
         color: #86c232 !important;
       }
+      .email-warning {
+        background: #3a3a1a !important;
+        border-left: 4px solid #ffc107 !important;
+      }
     }
   </style>
 </head>
@@ -51,27 +54,34 @@ export function getEmailVerificationTemplate({
   </div>
 
   <div style="background: #ffffff; padding: 40px; border-radius: 0 0 10px 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
-    <h2 class="email-text" style="color: #286300; margin-top: 0; font-size: 24px;">メールアドレスの確認</h2>
+    <h2 class="email-text" style="color: #286300; margin-top: 0; font-size: 24px;">パスワードリセットのご案内</h2>
 
-    <p class="email-text" style="font-size: 16px; color: #333;">上手くなる気がするぅぅぅにご登録いただきありがとうございます！</p>
+    <p class="email-text" style="font-size: 16px; color: #333;">上手くなる気がするぅぅぅをご利用いただきありがとうございます。</p>
 
-    <p class="email-text" style="font-size: 16px; color: #333;">以下のボタンをクリックして、メールアドレスの確認を完了してください：</p>
+    <p class="email-text" style="font-size: 16px; color: #333;">パスワードリセットのリクエストを受け付けました。以下のボタンをクリックして、新しいパスワードを設定してください：</p>
 
     <div style="text-align: center; margin: 30px 0;">
-      <a href="${verificationUrl}" class="email-button"
+      <a href="${resetUrl}" class="email-button"
          style="display: inline-block; background: linear-gradient(to bottom, #286300 0%, #415a1d 50%, #609f00 100%) !important; color: #ffffff !important; padding: 16px 48px; text-decoration: none !important; border-radius: 30px; font-weight: bold; font-size: 16px; box-shadow: 0 4px 6px rgba(40, 99, 0, 0.2); mso-hide: all;">
-        <span style="color: #ffffff !important; text-decoration: none !important;">メールアドレスを確認</span>
+        <span style="color: #ffffff !important; text-decoration: none !important;">パスワードをリセット</span>
       </a>
     </div>
 
     <p class="email-text-secondary" style="color: #666; font-size: 14px;">ボタンをクリックできない場合は、以下のURLをコピーしてブラウザに貼り付けてください：</p>
-    <p class="email-url-box" style="color: #415a1d; word-break: break-all; font-size: 14px; background: #f9f9f9; padding: 10px; border-radius: 5px;">${verificationUrl}</p>
+    <p class="email-url-box" style="color: #415a1d; word-break: break-all; font-size: 14px; background: #f9f9f9; padding: 10px; border-radius: 5px;">${resetUrl}</p>
+
+    <div class="email-warning" style="padding: 15px; background-color: #fff3cd; border-left: 4px solid #ffc107; margin: 20px 0; border-radius: 4px;">
+      <p class="email-text" style="margin: 0 0 10px 0; color: #856404; font-weight: bold; font-size: 14px;">注意事項:</p>
+      <ul class="email-text" style="margin: 0; padding-left: 20px; color: #856404; font-size: 14px;">
+        <li>このリンクは1時間のみ有効です</li>
+        <li>心当たりがない場合は、このメールを無視してください</li>
+      </ul>
+    </div>
 
     <hr style="border: none; border-top: 1px solid #eee; margin: 30px 0;">
 
     <p class="email-text-muted" style="color: #999; font-size: 12px; margin-bottom: 0;">
-      このメールに心当たりがない場合は、無視していただいて問題ありません。<br>
-      このリンクは24時間後に無効になります。
+      このメールは ${email} 宛に送信されました。
     </p>
   </div>
 
@@ -89,16 +99,20 @@ export function getEmailVerificationTemplate({
   `.trim();
 
   const text = `
-上手くなる気がするぅぅぅにご登録いただきありがとうございます！
+上手くなる気がするぅぅぅをご利用いただきありがとうございます。
 
-メールアドレスの確認を完了するには、以下のURLをクリックしてください：
+パスワードリセットのリクエストを受け付けました。
+以下のURLにアクセスして、新しいパスワードを設定してください：
 
-${verificationUrl}
+${resetUrl}
 
-このメールに心当たりがない場合は、無視していただいて問題ありません。
-このリンクは24時間後に無効になります。
+【注意事項】
+• このリンクは1時間のみ有効です
+• 心当たりがない場合は、このメールを無視してください
 
 ---
+このメールは ${email} 宛に送信されました。
+
 気がするぅぅぅチーム
 あなたのゴルフライフをサポートします
 スイングデータを記録・分析して、さらなる上達を目指しましょう！

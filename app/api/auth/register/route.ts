@@ -2,7 +2,7 @@
 import { NextResponse } from 'next/server';
 import bcrypt from 'bcryptjs';
 import { prisma } from '@/lib/db/prisma';
-import { sendEmail, getLogoBase64 } from '@/lib/email';
+import { sendEmail } from '@/lib/email';
 import { getEmailVerificationTemplate } from '@/lib/email/templates/email-verification';
 
 export async function POST(request: Request) {
@@ -62,12 +62,13 @@ export async function POST(request: Request) {
     let emailError: string | null = null;
 
     try {
-      const logoBase64 = getLogoBase64();
+      // 本番環境のロゴURL（HTTPSで参照）
+      const logoUrl = `${baseUrl}/assets/images/logo_w.png`;
 
       const { html } = getEmailVerificationTemplate({
         verificationUrl,
         email: normalizedEmail,
-        logoBase64: logoBase64 || undefined,
+        logoUrl,
       });
 
       const result = await sendEmail({
