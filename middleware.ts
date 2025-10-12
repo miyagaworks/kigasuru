@@ -20,19 +20,29 @@ export default auth((req) => {
 
   const isPublicRoute = nextUrl.pathname === '/landing' || isAuthRoute || isApiAuthRoute || isStaticAsset;
 
+  // ホスト名でアプリとランディングページを分ける
+  const hostname = req.headers.get('host') || '';
+  const isAppDomain = hostname.startsWith('app.');
+
   // トップページへのアクセス処理
   if (nextUrl.pathname === '/') {
-    if (isLoggedIn) {
-      // 管理者は管理者ダッシュボードへ
-      const isAdmin = req.auth?.user?.isAdmin;
-      if (isAdmin) {
-        return NextResponse.redirect(new URL('/admin', nextUrl));
+    // app.kigasuru.com の場合
+    if (isAppDomain) {
+      if (isLoggedIn) {
+        // 管理者は管理者ダッシュボードへ
+        const isAdmin = req.auth?.user?.isAdmin;
+        if (isAdmin) {
+          return NextResponse.redirect(new URL('/admin', nextUrl));
+        }
+        // 一般ユーザーはダッシュボードへ
+        return NextResponse.redirect(new URL('/dashboard', nextUrl));
+      } else {
+        // 未認証ユーザーは新規登録ページへ
+        return NextResponse.redirect(new URL('/auth/signup', nextUrl));
       }
-      // 一般ユーザーはダッシュボードへ
-      return NextResponse.redirect(new URL('/dashboard', nextUrl));
     } else {
-      // 未認証ユーザーは新規登録ページへ
-      return NextResponse.redirect(new URL('/auth/signup', nextUrl));
+      // kigasuru.com の場合は全員ランディングページへ
+      return NextResponse.redirect(new URL('/landing', nextUrl));
     }
   }
 
