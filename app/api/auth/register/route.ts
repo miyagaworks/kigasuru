@@ -52,35 +52,58 @@ export async function POST(request: Request) {
       },
     });
 
-    // 認証メール送信
+    console.log('[Register] Pending registration created:', { email: normalizedEmail, token });
+
+    // 認証メール送信（失敗してもユーザー登録は成功とする）
     const baseUrl = process.env.AUTH_URL || process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
     const verificationUrl = `${baseUrl}/api/auth/verify-email?token=${token}`;
 
-    const logoBase64 = getLogoBase64();
+    let emailSent = false;
+    let emailError: string | null = null;
 
-    const { html } = getEmailVerificationTemplate({
-      verificationUrl,
-      email: normalizedEmail,
-      logoBase64: logoBase64 || undefined,
-    });
+    try {
+      const logoBase64 = getLogoBase64();
 
-    await sendEmail({
-      to: [normalizedEmail],
-      subject: '【気がするぅぅぅ】メールアドレスの確認',
-      html,
-    });
+      const { html } = getEmailVerificationTemplate({
+        verificationUrl,
+        email: normalizedEmail,
+        logoBase64: logoBase64 || undefined,
+      });
+
+      const result = await sendEmail({
+        to: [normalizedEmail],
+        subject: '【気がするぅぅぅ】メールアドレスの確認',
+        html,
+      });
+
+      if (result.success) {
+        emailSent = true;
+        console.log('[Register] Email sent successfully to:', normalizedEmail);
+      } else {
+        emailError = 'Email send failed';
+        console.error('[Register] Email send failed:', result);
+      }
+    } catch (error) {
+      emailError = error instanceof Error ? error.message : 'Unknown error';
+      console.error('[Register] Email error:', error);
+    }
 
     return NextResponse.json(
       {
-        message: '登録完了メールを送信しました。メールを確認して認証を完了してください。',
+        message: emailSent
+          ? '登録完了メールを送信しました。メールを確認して認証を完了してください。'
+          : 'アカウントを作成しましたが、メールの送信に失敗しました。サポートにお問い合わせください。',
         email: normalizedEmail,
+        emailSent,
+        requiresEmailVerification: true,
+        ...(emailError && { emailError }),
       },
       { status: 201 },
     );
   } catch (error) {
-    console.error('Registration error:', error);
+    console.error('[Register] Registration error:', error);
     return NextResponse.json(
-      { error: '登録処理中にエラーが発生しました' },
+      { error: '登録処理中にエラーが発生しました', details: error instanceof Error ? error.message : 'Unknown error' },
       { status: 500 },
     );
   }

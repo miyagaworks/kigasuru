@@ -31,6 +31,18 @@ function SignInForm() {
     };
     checkPWA();
 
+    // URL パラメータからエラーメッセージを取得
+    const errorParam = searchParams?.get('error');
+    if (errorParam) {
+      setError(decodeURIComponent(errorParam));
+    }
+
+    // URL パラメータからメールアドレスを取得（新規登録からのリダイレクト時）
+    const emailParam = searchParams?.get('email');
+    if (emailParam) {
+      setEmail(decodeURIComponent(emailParam));
+    }
+
     // PWAブリッジ成功時の処理
     const checkBridgeSuccess = async () => {
       if (searchParams?.get('pwa_bridge_success') === 'true') {

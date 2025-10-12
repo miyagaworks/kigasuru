@@ -51,16 +51,25 @@ export default function SignUpPage() {
         body: JSON.stringify({ name, email, password }),
       });
 
+      const data = await response.json();
+
       if (!response.ok) {
-        const data = await response.json();
         setError(data.error || '登録に失敗しました');
         setLoading(false);
         return;
       }
 
-      // 登録成功後、メール認証待ちページへリダイレクト
-      const data = await response.json();
-      router.push(`/auth/verify-email?email=${encodeURIComponent(data.email || email)}`);
+      // 登録成功 - メール送信状況に応じて適切なページにリダイレクト
+      if (data.emailSent) {
+        // メール送信成功：メール認証待ちページへ
+        router.push(`/auth/verify-email?email=${encodeURIComponent(data.email || email)}`);
+      } else {
+        // メール送信失敗：ログインページへリダイレクトし、エラーメッセージを表示
+        const errorMsg = encodeURIComponent(
+          'アカウントは作成されましたが、確認メールの送信に失敗しました。サポートにお問い合わせください。'
+        );
+        router.push(`/auth/signin?error=${errorMsg}&email=${encodeURIComponent(data.email || email)}`);
+      }
     } catch {
       setError('登録処理中にエラーが発生しました');
     } finally {
