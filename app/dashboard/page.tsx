@@ -141,8 +141,8 @@ export default function DashboardPage() {
       setTodayClubPerformance(todayPerf.sort((a, b) => b.shotCount - a.shotCount));
       setAllClubPerformance(allPerf.sort((a, b) => b.shotCount - a.shotCount));
 
-      // ワースト順のクラブを設定（精度が低い順）
-      setWorstClubs(allPerf.filter(c => c.accuracy > 0).sort((a, b) => b.accuracy - a.accuracy));
+      // ワースト順のクラブを設定（精度が低い順、3回以上使用したクラブのみ）
+      setWorstClubs(allPerf.filter(c => c.accuracy > 0 && c.shotCount >= 3).sort((a, b) => b.accuracy - a.accuracy));
 
     } catch (error) {
       console.error('Failed to load data:', error);
