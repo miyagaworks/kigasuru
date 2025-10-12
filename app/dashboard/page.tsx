@@ -51,7 +51,30 @@ export default function DashboardPage() {
 
   const loadData = async () => {
     try {
-      const shots = await getAllShots();
+      // Try to fetch from server first (if online)
+      let shots: Shot[] = [];
+      const isOnline = typeof navigator !== 'undefined' && navigator.onLine;
+
+      if (isOnline) {
+        try {
+          const response = await fetch('/api/shots');
+          if (response.ok) {
+            const result = await response.json();
+            shots = result.shots || [];
+            console.log('[Dashboard] Loaded', shots.length, 'shots from server');
+          } else {
+            throw new Error('Failed to fetch from server');
+          }
+        } catch (error) {
+          console.error('[Dashboard] Failed to load from server, falling back to IndexedDB:', error);
+          shots = await getAllShots();
+        }
+      } else {
+        // Offline: Load from IndexedDB
+        console.log('[Dashboard] Offline - loading from IndexedDB');
+        shots = await getAllShots();
+      }
+
       const today = new Date();
       today.setHours(0, 0, 0, 0);
 

@@ -555,8 +555,10 @@ function RecordContent() {
       }
 
       if (editId) {
-        // Update existing shot
+        // Update existing shot in IndexedDB
         await updateShot(parseInt(editId), currentShot as Partial<Shot>);
+
+        // TODO: Update shot on server as well (requires PUT endpoint)
 
         // Show success toast
         toast.success('更新しました', {
@@ -575,8 +577,37 @@ function RecordContent() {
           router.push('/record');
         }, 500);
       } else {
-        // Create new shot
-        await addShot(currentShot as Partial<Shot>);
+        // Create new shot - Try to save to server first (if online)
+        const isOnline = typeof navigator !== 'undefined' && navigator.onLine;
+
+        if (isOnline) {
+          try {
+            // Save to server
+            const response = await fetch('/api/shots', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(currentShot),
+            });
+
+            if (!response.ok) {
+              throw new Error('サーバーへの保存に失敗');
+            }
+
+            const result = await response.json();
+            console.log('[Record] Shot saved to server:', result.shotId);
+
+            // Also save to IndexedDB for offline access
+            await addShot(currentShot as Partial<Shot>);
+          } catch (error) {
+            console.error('[Record] Failed to save to server, saving to IndexedDB only:', error);
+            // Fallback: Save to IndexedDB only (will sync later)
+            await addShot(currentShot as Partial<Shot>);
+          }
+        } else {
+          // Offline: Save to IndexedDB only (will sync when online)
+          console.log('[Record] Offline - saving to IndexedDB only');
+          await addShot(currentShot as Partial<Shot>);
+        }
 
         // Show success toast
         toast.success('保存しました', {
