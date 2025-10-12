@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { useSession } from 'next-auth/react';
 import { Layout } from '@/components/Layout';
 import { getAllShots, type Shot, getSetting } from '@/lib/db';
 import { PwaInstallBanner } from '@/components/PwaInstallBanner';
@@ -23,6 +24,7 @@ interface ClubPerformance {
  * Dashboard page - Main entry point after login
  */
 export default function DashboardPage() {
+  const { data: session } = useSession();
   const [todayStats, setTodayStats] = useState<Statistics | null>(null);
   const [allStats, setAllStats] = useState<Statistics | null>(null);
   const [todayClubPerformance, setTodayClubPerformance] = useState<ClubPerformance[]>([]);
@@ -36,8 +38,16 @@ export default function DashboardPage() {
   useEffect(() => {
     loadData();
     checkAuthStatus();
-    checkSettingsStatus();
   }, []);
+
+  // Check settings status only after session is ready
+  useEffect(() => {
+    if (session?.user?.id) {
+      console.log('[Dashboard] Session ready, checking settings for user:', session.user.id);
+      checkSettingsStatus();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [session?.user?.id]);
 
   const loadData = async () => {
     try {
