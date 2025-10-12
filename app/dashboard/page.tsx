@@ -30,7 +30,8 @@ export default function DashboardPage() {
   const [worstClubs, setWorstClubs] = useState<ClubPerformance[]>([]);
   const [loading, setLoading] = useState(true);
   const [needsAdditionalAuth, setNeedsAdditionalAuth] = useState(false);
-  const [showSettingsGuide, setShowSettingsGuide] = useState(true);
+  const [showSettingsGuide, setShowSettingsGuide] = useState(false);
+  const [settingsGuideTemporarilyClosed, setSettingsGuideTemporarilyClosed] = useState(false);
 
   useEffect(() => {
     loadData();
@@ -500,8 +501,11 @@ export default function DashboardPage() {
       </div>
       <PwaInstallBanner needsAdditionalAuth={needsAdditionalAuth} />
       <SettingsGuideModal
-        isOpen={showSettingsGuide}
-        onClose={() => setShowSettingsGuide(false)}
+        isOpen={showSettingsGuide && !settingsGuideTemporarilyClosed}
+        onClose={() => {
+          console.log('[Dashboard] Settings guide temporarily closed - will reappear on page reload if not configured');
+          setSettingsGuideTemporarilyClosed(true);
+        }}
       />
     </Layout>
   );
