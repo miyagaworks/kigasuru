@@ -45,8 +45,10 @@ export class KigasuruDB extends Dexie {
   settings!: Table<Setting, string>;
   calibration!: Table<Calibration, string>;
 
-  constructor() {
-    super('KigasuruDB');
+  constructor(userId?: string) {
+    // ユーザーIDをデータベース名に含めることで、ユーザーごとに独立したDBを作成
+    const dbName = userId ? `KigasuruDB_${userId}` : 'KigasuruDB';
+    super(dbName);
 
     this.version(1).stores({
       shots: '++id, date, slope, club, lie, strength, wind, temperature, result, distance, feeling, memo, createdAt',
@@ -83,7 +85,49 @@ export class KigasuruDB extends Dexie {
   }
 }
 
-export const db = new KigasuruDB();
+// グローバルなDB インスタンスを保持
+let dbInstance: KigasuruDB | null = null;
+let currentUserId: string | null = null;
+
+/**
+ * ユーザーIDを設定してDBインスタンスを初期化
+ */
+export const initDB = (userId: string): KigasuruDB => {
+  console.log('[DB] Initializing DB for user:', userId);
+
+  // 既存のインスタンスがあり、同じユーザーの場合はそのまま返す
+  if (dbInstance && currentUserId === userId) {
+    console.log('[DB] Reusing existing DB instance for user:', userId);
+    return dbInstance;
+  }
+
+  // 既存のインスタンスがあるが、別のユーザーの場合は閉じる
+  if (dbInstance && currentUserId !== userId) {
+    console.log('[DB] Closing DB for previous user:', currentUserId);
+    dbInstance.close();
+  }
+
+  // 新しいインスタンスを作成
+  console.log('[DB] Creating new DB instance for user:', userId);
+  currentUserId = userId;
+  dbInstance = new KigasuruDB(userId);
+  return dbInstance;
+};
+
+/**
+ * 現在のDBインスタンスを取得（初期化されていない場合はエラー）
+ */
+export const getDB = (): KigasuruDB => {
+  if (!dbInstance) {
+    console.warn('[DB] DB not initialized - using default instance');
+    // フォールバックとして非ユーザー固有のDBを使用（後方互換性のため）
+    dbInstance = new KigasuruDB();
+  }
+  return dbInstance;
+};
+
+// 後方互換性のため、デフォルトのdbエクスポートを維持
+export const db = getDB();
 
 /**
  * Add a shot record
@@ -109,21 +153,21 @@ export const addShot = async (shotData: Partial<Shot>): Promise<number> => {
     manualLocation: shotData.manualLocation || false,
     createdAt: Date.now(),
   };
-  return await db.shots.add(shot);
+  return await getDB().shots.add(shot);
 };
 
 /**
  * Get all shots
  */
 export const getAllShots = async (): Promise<Shot[]> => {
-  return await db.shots.orderBy('createdAt').reverse().toArray();
+  return await getDB().shots.orderBy('createdAt').reverse().toArray();
 };
 
 /**
  * Get shots with filters
  */
 export const getFilteredShots = async (filters: Partial<Shot> = {}): Promise<Shot[]> => {
-  let collection = db.shots.toCollection();
+  let collection = getDB().shots.toCollection();
 
   Object.entries(filters).forEach(([key, value]) => {
     if (value !== undefined && value !== null) {
@@ -189,14 +233,14 @@ export const getStatistics = async (filters: Partial<Shot> = {}) => {
  * Save setting
  */
 export const saveSetting = async (key: string, value: unknown): Promise<string> => {
-  return await db.settings.put({ key, value });
+  return await getDB().settings.put({ key, value });
 };
 
 /**
  * Get setting
  */
 export const getSetting = async <T = unknown>(key: string, defaultValue: T | null = null): Promise<T | null> => {
-  const setting = await db.settings.get(key);
+  const setting = await getDB().settings.get(key);
   return setting ? setting.value as T : defaultValue;
 };
 
@@ -204,7 +248,7 @@ export const getSetting = async <T = unknown>(key: string, defaultValue: T | nul
  * Save calibration data
  */
 export const saveCalibration = async (data: Omit<Calibration, 'id' | 'timestamp'>): Promise<string> => {
-  return await db.calibration.put({
+  return await getDB().calibration.put({
     id: 'current',
     ...data,
     timestamp: Date.now(),
@@ -215,35 +259,35 @@ export const saveCalibration = async (data: Omit<Calibration, 'id' | 'timestamp'
  * Get calibration data
  */
 export const getCalibration = async (): Promise<Calibration | undefined> => {
-  return await db.calibration.get('current');
+  return await getDB().calibration.get('current');
 };
 
 /**
  * Update a shot record
  */
 export const updateShot = async (shotId: number, updates: Partial<Shot>): Promise<number> => {
-  return await db.shots.update(shotId, updates);
+  return await getDB().shots.update(shotId, updates);
 };
 
 /**
  * Delete a shot record
  */
 export const deleteShot = async (shotId: number): Promise<void> => {
-  return await db.shots.delete(shotId);
+  return await getDB().shots.delete(shotId);
 };
 
 /**
  * Get a single shot by ID
  */
 export const getShot = async (shotId: number): Promise<Shot | undefined> => {
-  return await db.shots.get(shotId);
+  return await getDB().shots.get(shotId);
 };
 
 /**
  * Clear all data (for reset)
  */
 export const clearAllData = async (): Promise<void> => {
-  await db.shots.clear();
+  await getDB().shots.clear();
   // Keep settings and calibration
 };
 
@@ -256,7 +300,7 @@ export const getTodayManualLocationShots = async (): Promise<Shot[]> => {
   const tomorrow = new Date(today);
   tomorrow.setDate(tomorrow.getDate() + 1);
 
-  return await db.shots
+  return await getDB().shots
     .where('createdAt')
     .between(today.getTime(), tomorrow.getTime())
     .and(shot => shot.manualLocation === true)
@@ -278,7 +322,7 @@ export const updateLocationForShots = async (
 ): Promise<void> => {
   await Promise.all(
     shotIds.map(id =>
-      db.shots.update(id, {
+      getDB().shots.update(id, {
         golfCourse: locationData.golfCourse,
         actualTemperature: locationData.actualTemperature,
         temperature: locationData.temperature,

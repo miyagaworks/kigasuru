@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { Navigation } from './Navigation';
 import { isAdmin } from '@/lib/admin';
+import { initDB } from '@/lib/db';
 
 /**
  * Main layout component with bottom navigation
@@ -20,6 +21,14 @@ export const Layout: React.FC<LayoutProps> = ({ children, showNav = true }) => {
   const router = useRouter();
   const [showUserMenu, setShowUserMenu] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
+
+  // Initialize IndexedDB with user ID
+  useEffect(() => {
+    if (session?.user?.id) {
+      console.log('[Layout] Initializing DB for user:', session.user.id);
+      initDB(session.user.id);
+    }
+  }, [session?.user?.id]);
 
   // Close menu when clicking outside
   useEffect(() => {
@@ -39,6 +48,16 @@ export const Layout: React.FC<LayoutProps> = ({ children, showNav = true }) => {
   }, [showUserMenu]);
 
   const handleLogout = async () => {
+    // Close IndexedDB before logout
+    const { getDB } = await import('@/lib/db');
+    try {
+      const db = getDB();
+      db.close();
+      console.log('[Layout] Closed IndexedDB on logout');
+    } catch (error) {
+      console.error('[Layout] Error closing IndexedDB:', error);
+    }
+
     await signOut({ callbackUrl: '/auth/signin' });
   };
 
