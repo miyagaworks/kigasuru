@@ -184,9 +184,28 @@ export default function DashboardPage() {
         return;
       }
 
+      // 配列の内容比較（順序も考慮）
+      const arraysEqual = (a: unknown[], b: unknown[]) => {
+        if (a.length !== b.length) return false;
+        return a.every((val, idx) => val === b[idx]);
+      };
+
+      // オブジェクトの内容比較（プロパティ単位）
+      const objectsEqual = (a: Record<string, unknown>, b: Record<string, unknown>) => {
+        const keysA = Object.keys(a).sort();
+        const keysB = Object.keys(b).sort();
+        if (keysA.length !== keysB.length) return false;
+        if (!keysA.every((key, idx) => key === keysB[idx])) return false;
+        return keysA.every(key => a[key] === b[key]);
+      };
+
       // 設定がデフォルトから変更されているかチェック
-      const clubsChanged = customClubs && JSON.stringify(customClubs) !== JSON.stringify(DEFAULT_CLUBS);
-      const fieldsChanged = enabledInputFields && JSON.stringify(enabledInputFields) !== JSON.stringify(DEFAULT_FIELDS);
+      const clubsChanged = customClubs
+        ? !arraysEqual(customClubs as string[], DEFAULT_CLUBS)
+        : false;
+      const fieldsChanged = enabledInputFields
+        ? !objectsEqual(enabledInputFields as Record<string, boolean>, DEFAULT_FIELDS)
+        : false;
 
       console.log('[Dashboard] Settings changed:', { clubsChanged, fieldsChanged });
 
@@ -200,8 +219,8 @@ export default function DashboardPage() {
       }
     } catch (error) {
       console.error('[Dashboard] Failed to check settings status:', error);
-      // エラー時はガイドを表示
-      setShowSettingsGuide(true);
+      // エラー時はガイドを非表示（ユーザーに邪魔にならないように）
+      setShowSettingsGuide(false);
     }
   };
 
