@@ -18,12 +18,14 @@ declare module 'next-auth' {
   interface User {
     subscriptionStatus?: string;
     image?: string | null;
+    isAdmin?: boolean;
   }
   interface Session {
     user: {
       id: string;
       subscriptionStatus?: string;
       image?: string | null;
+      isAdmin?: boolean;
     } & DefaultSession['user'];
   }
 }
@@ -32,6 +34,7 @@ declare module '@auth/core/jwt' {
   interface JWT {
     subscriptionStatus?: string;
     picture?: string | null;
+    isAdmin?: boolean;
   }
 }
 
@@ -333,6 +336,10 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         session.user.id = token.sub as string;
         session.user.name = token.name as string;
         session.user.email = token.email as string;
+
+        // 管理者判定（メールアドレスで判定）
+        const ADMIN_EMAIL = 'admin@kigasuru.com';
+        session.user.isAdmin = session.user.email?.toLowerCase() === ADMIN_EMAIL.toLowerCase();
 
         // subscriptionStatusと画像はここでDBから取得（JWTサイズを最小化するため）
         try {

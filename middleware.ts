@@ -23,7 +23,12 @@ export default auth((req) => {
   // トップページへのアクセス処理
   if (nextUrl.pathname === '/') {
     if (isLoggedIn) {
-      // 認証済みユーザーはダッシュボードへ
+      // 管理者は管理者ダッシュボードへ
+      const isAdmin = req.auth?.user?.isAdmin;
+      if (isAdmin) {
+        return NextResponse.redirect(new URL('/admin', nextUrl));
+      }
+      // 一般ユーザーはダッシュボードへ
       return NextResponse.redirect(new URL('/dashboard', nextUrl));
     } else {
       // 未認証ユーザーは新規登録ページへ
@@ -41,7 +46,17 @@ export default auth((req) => {
 
   // 認証済みユーザーが認証ページにアクセスした場合、ダッシュボードにリダイレクト
   if (isLoggedIn && isAuthRoute && !nextUrl.pathname.includes('/auth/error')) {
+    const isAdmin = req.auth?.user?.isAdmin;
+    if (isAdmin) {
+      return NextResponse.redirect(new URL('/admin', nextUrl));
+    }
     return NextResponse.redirect(new URL('/dashboard', nextUrl));
+  }
+
+  // 管理者が一般ダッシュボードにアクセスした場合、管理者ダッシュボードにリダイレクト
+  const isAdmin = req.auth?.user?.isAdmin;
+  if (isLoggedIn && isAdmin && nextUrl.pathname === '/dashboard') {
+    return NextResponse.redirect(new URL('/admin', nextUrl));
   }
 
   // サブスクリプションチェック（管理者ルートと公開ルートを除く）
