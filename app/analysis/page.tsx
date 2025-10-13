@@ -132,12 +132,6 @@ function AnalysisContent() {
         }
         clubData[shot.club].shotCount++;
 
-        // Add distance data
-        if (shot.distance !== null && shot.distance > 0) {
-          clubData[shot.club].totalDistance += shot.distance;
-          clubData[shot.club].distanceCount++;
-        }
-
         if (shot.result !== null && typeof shot.result === 'object' && shot.result.x !== undefined) {
           // Calculate distance from target using Pythagorean theorem
           const x = shot.result.x || 0;
@@ -145,6 +139,13 @@ function AnalysisContent() {
           const diff = Math.round(Math.sqrt(x * x + y * y));
           clubData[shot.club].totalDiff += diff;
           clubData[shot.club].count++;
+
+          // Calculate actual distance (target distance + y deviation)
+          if (shot.distance !== null && shot.distance > 0) {
+            const actualDistance = shot.distance + y;
+            clubData[shot.club].totalDistance += actualDistance;
+            clubData[shot.club].distanceCount++;
+          }
         }
       });
 
