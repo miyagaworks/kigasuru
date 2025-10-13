@@ -27,6 +27,15 @@ interface DistancePerformance {
   shotCount: number;
 }
 
+interface ClubTrend {
+  club: string;
+  recentAvg: number;
+  previousAvg: number;
+  change: number;
+  trend: 'improving' | 'stable' | 'declining';
+  shotCount: number;
+}
+
 /**
  * Dashboard page - Main entry point after login
  */
@@ -38,6 +47,7 @@ export default function DashboardPage() {
   const [allClubPerformance, setAllClubPerformance] = useState<ClubPerformance[]>([]);
   const [worstClubs, setWorstClubs] = useState<ClubPerformance[]>([]);
   const [distancePerformance, setDistancePerformance] = useState<DistancePerformance[]>([]);
+  const [clubTrends, setClubTrends] = useState<ClubTrend[]>([]);
   const [loading, setLoading] = useState(true);
   const [needsAdditionalAuth, setNeedsAdditionalAuth] = useState(false);
   const [showSettingsGuide, setShowSettingsGuide] = useState(false);
@@ -222,6 +232,100 @@ export default function DashboardPage() {
 
       // 距離別パフォーマンスを設定
       setDistancePerformance(calculateDistancePerformance(shots));
+
+      // クラブ精度の推移を計算
+      const calculateClubTrends = (targetShots: Shot[]): ClubTrend[] => {
+        // クラブごとにショットを日付順にソート
+        const clubShots: Record<string, Shot[]> = {};
+
+        targetShots.forEach(shot => {
+          if (!clubShots[shot.club]) {
+            clubShots[shot.club] = [];
+          }
+          clubShots[shot.club].push(shot);
+        });
+
+        const trends: ClubTrend[] = [];
+
+        Object.entries(clubShots).forEach(([club, shots]) => {
+          // 日付順にソート（古い順）
+          const sortedShots = shots.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+
+          // 5回以上のデータがあるクラブのみ
+          if (sortedShots.length < 5) return;
+
+          // resultがあるショットのみフィルター
+          const shotsWithResult = sortedShots.filter(shot =>
+            shot.result !== null &&
+            typeof shot.result === 'object' &&
+            shot.result.x !== undefined
+          );
+
+          if (shotsWithResult.length < 5) return;
+
+          // 直近5回の平均精度を計算
+          const recent5 = shotsWithResult.slice(-5);
+          const recentDiffs = recent5.map(shot => {
+            const x = shot.result!.x || 0;
+            const y = shot.result!.y || 0;
+            return Math.round(Math.sqrt(x * x + y * y));
+          });
+          const recentAvg = Math.round(recentDiffs.reduce((a, b) => a + b, 0) / recentDiffs.length);
+
+          // その前の5回の平均精度を計算（10回以上データがある場合）
+          if (shotsWithResult.length >= 10) {
+            const previous5 = shotsWithResult.slice(-10, -5);
+            const previousDiffs = previous5.map(shot => {
+              const x = shot.result!.x || 0;
+              const y = shot.result!.y || 0;
+              return Math.round(Math.sqrt(x * x + y * y));
+            });
+            const previousAvg = Math.round(previousDiffs.reduce((a, b) => a + b, 0) / previousDiffs.length);
+
+            // 変化率を計算（精度が良くなる = ズレが小さくなる = マイナス）
+            const change = ((recentAvg - previousAvg) / previousAvg) * 100;
+
+            let trend: 'improving' | 'stable' | 'declining';
+            if (change <= -5) {
+              trend = 'improving'; // 5%以上改善（ズレが小さくなった）
+            } else if (change >= 5) {
+              trend = 'declining'; // 5%以上悪化（ズレが大きくなった）
+            } else {
+              trend = 'stable'; // ±5%以内
+            }
+
+            trends.push({
+              club,
+              recentAvg,
+              previousAvg,
+              change,
+              trend,
+              shotCount: shotsWithResult.length
+            });
+          } else {
+            // 10回未満の場合は前回との比較なし
+            trends.push({
+              club,
+              recentAvg,
+              previousAvg: recentAvg,
+              change: 0,
+              trend: 'stable',
+              shotCount: shotsWithResult.length
+            });
+          }
+        });
+
+        // 改善中のクラブを優先してソート
+        return trends.sort((a, b) => {
+          if (a.trend === 'improving' && b.trend !== 'improving') return -1;
+          if (a.trend !== 'improving' && b.trend === 'improving') return 1;
+          if (a.trend === 'declining' && b.trend !== 'declining') return 1;
+          if (a.trend !== 'declining' && b.trend === 'declining') return -1;
+          return a.change - b.change;
+        });
+      };
+
+      setClubTrends(calculateClubTrends(shots));
 
     } catch (error) {
       console.error('Failed to load data:', error);
@@ -453,7 +557,119 @@ export default function DashboardPage() {
               </div>
             )}
 
-            {/* 4. クラブ別精度（ワースト順） */}
+            {/* 4. クラブ精度の推移 */}
+            {clubTrends.length > 0 && (
+              <div className="bg-[var(--color-card-bg)] rounded-lg shadow-md p-4 border-l-4 border-[var(--color-secondary-blue)]">
+                <h2 className="text-lg font-bold text-[var(--color-neutral-900)] mb-4 flex items-center gap-2">
+                  <svg
+                    width="20"
+                    height="20"
+                    fill="none"
+                    stroke="currentColor"
+                    className="text-[var(--color-secondary-blue)]"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z"
+                    />
+                  </svg>
+                  クラブ精度の推移（5ショット以上）
+                </h2>
+                <div className="space-y-3">
+                  {clubTrends.map((trend) => (
+                    <div
+                      key={trend.club}
+                      className="flex items-center justify-between bg-[var(--color-neutral-100)] rounded-lg p-3"
+                    >
+                      <div className="flex items-center gap-3">
+                        <svg
+                          className="w-6 h-6 text-[var(--color-neutral-700)] flex-shrink-0"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"
+                          />
+                        </svg>
+                        <div>
+                          <p className="text-base font-bold text-[var(--color-neutral-900)]">
+                            {trend.club}
+                          </p>
+                          <p className="text-xs text-[var(--color-neutral-600)]">
+                            {trend.shotCount}ショット
+                          </p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-4">
+                        {/* 前回の平均 */}
+                        {trend.shotCount >= 10 && (
+                          <div className="text-right">
+                            <p className="text-xs text-[var(--color-neutral-600)]">前回5回</p>
+                            <p className="text-sm font-bold text-[var(--color-neutral-700)]">
+                              {trend.previousAvg}Yd
+                            </p>
+                          </div>
+                        )}
+                        {/* 直近の平均 */}
+                        <div className="text-right">
+                          <p className="text-xs text-[var(--color-neutral-600)]">直近5回</p>
+                          <p className="text-lg font-bold text-[var(--color-secondary-blue)]">
+                            {trend.recentAvg}Yd
+                          </p>
+                        </div>
+                        {/* トレンド表示 */}
+                        {trend.shotCount >= 10 && (
+                          <div className="flex items-center gap-2 min-w-[100px]">
+                            {trend.trend === 'improving' && (
+                              <>
+                                <div className="text-2xl">↗️</div>
+                                <div className="text-right">
+                                  <p className="text-xs font-bold text-[var(--color-primary-green)]">改善中</p>
+                                  <p className="text-xs text-[var(--color-primary-green)]">
+                                    {Math.abs(Math.round(trend.change))}%
+                                  </p>
+                                </div>
+                              </>
+                            )}
+                            {trend.trend === 'stable' && (
+                              <>
+                                <div className="text-2xl">→</div>
+                                <div className="text-right">
+                                  <p className="text-xs font-bold text-[var(--color-neutral-700)]">安定</p>
+                                  <p className="text-xs text-[var(--color-neutral-600)]">
+                                    {Math.abs(Math.round(trend.change))}%
+                                  </p>
+                                </div>
+                              </>
+                            )}
+                            {trend.trend === 'declining' && (
+                              <>
+                                <div className="text-2xl">↘️</div>
+                                <div className="text-right">
+                                  <p className="text-xs font-bold text-[var(--color-secondary-red)]">悪化</p>
+                                  <p className="text-xs text-[var(--color-secondary-red)]">
+                                    {Math.abs(Math.round(trend.change))}%
+                                  </p>
+                                </div>
+                              </>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* 5. クラブ別精度（ワースト順） */}
             {worstClubs.length > 0 && (
               <div className="bg-[var(--color-error-bg)] rounded-lg shadow-md p-4 border-l-4 border-[var(--color-error-text)]">
                 <h2 className="text-lg font-bold text-[var(--color-error-text)] mb-4 flex items-center gap-2">
@@ -470,7 +686,7 @@ export default function DashboardPage() {
                       d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
                     />
                   </svg>
-                  要改善クラブ（精度の低い順）
+                  要改善クラブ（3ショット以上）
                 </h2>
                 <div className="space-y-2">
                   {worstClubs.slice(0, 5).map((club, index) => (
