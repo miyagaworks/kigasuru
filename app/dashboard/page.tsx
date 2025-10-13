@@ -9,7 +9,6 @@ import { SettingsGuideModal } from '@/components/SettingsGuideModal';
 
 interface Statistics {
   count: number;
-  avgDistance: number;
   avgAccuracy: number;
   mostUsedClub?: string;
 }
@@ -88,12 +87,8 @@ export default function DashboardPage() {
       // 統計を計算する関数
       const calculateStats = (targetShots: Shot[]): Statistics => {
         if (targetShots.length === 0) {
-          return { count: 0, avgDistance: 0, avgAccuracy: 0 };
+          return { count: 0, avgAccuracy: 0 };
         }
-
-        // 平均飛距離を計算
-        const totalDistance = targetShots.reduce((sum, shot) => sum + (shot.distance || 0), 0);
-        const avgDistance = Math.round(totalDistance / targetShots.length);
 
         // 精度を計算（結果の位置からのズレの平均）
         let avgAccuracy = 0;
@@ -120,7 +115,6 @@ export default function DashboardPage() {
 
         return {
           count: targetShots.length,
-          avgDistance,
           avgAccuracy,
           mostUsedClub
         };
@@ -240,7 +234,7 @@ export default function DashboardPage() {
                 今日のラウンドサマリー
               </h2>
               {todayStats && todayStats.count > 0 ? (
-                <div className="grid grid-cols-3 gap-4">
+                <div className="grid grid-cols-2 gap-4">
                   <div className="text-center">
                     <p className="text-xs text-[var(--color-neutral-600)] mb-1">
                       ショット数
@@ -249,7 +243,7 @@ export default function DashboardPage() {
                       {todayStats.count}
                     </p>
                   </div>
-                  <div className="text-center border-x border-[var(--color-neutral-300)]">
+                  <div className="text-center">
                     <p className="text-xs text-[var(--color-neutral-600)] mb-1">
                       平均精度
                     </p>
@@ -257,15 +251,7 @@ export default function DashboardPage() {
                       {todayStats.avgAccuracy}
                     </p>
                     <p className="text-xs text-[var(--color-neutral-500)]">
-                      ヤード
-                    </p>
-                  </div>
-                  <div className="text-center">
-                    <p className="text-xs text-[var(--color-neutral-600)] mb-1">
-                      最多使用
-                    </p>
-                    <p className="text-2xl font-bold text-[var(--color-neutral-900)]">
-                      {todayStats.mostUsedClub || "-"}
+                      Ydのズレ
                     </p>
                   </div>
                 </div>
@@ -297,7 +283,7 @@ export default function DashboardPage() {
                 全ラウンドサマリー
               </h2>
               {allStats && allStats.count > 0 ? (
-                <div className="grid grid-cols-3 gap-4">
+                <div className="grid grid-cols-2 gap-4">
                   <div className="text-center">
                     <p className="text-xs text-[var(--color-neutral-600)] mb-1">
                       ショット数
@@ -306,7 +292,7 @@ export default function DashboardPage() {
                       {allStats.count}
                     </p>
                   </div>
-                  <div className="text-center border-x border-[var(--color-neutral-300)]">
+                  <div className="text-center">
                     <p className="text-xs text-[var(--color-neutral-600)] mb-1">
                       平均精度
                     </p>
@@ -314,15 +300,7 @@ export default function DashboardPage() {
                       {allStats.avgAccuracy}
                     </p>
                     <p className="text-xs text-[var(--color-neutral-500)]">
-                      ヤード
-                    </p>
-                  </div>
-                  <div className="text-center">
-                    <p className="text-xs text-[var(--color-neutral-600)] mb-1">
-                      最多使用
-                    </p>
-                    <p className="text-2xl font-bold text-[var(--color-neutral-900)]">
-                      {allStats.mostUsedClub || "-"}
+                      Ydのズレ
                     </p>
                   </div>
                 </div>
@@ -369,7 +347,7 @@ export default function DashboardPage() {
                           {club.accuracy}
                         </p>
                         <p className="text-xs text-center text-[var(--color-neutral-500)]">
-                          ヤード
+                          Yd
                         </p>
                         <p className="text-xs text-center text-[var(--color-neutral-600)] mt-1">
                           {club.shotCount}ショット
@@ -416,7 +394,7 @@ export default function DashboardPage() {
                           {club.accuracy}
                         </p>
                         <p className="text-xs text-center text-[var(--color-neutral-500)]">
-                          ヤード
+                          Yd
                         </p>
                         <p className="text-xs text-center text-[var(--color-neutral-600)] mt-1">
                           {club.shotCount}ショット
@@ -487,7 +465,7 @@ export default function DashboardPage() {
                       </div>
                       <div className="text-right">
                         <p className="font-bold text-[var(--color-secondary-red)]">
-                          平均 {club.accuracy} ヤード
+                          平均 {club.accuracy} Yd
                         </p>
                         <p className="text-xs text-[var(--color-neutral-600)]">
                           のズレ（{club.shotCount}ショット）
