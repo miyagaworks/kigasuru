@@ -361,7 +361,7 @@ export default function DashboardPage() {
             )}
 
             {/* 3. 距離別精度 */}
-            {distancePerformance.some(d => d.shotCount > 0) && (
+            {distancePerformance.some((d) => d.shotCount > 0) && (
               <div className="bg-[var(--color-card-bg)] rounded-lg shadow-md p-4 border-l-4 border-[var(--color-primary-green)]">
                 <h2 className="text-lg font-bold text-[var(--color-neutral-900)] mb-4 flex items-center gap-2">
                   <svg
@@ -383,7 +383,7 @@ export default function DashboardPage() {
                 </h2>
                 <div className="space-y-3">
                   {distancePerformance
-                    .filter(d => d.shotCount > 0)
+                    .filter((d) => d.shotCount > 0)
                     .map((distance) => (
                       <div
                         key={distance.range}
@@ -434,7 +434,7 @@ export default function DashboardPage() {
 
             {/* 4. クラブ別精度（ワースト順） */}
             {worstClubs.length > 0 && (
-              <div className="bg-[var(--color-error-bg)] rounded-lg shadow-md p-4 border border-[var(--color-error-border)]">
+              <div className="bg-[var(--color-error-bg)] rounded-lg shadow-md p-4 border-l-4 border-[var(--color-error-text)]">
                 <h2 className="text-lg font-bold text-[var(--color-error-text)] mb-4 flex items-center gap-2">
                   <svg
                     className="w-6 h-6 text-[var(--color-error-text)]"
@@ -472,6 +472,14 @@ export default function DashboardPage() {
                             d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"
                           />
                         </svg>
+                        <div className="text-center">
+                          <p className={`${index === 0 ? 'text-sm' : 'text-xs'} text-[var(--color-neutral-600)] leading-tight`}>
+                            ワースト
+                          </p>
+                          <p className={`${index === 0 ? 'text-xl' : 'text-base'} font-bold text-[var(--color-secondary-red)] leading-tight`}>
+                            {index + 1}位
+                          </p>
+                        </div>
                         <div>
                           <span className="text-lg font-bold text-[var(--color-neutral-900)]">
                             {club.club}
@@ -504,7 +512,9 @@ export default function DashboardPage() {
       <SettingsGuideModal
         isOpen={showSettingsGuide && !settingsGuideTemporarilyClosed}
         onClose={() => {
-          console.log('[Dashboard] Settings guide temporarily closed - will reappear on page reload if not configured');
+          console.log(
+            "[Dashboard] Settings guide temporarily closed - will reappear on page reload if not configured"
+          );
           setSettingsGuideTemporarilyClosed(true);
         }}
       />
