@@ -12,8 +12,6 @@ import { getAllShots, getSetting, type Shot } from '@/lib/db';
 const DEFAULT_CLUBS = ['DR', '3W', '5W', '7W', 'U4', 'U5', '5I', '6I', '7I', '8I', '9I', 'PW', '50', '52', '54', '56', '58'];
 
 interface Statistics {
-  count: number;
-  avgDistance: number;
   shots: Shot[];
   missCount: number;
   missTypeCount: Record<string, number>;
@@ -23,6 +21,7 @@ interface ClubAccuracy {
   club: string;
   accuracy: number;
   shotCount: number;
+  avgDistance: number;
 }
 
 /**
@@ -115,12 +114,6 @@ function AnalysisContent() {
           })
         : dateFilteredShots;
 
-      // Calculate statistics for filtered shots
-      const distances = filtered.map(s => s.distance).filter((d): d is number => d !== null && d > 0);
-      const avgDistance = distances.length > 0
-        ? Math.round(distances.reduce((a, b) => a + b, 0) / distances.length)
-        : 0;
-
       // Count miss shots
       const missShots = filtered.filter(shot => shot.missType);
       const missTypeCount: Record<string, number> = {};
@@ -131,13 +124,19 @@ function AnalysisContent() {
       });
 
       // Calculate club-wise accuracy (average yards from target)
-      const clubData: Record<string, { totalDiff: number; count: number; shotCount: number }> = {};
+      const clubData: Record<string, { totalDiff: number; count: number; shotCount: number; totalDistance: number; distanceCount: number }> = {};
 
       filtered.forEach(shot => {
         if (!clubData[shot.club]) {
-          clubData[shot.club] = { totalDiff: 0, count: 0, shotCount: 0 };
+          clubData[shot.club] = { totalDiff: 0, count: 0, shotCount: 0, totalDistance: 0, distanceCount: 0 };
         }
         clubData[shot.club].shotCount++;
+
+        // Add distance data
+        if (shot.distance !== null && shot.distance > 0) {
+          clubData[shot.club].totalDistance += shot.distance;
+          clubData[shot.club].distanceCount++;
+        }
 
         if (shot.result !== null && typeof shot.result === 'object' && shot.result.x !== undefined) {
           // Calculate distance from target using Pythagorean theorem
@@ -153,14 +152,13 @@ function AnalysisContent() {
         .map(([club, data]) => ({
           club,
           accuracy: data.count > 0 ? Math.round(data.totalDiff / data.count) : 0,
-          shotCount: data.shotCount
+          shotCount: data.shotCount,
+          avgDistance: data.distanceCount > 0 ? Math.round(data.totalDistance / data.distanceCount) : 0
         }))
         .filter(c => c.accuracy > 0) // Only include clubs with result data
         .sort((a, b) => a.accuracy - b.accuracy); // Sort by accuracy (best first)
 
       setStats({
-        count: filtered.length,
-        avgDistance,
         shots: filtered, // Keep all filtered shots for scatter plot
         missCount: missShots.length,
         missTypeCount,
@@ -746,31 +744,6 @@ function AnalysisContent() {
         {stats ? (
           <div className="space-y-4 mb-6">
             <div className="bg-[var(--color-card-bg)] rounded-lg shadow-md p-6">
-              <div className="flex justify-between items-center mb-4">
-                <h2 className="text-lg font-bold">統計情報</h2>
-                {hasActiveFilters && (
-                  <span className="text-xs text-[var(--color-neutral-600)]">
-                    フィルタ適用中
-                  </span>
-                )}
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <p className="text-sm text-[var(--color-neutral-600)]">ショット数</p>
-                  <p className="text-3xl font-bold text-[var(--color-primary-green)]">
-                    {stats.count}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-sm text-[var(--color-neutral-600)]">平均飛距離</p>
-                  <p className="text-3xl font-bold text-[var(--color-secondary-blue)]">
-                    {stats.avgDistance}y
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            <div className="bg-[var(--color-card-bg)] rounded-lg shadow-md p-6">
               <div className="flex items-center justify-between mb-4">
                 <h2 className="text-lg font-bold">結果分布</h2>
                 {/* Range toggle */}
@@ -906,16 +879,24 @@ function AnalysisContent() {
                         <span className="text-lg font-bold text-[var(--color-neutral-900)] min-w-[50px]">
                           {clubAccuracy.club}
                         </span>
-                        <span className="text-xs text-[var(--color-neutral-600)]">
-                          {clubAccuracy.shotCount}ショット
-                        </span>
+                        <div className="text-left">
+                          <p className="font-bold text-[var(--color-secondary-blue)]">
+                            平均 {clubAccuracy.accuracy} Yd
+                          </p>
+                          <p className="text-xs text-[var(--color-neutral-600)]">
+                            のズレ（{clubAccuracy.shotCount}ショット）
+                          </p>
+                        </div>
                       </div>
                       <div className="text-right">
-                        <p className="font-bold text-[var(--color-secondary-blue)]">
-                          平均 {clubAccuracy.accuracy} ヤード
+                        <p className="text-xs text-[var(--color-neutral-600)] mb-1">
+                          平均飛距離
                         </p>
-                        <p className="text-xs text-[var(--color-neutral-600)]">
-                          のズレ
+                        <p className="font-bold text-[var(--color-primary-green)]">
+                          {clubAccuracy.avgDistance} Yd
+                        </p>
+                        <p className="text-xs text-[var(--color-neutral-500)]">
+                          ({clubAccuracy.shotCount}ショット)
                         </p>
                       </div>
                     </div>
