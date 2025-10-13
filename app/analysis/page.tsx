@@ -19,6 +19,12 @@ interface Statistics {
   missTypeCount: Record<string, number>;
 }
 
+interface ClubAccuracy {
+  club: string;
+  accuracy: number;
+  shotCount: number;
+}
+
 /**
  * Analysis page - Data visualization and statistics
  */
@@ -29,6 +35,7 @@ function AnalysisContent() {
   const dateFilter = searchParams.get('date'); // URLから日付パラメータを取得
 
   const [stats, setStats] = useState<Statistics | null>(null);
+  const [clubAccuracies, setClubAccuracies] = useState<ClubAccuracy[]>([]);
   const [clubs, setClubs] = useState(DEFAULT_CLUBS);
   const [golfCourses, setGolfCourses] = useState<string[]>([]);
   const [scatterRange, setScatterRange] = useState(30); // 30yd or 70Yd
@@ -123,6 +130,34 @@ function AnalysisContent() {
         }
       });
 
+      // Calculate club-wise accuracy (average yards from target)
+      const clubData: Record<string, { totalDiff: number; count: number; shotCount: number }> = {};
+
+      filtered.forEach(shot => {
+        if (!clubData[shot.club]) {
+          clubData[shot.club] = { totalDiff: 0, count: 0, shotCount: 0 };
+        }
+        clubData[shot.club].shotCount++;
+
+        if (shot.result !== null && typeof shot.result === 'object' && shot.result.x !== undefined) {
+          // Calculate distance from target using Pythagorean theorem
+          const x = shot.result.x || 0;
+          const y = shot.result.y || 0;
+          const diff = Math.round(Math.sqrt(x * x + y * y));
+          clubData[shot.club].totalDiff += diff;
+          clubData[shot.club].count++;
+        }
+      });
+
+      const clubAccuracyList = Object.entries(clubData)
+        .map(([club, data]) => ({
+          club,
+          accuracy: data.count > 0 ? Math.round(data.totalDiff / data.count) : 0,
+          shotCount: data.shotCount
+        }))
+        .filter(c => c.accuracy > 0) // Only include clubs with result data
+        .sort((a, b) => a.accuracy - b.accuracy); // Sort by accuracy (best first)
+
       setStats({
         count: filtered.length,
         avgDistance,
@@ -130,6 +165,8 @@ function AnalysisContent() {
         missCount: missShots.length,
         missTypeCount,
       });
+
+      setClubAccuracies(clubAccuracyList);
     } catch (error) {
       console.error('Failed to load data:', error);
     }
@@ -854,6 +891,38 @@ function AnalysisContent() {
                 </svg>
               </div>
             </div>
+
+            {/* Club-wise accuracy */}
+            {clubAccuracies.length > 0 && (
+              <div className="bg-[var(--color-card-bg)] rounded-lg shadow-md p-6">
+                <h2 className="text-lg font-bold mb-4">クラブ別精度（絞り込み条件下）</h2>
+                <div className="space-y-2">
+                  {clubAccuracies.map((clubAccuracy) => (
+                    <div
+                      key={clubAccuracy.club}
+                      className="flex items-center justify-between bg-[var(--color-neutral-100)] rounded-lg p-3"
+                    >
+                      <div className="flex items-center gap-3">
+                        <span className="text-lg font-bold text-[var(--color-neutral-900)] min-w-[50px]">
+                          {clubAccuracy.club}
+                        </span>
+                        <span className="text-xs text-[var(--color-neutral-600)]">
+                          {clubAccuracy.shotCount}ショット
+                        </span>
+                      </div>
+                      <div className="text-right">
+                        <p className="font-bold text-[var(--color-secondary-blue)]">
+                          平均 {clubAccuracy.accuracy} ヤード
+                        </p>
+                        <p className="text-xs text-[var(--color-neutral-600)]">
+                          のズレ
+                        </p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
 
             {/* Miss shots statistics */}
             {stats.missCount > 0 && stats.missTypeCount && (
