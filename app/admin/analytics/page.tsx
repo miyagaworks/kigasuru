@@ -183,46 +183,67 @@ export default function AdminAnalyticsPage() {
       </div>
 
       {/* 統計サマリー */}
-      <div className="grid grid-cols-3 gap-4 mb-4">
-        <div className="bg-[var(--color-neutral-100)] rounded-lg p-3 text-center">
-          <p className="text-2xl font-bold text-[var(--color-primary-green)]">
+      <div className="grid grid-cols-3 gap-3 mb-4">
+        <div className="bg-[var(--color-neutral-100)] rounded-lg p-3">
+          <p className="text-xs text-[var(--color-neutral-600)] mb-1 text-center">
+            ショット数
+          </p>
+          <p className="text-2xl font-bold text-[var(--color-primary-green)] text-center">
             {user._count.shots}
           </p>
-          <p className="text-xs text-[var(--color-neutral-600)]">ショット数</p>
         </div>
-        <div className="bg-[var(--color-neutral-100)] rounded-lg p-3 text-center">
-          <p className="text-2xl font-bold text-[var(--color-secondary-blue)]">
+        <div className="bg-[var(--color-neutral-100)] rounded-lg p-3">
+          <p className="text-xs text-[var(--color-neutral-600)] mb-1 text-center">
+            サブスク
+          </p>
+          <p className="text-2xl font-bold text-[var(--color-secondary-blue)] text-center">
             {user._count.subscriptions}
           </p>
-          <p className="text-xs text-[var(--color-neutral-600)]">サブスク</p>
         </div>
-        <div className="bg-[var(--color-neutral-100)] rounded-lg p-3 text-center">
-          <p className="text-2xl font-bold text-[var(--color-secondary-orange)]">
+        <div className="bg-[var(--color-neutral-100)] rounded-lg p-3">
+          <p className="text-xs text-[var(--color-neutral-600)] mb-1 text-center">
+            支払い
+          </p>
+          <p className="text-2xl font-bold text-[var(--color-secondary-orange)] text-center">
             {user._count.payments}
           </p>
-          <p className="text-xs text-[var(--color-neutral-600)]">支払い</p>
         </div>
       </div>
 
       {/* 最近のショット */}
       {user.shots.length > 0 && (
         <div className="mb-4">
-          <h4 className="text-sm font-bold text-[var(--color-neutral-900)] mb-2">
+          <h4 className="text-sm font-bold text-[var(--color-neutral-900)] mb-2 flex items-center gap-1">
+            <svg
+              className="w-4 h-4 text-[var(--color-primary-green)]"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"
+              />
+            </svg>
             最近のショット
           </h4>
           <div className="space-y-2">
             {user.shots.map((shot) => (
               <div
                 key={shot.id}
-                className="bg-[var(--color-neutral-100)] rounded-lg p-2 flex justify-between items-center text-xs"
+                className="bg-[var(--color-neutral-100)] rounded-lg p-3 flex justify-between items-center"
               >
-                <div>
-                  <span className="font-bold">{shot.club}</span>
-                  <span className="text-[var(--color-neutral-600)] ml-2">
-                    {shot.distance}yd
+                <div className="flex items-center gap-2">
+                  <span className="text-base font-bold text-[var(--color-neutral-900)]">
+                    {shot.club}
+                  </span>
+                  <span className="text-sm text-[var(--color-neutral-600)]">
+                    {shot.distance}Yd
                   </span>
                 </div>
-                <span className="text-[var(--color-neutral-500)]">
+                <span className="text-xs text-[var(--color-neutral-500)]">
                   {new Date(shot.date).toLocaleDateString('ja-JP')}
                 </span>
               </div>
@@ -234,19 +255,34 @@ export default function AdminAnalyticsPage() {
       {/* サブスクリプション履歴 */}
       {user.subscriptions.length > 0 && (
         <div className="mb-4">
-          <h4 className="text-sm font-bold text-[var(--color-neutral-900)] mb-2">
+          <h4 className="text-sm font-bold text-[var(--color-neutral-900)] mb-2 flex items-center gap-1">
+            <svg
+              className="w-4 h-4 text-[var(--color-secondary-blue)]"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"
+              />
+            </svg>
             サブスクリプション履歴
           </h4>
           <div className="space-y-2">
             {user.subscriptions.map((sub) => (
               <div
                 key={sub.id}
-                className="bg-[var(--color-neutral-100)] rounded-lg p-2 text-xs"
+                className="bg-[var(--color-neutral-100)] rounded-lg p-3"
               >
-                <div className="flex justify-between items-center mb-1">
-                  <span className="font-bold">{sub.plan}</span>
+                <div className="flex justify-between items-center mb-2">
+                  <span className="text-base font-bold text-[var(--color-neutral-900)]">
+                    {sub.plan}
+                  </span>
                   <span
-                    className={`px-2 py-0.5 rounded ${
+                    className={`px-2 py-1 rounded text-xs font-bold ${
                       sub.status === 'active'
                         ? 'bg-[var(--color-success-bg)] text-[var(--color-success-text)]'
                         : 'bg-[var(--color-neutral-300)] text-[var(--color-neutral-700)]'
@@ -255,7 +291,7 @@ export default function AdminAnalyticsPage() {
                     {sub.status}
                   </span>
                 </div>
-                <p className="text-[var(--color-neutral-600)]">
+                <p className="text-xs text-[var(--color-neutral-600)]">
                   {new Date(sub.startDate).toLocaleDateString('ja-JP')}
                   {sub.endDate && ` ~ ${new Date(sub.endDate).toLocaleDateString('ja-JP')}`}
                 </p>
@@ -268,22 +304,37 @@ export default function AdminAnalyticsPage() {
       {/* 支払い履歴（検索結果の場合のみ表示） */}
       {isSearchResult && user.payments && user.payments.length > 0 && (
         <div className="mb-4">
-          <h4 className="text-sm font-bold text-[var(--color-neutral-900)] mb-2">
+          <h4 className="text-sm font-bold text-[var(--color-neutral-900)] mb-2 flex items-center gap-1">
+            <svg
+              className="w-4 h-4 text-[var(--color-secondary-orange)]"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"
+              />
+            </svg>
             支払い履歴
           </h4>
           <div className="space-y-2">
             {user.payments.map((payment) => (
               <div
                 key={payment.id}
-                className="bg-[var(--color-neutral-100)] rounded-lg p-2 flex justify-between items-center text-xs"
+                className="bg-[var(--color-neutral-100)] rounded-lg p-3 flex justify-between items-center"
               >
-                <div>
-                  <span className="font-bold">¥{payment.amount.toLocaleString()}</span>
-                  <span className="text-[var(--color-neutral-600)] ml-2">
+                <div className="flex items-center gap-2">
+                  <span className="text-base font-bold text-[var(--color-secondary-orange)]">
+                    ¥{payment.amount.toLocaleString()}
+                  </span>
+                  <span className="text-sm text-[var(--color-neutral-600)]">
                     {payment.plan || '不明'}
                   </span>
                 </div>
-                <span className="text-[var(--color-neutral-500)]">
+                <span className="text-xs text-[var(--color-neutral-500)]">
                   {new Date(payment.createdAt).toLocaleDateString('ja-JP')}
                 </span>
               </div>
