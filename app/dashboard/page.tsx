@@ -419,11 +419,11 @@ export default function DashboardPage() {
                           </div>
                         </div>
                         <div className="text-right">
-                          <p className="text-xl font-bold text-[var(--color-secondary-blue)]">
-                            {distance.accuracy}
+                          <p className="text-xs text-[var(--color-neutral-600)] mb-1">
+                            平均精度
                           </p>
-                          <p className="text-xs text-[var(--color-neutral-600)]">
-                            Ydのズレ
+                          <p className="text-xl font-bold text-[var(--color-secondary-blue)]">
+                            {distance.accuracy}Yd
                           </p>
                         </div>
                       </div>
@@ -435,7 +435,20 @@ export default function DashboardPage() {
             {/* 4. クラブ別精度（ワースト順） */}
             {worstClubs.length > 0 && (
               <div className="bg-[var(--color-error-bg)] rounded-lg shadow-md p-4 border border-[var(--color-error-border)]">
-                <h2 className="text-lg font-bold text-[var(--color-error-text)] mb-4">
+                <h2 className="text-lg font-bold text-[var(--color-error-text)] mb-4 flex items-center gap-2">
+                  <svg
+                    className="w-6 h-6 text-[var(--color-error-text)]"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+                    />
+                  </svg>
                   要改善クラブ（精度の低い順）
                 </h2>
                 <div className="space-y-2">
@@ -459,49 +472,14 @@ export default function DashboardPage() {
                             d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"
                           />
                         </svg>
-                        <div className="flex items-center gap-1">
-                          {index < 3 ? (
-                            <svg
-                              width="20"
-                              height="20"
-                              fill="none"
-                              stroke="currentColor"
-                              className="text-[var(--color-secondary-red)]"
-                              viewBox="0 0 24 24"
-                            >
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth={2}
-                                d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
-                              />
-                            </svg>
-                          ) : (
-                            <svg
-                              width="20"
-                              height="20"
-                              fill="none"
-                              stroke="currentColor"
-                              className="text-[var(--color-secondary-orange)]"
-                              viewBox="0 0 24 24"
-                            >
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth={2}
-                                d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                              />
-                            </svg>
-                          )}
-                          <span
-                            className={`text-2xl font-bold ${index < 3 ? "text-[var(--color-secondary-red)]" : "text-[var(--color-secondary-orange)]"}`}
-                          >
-                            {index + 1}
+                        <div>
+                          <span className="text-lg font-bold text-[var(--color-neutral-900)]">
+                            {club.club}
                           </span>
+                          <p className="text-xs text-[var(--color-neutral-600)]">
+                            {club.shotCount}ショット
+                          </p>
                         </div>
-                        <span className="text-lg font-bold text-[var(--color-neutral-900)]">
-                          {club.club}
-                        </span>
                       </div>
                       <div className="text-right">
                         <p className="text-xs text-[var(--color-neutral-600)] mb-1">
@@ -509,9 +487,6 @@ export default function DashboardPage() {
                         </p>
                         <p className="font-bold text-[var(--color-secondary-red)]">
                           {club.accuracy} Yd
-                        </p>
-                        <p className="text-xs text-[var(--color-neutral-600)]">
-                          {club.shotCount}ショット
                         </p>
                       </div>
                     </div>
