@@ -265,106 +265,7 @@ export default function DashboardPage() {
             {/* スペーサー */}
             <div className="h-4"></div>
 
-            {/* 1. 今日のラウンドサマリー */}
-            <div className="bg-[var(--color-card-bg)] rounded-lg shadow-md p-4 border-l-4 border-[var(--color-primary-green)]">
-              <h2 className="text-lg font-bold text-[var(--color-neutral-900)] mb-4 flex items-center gap-2">
-                <svg
-                  width="20"
-                  height="20"
-                  fill="none"
-                  stroke="currentColor"
-                  className="text-[var(--color-primary-green)]"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M12 2v10l4 4"
-                  />
-                  <circle cx="12" cy="12" r="10" strokeWidth={2} />
-                </svg>
-                今日のラウンドサマリー
-              </h2>
-              {todayStats && todayStats.count > 0 ? (
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="text-center">
-                    <p className="text-xs text-[var(--color-neutral-600)] mb-1">
-                      ショット数
-                    </p>
-                    <p className="text-2xl font-bold text-[var(--color-primary-green)]">
-                      {todayStats.count}
-                    </p>
-                  </div>
-                  <div className="text-center">
-                    <p className="text-xs text-[var(--color-neutral-600)] mb-1">
-                      平均精度
-                    </p>
-                    <p className="text-2xl font-bold text-[var(--color-secondary-blue)]">
-                      {todayStats.avgAccuracy}
-                    </p>
-                    <p className="text-xs text-[var(--color-neutral-500)]">
-                      Ydのズレ
-                    </p>
-                  </div>
-                </div>
-              ) : (
-                <p className="text-center text-[var(--color-neutral-600)] py-4">
-                  今日のデータはありません
-                </p>
-              )}
-            </div>
-
-            {/* 2. 全てのラウンドサマリー */}
-            <div className="bg-[var(--color-card-bg)] rounded-lg shadow-md p-4 border-l-4 border-[var(--color-secondary-blue)]">
-              <h2 className="text-lg font-bold text-[var(--color-neutral-900)] mb-4 flex items-center gap-2">
-                <svg
-                  width="20"
-                  height="20"
-                  fill="none"
-                  stroke="currentColor"
-                  className="text-[var(--color-secondary-blue)]"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
-                  />
-                </svg>
-                全ラウンドサマリー
-              </h2>
-              {allStats && allStats.count > 0 ? (
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="text-center">
-                    <p className="text-xs text-[var(--color-neutral-600)] mb-1">
-                      ショット数
-                    </p>
-                    <p className="text-2xl font-bold text-[var(--color-primary-green)]">
-                      {allStats.count}
-                    </p>
-                  </div>
-                  <div className="text-center">
-                    <p className="text-xs text-[var(--color-neutral-600)] mb-1">
-                      平均精度
-                    </p>
-                    <p className="text-2xl font-bold text-[var(--color-secondary-blue)]">
-                      {allStats.avgAccuracy}
-                    </p>
-                    <p className="text-xs text-[var(--color-neutral-500)]">
-                      Ydのズレ
-                    </p>
-                  </div>
-                </div>
-              ) : (
-                <p className="text-center text-[var(--color-neutral-600)] py-4">
-                  データがありません
-                </p>
-              )}
-            </div>
-
-            {/* 3. 今日のクラブ別パフォーマンス */}
+            {/* 1. 今日のクラブ別パフォーマンス */}
             {todayClubPerformance.length > 0 && (
               <div className="bg-[var(--color-card-bg)] rounded-lg shadow-md p-4 border-l-4 border-[var(--color-primary-green)]">
                 <h2 className="text-lg font-bold text-[var(--color-neutral-900)] mb-4 flex items-center gap-2">
@@ -412,7 +313,7 @@ export default function DashboardPage() {
               </div>
             )}
 
-            {/* 4. 全期間のクラブ別パフォーマンス */}
+            {/* 2. 全期間のクラブ別パフォーマンス */}
             {allClubPerformance.length > 0 && (
               <div className="bg-[var(--color-card-bg)] rounded-lg shadow-md p-4 border-l-4 border-[var(--color-secondary-blue)]">
                 <h2 className="text-lg font-bold text-[var(--color-neutral-900)] mb-4 flex items-center gap-2">
@@ -459,7 +360,7 @@ export default function DashboardPage() {
               </div>
             )}
 
-            {/* 5. 距離別精度 */}
+            {/* 3. 距離別精度 */}
             {distancePerformance.some(d => d.shotCount > 0) && (
               <div className="bg-[var(--color-card-bg)] rounded-lg shadow-md p-4 border-l-4 border-[var(--color-primary-green)]">
                 <h2 className="text-lg font-bold text-[var(--color-neutral-900)] mb-4 flex items-center gap-2">
@@ -531,7 +432,7 @@ export default function DashboardPage() {
               </div>
             )}
 
-            {/* 6. クラブ別精度（ワースト順） */}
+            {/* 4. クラブ別精度（ワースト順） */}
             {worstClubs.length > 0 && (
               <div className="bg-[var(--color-error-bg)] rounded-lg shadow-md p-4 border border-[var(--color-error-border)]">
                 <h2 className="text-lg font-bold text-[var(--color-error-text)] mb-4">
