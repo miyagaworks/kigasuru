@@ -19,6 +19,13 @@ interface ClubPerformance {
   shotCount: number;
 }
 
+interface DistancePerformance {
+  range: string;
+  label: string;
+  accuracy: number;
+  shotCount: number;
+}
+
 /**
  * Dashboard page - Main entry point after login
  */
@@ -29,6 +36,7 @@ export default function DashboardPage() {
   const [todayClubPerformance, setTodayClubPerformance] = useState<ClubPerformance[]>([]);
   const [allClubPerformance, setAllClubPerformance] = useState<ClubPerformance[]>([]);
   const [worstClubs, setWorstClubs] = useState<ClubPerformance[]>([]);
+  const [distancePerformance, setDistancePerformance] = useState<DistancePerformance[]>([]);
   const [loading, setLoading] = useState(true);
   const [needsAdditionalAuth, setNeedsAdditionalAuth] = useState(false);
   const [showSettingsGuide, setShowSettingsGuide] = useState(false);
@@ -147,6 +155,48 @@ export default function DashboardPage() {
         }));
       };
 
+      // 距離別パフォーマンスを計算する関数
+      const calculateDistancePerformance = (targetShots: Shot[]): DistancePerformance[] => {
+        const distanceRanges = [
+          { range: '0-60', label: '60Yd以内', min: 0, max: 60 },
+          { range: '61-120', label: '61~120Yd', min: 61, max: 120 },
+          { range: '121-180', label: '121~180Yd', min: 121, max: 180 },
+          { range: '181+', label: '180Yd以上', min: 181, max: Infinity },
+        ];
+
+        return distanceRanges.map(({ range, label, min, max }) => {
+          const rangeShots = targetShots.filter(shot => {
+            if (!shot.distance || shot.distance === null) return false;
+            return shot.distance >= min && shot.distance <= max;
+          });
+
+          if (rangeShots.length === 0) {
+            return { range, label, accuracy: 0, shotCount: 0 };
+          }
+
+          // 精度を計算（目標地点からのズレの平均）
+          const shotsWithResult = rangeShots.filter(shot => shot.result !== null);
+          let avgAccuracy = 0;
+
+          if (shotsWithResult.length > 0) {
+            const totalDiff = shotsWithResult.reduce((sum, shot) => {
+              const x = shot.result?.x || 0;
+              const y = shot.result?.y || 0;
+              const diff = Math.round(Math.sqrt(x * x + y * y));
+              return sum + diff;
+            }, 0);
+            avgAccuracy = Math.round(totalDiff / shotsWithResult.length);
+          }
+
+          return {
+            range,
+            label,
+            accuracy: avgAccuracy,
+            shotCount: rangeShots.length
+          };
+        });
+      };
+
       // 統計を設定
       setTodayStats(calculateStats(todayShots));
       setAllStats(calculateStats(shots));
@@ -160,6 +210,9 @@ export default function DashboardPage() {
 
       // ワースト順のクラブを設定（精度が低い順、3回以上使用したクラブのみ）
       setWorstClubs(allPerf.filter(c => c.accuracy > 0 && c.shotCount >= 3).sort((a, b) => b.accuracy - a.accuracy));
+
+      // 距離別パフォーマンスを設定
+      setDistancePerformance(calculateDistancePerformance(shots));
 
     } catch (error) {
       console.error('Failed to load data:', error);
@@ -406,7 +459,79 @@ export default function DashboardPage() {
               </div>
             )}
 
-            {/* 5. クラブ別精度（ワースト順） */}
+            {/* 5. 距離別精度 */}
+            {distancePerformance.some(d => d.shotCount > 0) && (
+              <div className="bg-[var(--color-card-bg)] rounded-lg shadow-md p-4 border-l-4 border-[var(--color-primary-green)]">
+                <h2 className="text-lg font-bold text-[var(--color-neutral-900)] mb-4 flex items-center gap-2">
+                  <svg
+                    width="20"
+                    height="20"
+                    fill="none"
+                    stroke="currentColor"
+                    className="text-[var(--color-primary-green)]"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"
+                    />
+                  </svg>
+                  距離別精度（全期間）
+                </h2>
+                <div className="space-y-3">
+                  {distancePerformance
+                    .filter(d => d.shotCount > 0)
+                    .map((distance) => (
+                      <div
+                        key={distance.range}
+                        className="flex items-center justify-between bg-[var(--color-neutral-100)] rounded-lg p-3"
+                      >
+                        <div className="flex items-center gap-3">
+                          <svg
+                            className="w-6 h-6 text-[var(--color-primary-green)] flex-shrink-0"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
+                            />
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
+                            />
+                          </svg>
+                          <div>
+                            <p className="text-base font-bold text-[var(--color-neutral-900)]">
+                              {distance.label}
+                            </p>
+                            <p className="text-xs text-[var(--color-neutral-600)]">
+                              {distance.shotCount}ショット
+                            </p>
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <p className="text-xl font-bold text-[var(--color-secondary-blue)]">
+                            {distance.accuracy}
+                          </p>
+                          <p className="text-xs text-[var(--color-neutral-600)]">
+                            Ydのズレ
+                          </p>
+                        </div>
+                      </div>
+                    ))}
+                </div>
+              </div>
+            )}
+
+            {/* 6. クラブ別精度（ワースト順） */}
             {worstClubs.length > 0 && (
               <div className="bg-[var(--color-error-bg)] rounded-lg shadow-md p-4 border border-[var(--color-error-border)]">
                 <h2 className="text-lg font-bold text-[var(--color-error-text)] mb-4">
@@ -418,7 +543,21 @@ export default function DashboardPage() {
                       key={club.club}
                       className="flex items-center justify-between bg-white/50 rounded-lg p-3"
                     >
-                      <div className="flex items-center gap-6">
+                      <div className="flex items-center gap-3">
+                        {/* ゴルフクラブアイコン */}
+                        <svg
+                          className="w-8 h-8 text-[var(--color-neutral-700)] flex-shrink-0"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"
+                          />
+                        </svg>
                         <div className="flex items-center gap-1">
                           {index < 3 ? (
                             <svg
@@ -464,11 +603,14 @@ export default function DashboardPage() {
                         </span>
                       </div>
                       <div className="text-right">
+                        <p className="text-xs text-[var(--color-neutral-600)] mb-1">
+                          平均精度
+                        </p>
                         <p className="font-bold text-[var(--color-secondary-red)]">
-                          平均 {club.accuracy} Yd
+                          {club.accuracy} Yd
                         </p>
                         <p className="text-xs text-[var(--color-neutral-600)]">
-                          のズレ（{club.shotCount}ショット）
+                          {club.shotCount}ショット
                         </p>
                       </div>
                     </div>

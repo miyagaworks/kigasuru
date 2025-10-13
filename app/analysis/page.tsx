@@ -870,35 +870,45 @@ function AnalysisContent() {
             {clubAccuracies.length > 0 && (
               <div className="bg-[var(--color-card-bg)] rounded-lg shadow-md p-6">
                 <h2 className="text-lg font-bold mb-4">クラブ別精度（絞り込み条件下）</h2>
-                <div className="space-y-2">
+                <div className="space-y-3">
                   {clubAccuracies.map((clubAccuracy) => (
                     <div
                       key={clubAccuracy.club}
-                      className="flex items-center justify-between bg-[var(--color-neutral-100)] rounded-lg p-3"
+                      className="bg-[var(--color-neutral-100)] rounded-lg p-4"
                     >
-                      <div className="flex items-center gap-3">
-                        <span className="text-lg font-bold text-[var(--color-neutral-900)] min-w-[50px]">
+                      {/* ショット数 - 上部中央 */}
+                      <div className="text-center mb-3 pb-2 border-b border-[var(--color-neutral-300)]">
+                        <p className="text-sm text-[var(--color-neutral-600)]">
+                          {clubAccuracy.shotCount}ショット
+                        </p>
+                      </div>
+
+                      {/* クラブ名と2列の情報 */}
+                      <div className="flex items-center justify-between">
+                        {/* 左: クラブ名 */}
+                        <span className="text-2xl font-bold text-[var(--color-neutral-900)] min-w-[60px]">
                           {clubAccuracy.club}
                         </span>
-                        <div className="text-left">
-                          <p className="font-bold text-[var(--color-secondary-blue)]">
-                            平均 {clubAccuracy.accuracy} Yd
+
+                        {/* 中央: 平均精度 */}
+                        <div className="text-center flex-1">
+                          <p className="text-xs text-[var(--color-neutral-600)] mb-1">
+                            平均精度
                           </p>
-                          <p className="text-xs text-[var(--color-neutral-600)]">
-                            のズレ（{clubAccuracy.shotCount}ショット）
+                          <p className="text-xl font-bold text-[var(--color-secondary-blue)]">
+                            {clubAccuracy.accuracy}Yd
                           </p>
                         </div>
-                      </div>
-                      <div className="text-right">
-                        <p className="text-xs text-[var(--color-neutral-600)] mb-1">
-                          平均飛距離
-                        </p>
-                        <p className="font-bold text-[var(--color-primary-green)]">
-                          {clubAccuracy.avgDistance} Yd
-                        </p>
-                        <p className="text-xs text-[var(--color-neutral-500)]">
-                          ({clubAccuracy.shotCount}ショット)
-                        </p>
+
+                        {/* 右: 平均飛距離 */}
+                        <div className="text-right flex-1">
+                          <p className="text-xs text-[var(--color-neutral-600)] mb-1">
+                            平均飛距離
+                          </p>
+                          <p className="text-xl font-bold text-[var(--color-primary-green)]">
+                            {clubAccuracy.avgDistance}Yd
+                          </p>
+                        </div>
                       </div>
                     </div>
                   ))}
