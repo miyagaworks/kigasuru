@@ -7,12 +7,6 @@ import { getAllShots, type Shot, getSetting } from '@/lib/db';
 import { PwaInstallBanner } from '@/components/PwaInstallBanner';
 import { SettingsGuideModal } from '@/components/SettingsGuideModal';
 
-interface Statistics {
-  count: number;
-  avgAccuracy: number;
-  mostUsedClub?: string;
-}
-
 interface ClubPerformance {
   club: string;
   accuracy: number;
@@ -41,8 +35,6 @@ interface ClubTrend {
  */
 export default function DashboardPage() {
   const { data: session } = useSession();
-  const [todayStats, setTodayStats] = useState<Statistics | null>(null);
-  const [allStats, setAllStats] = useState<Statistics | null>(null);
   const [todayClubPerformance, setTodayClubPerformance] = useState<ClubPerformance[]>([]);
   const [allClubPerformance, setAllClubPerformance] = useState<ClubPerformance[]>([]);
   const [worstClubs, setWorstClubs] = useState<ClubPerformance[]>([]);
@@ -64,7 +56,6 @@ export default function DashboardPage() {
       console.log('[Dashboard] Session ready, checking settings for user:', session.user.id);
       checkSettingsStatus();
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [session?.user?.id]);
 
   const loadData = async () => {
@@ -102,42 +93,6 @@ export default function DashboardPage() {
         shotDate.setHours(0, 0, 0, 0);
         return shotDate.getTime() === today.getTime();
       });
-
-      // 統計を計算する関数
-      const calculateStats = (targetShots: Shot[]): Statistics => {
-        if (targetShots.length === 0) {
-          return { count: 0, avgAccuracy: 0 };
-        }
-
-        // 精度を計算（結果の位置からのズレの平均）
-        let avgAccuracy = 0;
-        const shotsWithResult = targetShots.filter(shot => shot.result !== null);
-        if (shotsWithResult.length > 0) {
-          const totalDiff = shotsWithResult.reduce((sum, shot) => {
-            // 結果の位置からの距離を計算（ピタゴラスの定理）
-            const x = shot.result?.x || 0;
-            const y = shot.result?.y || 0;
-            const diff = Math.round(Math.sqrt(x * x + y * y));
-            return sum + diff;
-          }, 0);
-          avgAccuracy = Math.round(totalDiff / shotsWithResult.length);
-        }
-
-        // 最も使用したクラブを計算
-        const clubCounts = targetShots.reduce((acc: Record<string, number>, shot) => {
-          acc[shot.club] = (acc[shot.club] || 0) + 1;
-          return acc;
-        }, {});
-        const mostUsedClub = Object.keys(clubCounts).length > 0
-          ? Object.keys(clubCounts).reduce((a, b) => clubCounts[a] > clubCounts[b] ? a : b)
-          : undefined;
-
-        return {
-          count: targetShots.length,
-          avgAccuracy,
-          mostUsedClub
-        };
-      };
 
       // クラブ別パフォーマンスを計算する関数
       const calculateClubPerformance = (targetShots: Shot[]): ClubPerformance[] => {
@@ -215,10 +170,6 @@ export default function DashboardPage() {
           };
         });
       };
-
-      // 統計を設定
-      setTodayStats(calculateStats(todayShots));
-      setAllStats(calculateStats(shots));
 
       // クラブ別パフォーマンスを設定
       const todayPerf = calculateClubPerformance(todayShots);
