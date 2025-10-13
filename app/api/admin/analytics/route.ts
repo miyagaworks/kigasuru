@@ -158,9 +158,12 @@ export async function GET(request: Request) {
       // クラブごとの統計を計算
       const clubStats: Record<string, {
         count: number;
+        shotCount: number;
         totalDistance: number;
+        distanceCount: number;
         avgDistance: number;
-        accuracySum: number;
+        totalDiff: number;
+        diffCount: number;
         avgAccuracy: number;
         shots: Array<{ distance: number; accuracy: number; date: Date }>;
       }> = {};
@@ -169,31 +172,42 @@ export async function GET(request: Request) {
         if (!clubStats[shot.club]) {
           clubStats[shot.club] = {
             count: 0,
+            shotCount: 0,
             totalDistance: 0,
+            distanceCount: 0,
             avgDistance: 0,
-            accuracySum: 0,
+            totalDiff: 0,
+            diffCount: 0,
             avgAccuracy: 0,
             shots: [],
           };
         }
 
         const stats = clubStats[shot.club];
-        stats.count++;
-        stats.totalDistance += shot.distance;
+        stats.shotCount++;
 
         // 精度を計算（result から x, y を取得）
         if (shot.result && typeof shot.result === 'object') {
           const result = shot.result as { x?: number; y?: number };
           if (typeof result.x === 'number' && typeof result.y === 'number') {
-            // 中心からの距離を計算（ピタゴラスの定理）
-            const distanceFromCenter = Math.sqrt(result.x ** 2 + result.y ** 2);
-            // 精度スコア（中心からの距離が小さいほど高い）
-            // 最大距離を70ydと仮定し、パーセンテージで表現
-            const accuracy = Math.max(0, 100 - (distanceFromCenter / 70) * 100);
-            stats.accuracySum += accuracy;
+            const x = result.x || 0;
+            const y = result.y || 0;
+
+            // 精度：ターゲットからのズレをYdで計算（ピタゴラスの定理）
+            const diff = Math.round(Math.sqrt(x * x + y * y));
+            stats.totalDiff += diff;
+            stats.diffCount++;
+
+            // 実際の飛距離を計算（目標距離 + y軸のズレ）
+            if (shot.distance !== null && shot.distance > 0) {
+              const actualDistance = shot.distance + y;
+              stats.totalDistance += actualDistance;
+              stats.distanceCount++;
+            }
+
             stats.shots.push({
               distance: shot.distance,
-              accuracy,
+              accuracy: diff,
               date: shot.date,
             });
           }
@@ -203,19 +217,23 @@ export async function GET(request: Request) {
       // 平均を計算
       Object.keys(clubStats).forEach((club) => {
         const stats = clubStats[club];
-        stats.avgDistance = stats.totalDistance / stats.count;
-        stats.avgAccuracy = stats.shots.length > 0 ? stats.accuracySum / stats.shots.length : 0;
+        stats.count = stats.shotCount;
+        stats.avgDistance = stats.distanceCount > 0 ? Math.round(stats.totalDistance / stats.distanceCount) : 0;
+        stats.avgAccuracy = stats.diffCount > 0 ? Math.round(stats.totalDiff / stats.diffCount) : 0;
       });
 
-      // クラブを平均精度でソート
+      // クラブを平均精度でソート（精度が良い順 = ズレが小さい順）
       const sortedClubs = Object.entries(clubStats)
         .map(([club, stats]) => ({
           club,
-          ...stats,
+          count: stats.count,
+          avgDistance: stats.avgDistance,
+          avgAccuracy: stats.avgAccuracy,
+          shots: stats.shots,
         }))
-        .sort((a, b) => b.avgAccuracy - a.avgAccuracy);
+        .sort((a, b) => a.avgAccuracy - b.avgAccuracy);
 
-      // ワースト5を取得
+      // ワースト5を取得（精度が悪い順 = ズレが大きい順）
       const worstClubs = [...sortedClubs].reverse().slice(0, 5);
 
       detailedStats = {

@@ -17,6 +17,7 @@ interface ClubPerformance {
   club: string;
   accuracy: number;
   shotCount: number;
+  avgDistance: number;
 }
 
 interface DistancePerformance {
@@ -130,28 +131,36 @@ export default function DashboardPage() {
 
       // クラブ別パフォーマンスを計算する関数
       const calculateClubPerformance = (targetShots: Shot[]): ClubPerformance[] => {
-        const clubData: Record<string, { totalDiff: number; count: number; shotCount: number }> = {};
+        const clubData: Record<string, { totalDiff: number; count: number; shotCount: number; totalDistance: number; distanceCount: number }> = {};
 
         targetShots.forEach(shot => {
           if (!clubData[shot.club]) {
-            clubData[shot.club] = { totalDiff: 0, count: 0, shotCount: 0 };
+            clubData[shot.club] = { totalDiff: 0, count: 0, shotCount: 0, totalDistance: 0, distanceCount: 0 };
           }
           clubData[shot.club].shotCount++;
 
-          if (shot.result !== null) {
-            // 結果の位置からの距離を計算
+          if (shot.result !== null && typeof shot.result === 'object' && shot.result.x !== undefined) {
+            // 結果の位置からの距離を計算（精度）
             const x = shot.result.x || 0;
             const y = shot.result.y || 0;
             const diff = Math.round(Math.sqrt(x * x + y * y));
             clubData[shot.club].totalDiff += diff;
             clubData[shot.club].count++;
+
+            // 実際の飛距離を計算（目標距離 + y軸のズレ）
+            if (shot.distance !== null && shot.distance > 0) {
+              const actualDistance = shot.distance + y;
+              clubData[shot.club].totalDistance += actualDistance;
+              clubData[shot.club].distanceCount++;
+            }
           }
         });
 
         return Object.entries(clubData).map(([club, data]) => ({
           club,
           accuracy: data.count > 0 ? Math.round(data.totalDiff / data.count) : 0,
-          shotCount: data.shotCount
+          shotCount: data.shotCount,
+          avgDistance: data.distanceCount > 0 ? Math.round(data.totalDistance / data.distanceCount) : 0
         }));
       };
 
@@ -292,18 +301,24 @@ export default function DashboardPage() {
                     {todayClubPerformance.map((club) => (
                       <div
                         key={club.club}
-                        className="flex-shrink-0 bg-[var(--color-neutral-100)] rounded-lg p-3 min-w-[100px]"
+                        className="flex-shrink-0 bg-[var(--color-neutral-100)] rounded-lg p-3 min-w-[120px]"
                       >
                         <p className="text-sm font-bold text-center text-[var(--color-neutral-900)]">
                           {club.club}
                         </p>
-                        <p className="text-xl font-bold text-center text-[var(--color-secondary-blue)] mt-1">
-                          {club.accuracy}
+                        <p className="text-xs text-center text-[var(--color-neutral-600)] mt-2">
+                          平均精度
                         </p>
-                        <p className="text-xs text-center text-[var(--color-neutral-500)]">
-                          Yd
+                        <p className="text-xl font-bold text-center text-[var(--color-secondary-blue)]">
+                          {club.accuracy}Yd
                         </p>
-                        <p className="text-xs text-center text-[var(--color-neutral-600)] mt-1">
+                        <p className="text-xs text-center text-[var(--color-neutral-600)] mt-2">
+                          平均飛距離
+                        </p>
+                        <p className="text-xl font-bold text-center text-[var(--color-primary-green)]">
+                          {club.avgDistance}Yd
+                        </p>
+                        <p className="text-xs text-center text-[var(--color-neutral-600)] mt-2">
                           {club.shotCount}ショット
                         </p>
                       </div>
@@ -339,18 +354,24 @@ export default function DashboardPage() {
                     {allClubPerformance.map((club) => (
                       <div
                         key={club.club}
-                        className="flex-shrink-0 bg-[var(--color-neutral-100)] rounded-lg p-3 min-w-[100px]"
+                        className="flex-shrink-0 bg-[var(--color-neutral-100)] rounded-lg p-3 min-w-[120px]"
                       >
                         <p className="text-sm font-bold text-center text-[var(--color-neutral-900)]">
                           {club.club}
                         </p>
-                        <p className="text-xl font-bold text-center text-[var(--color-secondary-blue)] mt-1">
-                          {club.accuracy}
+                        <p className="text-xs text-center text-[var(--color-neutral-600)] mt-2">
+                          平均精度
                         </p>
-                        <p className="text-xs text-center text-[var(--color-neutral-500)]">
-                          Yd
+                        <p className="text-xl font-bold text-center text-[var(--color-secondary-blue)]">
+                          {club.accuracy}Yd
                         </p>
-                        <p className="text-xs text-center text-[var(--color-neutral-600)] mt-1">
+                        <p className="text-xs text-center text-[var(--color-neutral-600)] mt-2">
+                          平均飛距離
+                        </p>
+                        <p className="text-xl font-bold text-center text-[var(--color-primary-green)]">
+                          {club.avgDistance}Yd
+                        </p>
+                        <p className="text-xs text-center text-[var(--color-neutral-600)] mt-2">
                           {club.shotCount}ショット
                         </p>
                       </div>

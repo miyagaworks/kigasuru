@@ -107,43 +107,68 @@ export function UserDetailModal({
 
               {/* ワースト5クラブ */}
               {detailedStats.worstClubs.length > 0 && (
-                <div>
-                  <h3 className="text-lg font-bold text-[var(--color-neutral-900)] mb-3 flex items-center gap-2">
-                    <Icon category="ui" name="analysis" size={20} />
-                    改善が必要なクラブ（ワースト5）
+                <div className="bg-[var(--color-error-bg)] rounded-lg shadow-md p-4 border-l-4 border-[var(--color-error-text)]">
+                  <h3 className="text-lg font-bold text-[var(--color-error-text)] mb-4 flex items-center gap-2">
+                    <svg
+                      className="w-6 h-6 text-[var(--color-error-text)]"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+                      />
+                    </svg>
+                    要改善クラブ（精度の低い順）
                   </h3>
                   <div className="space-y-2">
                     {detailedStats.worstClubs.map((clubStat, index) => (
                       <div
                         key={clubStat.club}
-                        className="bg-[var(--color-error-border)] border border-[var(--color-secondary-red)] rounded-lg p-4"
+                        className="flex items-center justify-between bg-white/50 rounded-lg p-3"
                       >
-                        <div className="flex items-center justify-between mb-2">
-                          <div className="flex items-center gap-3">
-                            <span className="text-2xl font-bold text-[var(--color-secondary-red)]">
-                              #{index + 1}
-                            </span>
+                        <div className="flex items-center gap-3">
+                          {/* ゴルフクラブアイコン */}
+                          <svg
+                            className="w-8 h-8 text-[var(--color-neutral-700)] flex-shrink-0"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"
+                            />
+                          </svg>
+                          <div className="text-center">
+                            <p className={`${index === 0 ? 'text-sm' : 'text-xs'} text-[var(--color-neutral-600)] leading-tight`}>
+                              ワースト
+                            </p>
+                            <p className={`${index === 0 ? 'text-xl' : 'text-base'} font-bold text-[var(--color-secondary-red)] leading-tight`}>
+                              {index + 1}位
+                            </p>
+                          </div>
+                          <div>
                             <span className="text-lg font-bold text-[var(--color-neutral-900)]">
                               {clubStat.club}
                             </span>
+                            <p className="text-xs text-[var(--color-neutral-600)]">
+                              {clubStat.count}ショット
+                            </p>
                           </div>
-                          <span className="text-sm text-[var(--color-neutral-600)]">
-                            {clubStat.count}ショット
-                          </span>
                         </div>
-                        <div className="grid grid-cols-2 gap-4 text-sm">
-                          <div>
-                            <p className="text-[var(--color-neutral-600)]">平均精度</p>
-                            <p className="text-xl font-bold text-[var(--color-secondary-red)]">
-                              {clubStat.avgAccuracy.toFixed(1)}%
-                            </p>
-                          </div>
-                          <div>
-                            <p className="text-[var(--color-neutral-600)]">平均距離</p>
-                            <p className="text-xl font-bold text-[var(--color-neutral-900)]">
-                              {clubStat.avgDistance.toFixed(0)}yd
-                            </p>
-                          </div>
+                        <div className="text-right">
+                          <p className="text-xs text-[var(--color-neutral-600)] mb-1">
+                            平均精度
+                          </p>
+                          <p className="font-bold text-[var(--color-secondary-red)]">
+                            {clubStat.avgAccuracy} Yd
+                          </p>
                         </div>
                       </div>
                     ))}
@@ -154,7 +179,7 @@ export function UserDetailModal({
               {/* 全クラブ統計 */}
               <div>
                 <h3 className="text-lg font-bold text-[var(--color-neutral-900)] mb-3">
-                  全クラブ統計（精度順）
+                  全クラブ統計（精度が良い順）
                 </h3>
                 <div className="overflow-x-auto">
                   <table className="w-full text-sm">
@@ -164,7 +189,7 @@ export function UserDetailModal({
                         <th className="p-3 text-left font-bold text-[var(--color-neutral-900)]">クラブ</th>
                         <th className="p-3 text-right font-bold text-[var(--color-neutral-900)]">ショット数</th>
                         <th className="p-3 text-right font-bold text-[var(--color-neutral-900)]">平均精度</th>
-                        <th className="p-3 text-right font-bold text-[var(--color-neutral-900)]">平均距離</th>
+                        <th className="p-3 text-right font-bold text-[var(--color-neutral-900)]">平均飛距離</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -181,18 +206,18 @@ export function UserDetailModal({
                           <td className="p-3 text-right">
                             <span
                               className={`font-bold ${
-                                clubStat.avgAccuracy >= 70
+                                index < 3
                                   ? 'text-[var(--color-primary-green)]'
-                                  : clubStat.avgAccuracy >= 50
-                                    ? 'text-[var(--color-secondary-orange)]'
-                                    : 'text-[var(--color-secondary-red)]'
+                                  : index >= detailedStats.allClubStats.length - 3
+                                    ? 'text-[var(--color-secondary-red)]'
+                                    : 'text-[var(--color-neutral-900)]'
                               }`}
                             >
-                              {clubStat.avgAccuracy.toFixed(1)}%
+                              {clubStat.avgAccuracy}Yd
                             </span>
                           </td>
-                          <td className="p-3 text-right">
-                            {clubStat.avgDistance.toFixed(0)}yd
+                          <td className="p-3 text-right font-bold text-[var(--color-primary-green)]">
+                            {clubStat.avgDistance}Yd
                           </td>
                         </tr>
                       ))}

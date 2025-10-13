@@ -210,48 +210,6 @@ export default function AdminAnalyticsPage() {
         </div>
       </div>
 
-      {/* 最近のショット */}
-      {user.shots.length > 0 && (
-        <div className="mb-4">
-          <h4 className="text-sm font-bold text-[var(--color-neutral-900)] mb-2 flex items-center gap-1">
-            <svg
-              className="w-4 h-4 text-[var(--color-primary-green)]"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"
-              />
-            </svg>
-            最近のショット
-          </h4>
-          <div className="space-y-2">
-            {user.shots.map((shot) => (
-              <div
-                key={shot.id}
-                className="bg-[var(--color-neutral-100)] rounded-lg p-3 flex justify-between items-center"
-              >
-                <div className="flex items-center gap-2">
-                  <span className="text-base font-bold text-[var(--color-neutral-900)]">
-                    {shot.club}
-                  </span>
-                  <span className="text-sm text-[var(--color-neutral-600)]">
-                    {shot.distance}Yd
-                  </span>
-                </div>
-                <span className="text-xs text-[var(--color-neutral-500)]">
-                  {new Date(shot.date).toLocaleDateString('ja-JP')}
-                </span>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
       {/* サブスクリプション履歴 */}
       {user.subscriptions.length > 0 && (
         <div className="mb-4">
