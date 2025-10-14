@@ -69,6 +69,7 @@ export async function GET() {
       }
 
       // shots配列は返さない（サイズが大きいため）
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const { shots, ...userWithoutShots } = user;
 
       return {

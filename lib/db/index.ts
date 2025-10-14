@@ -119,7 +119,7 @@ export const initDB = (userId: string): KigasuruDB => {
  */
 export const getDB = (): KigasuruDB => {
   if (!dbInstance) {
-    console.warn('[DB] DB not initialized - using default instance');
+    console.log('[DB] DB not initialized - using default instance');
     // フォールバックとして非ユーザー固有のDBを使用（後方互換性のため）
     dbInstance = new KigasuruDB();
   }

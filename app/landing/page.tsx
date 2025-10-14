@@ -53,7 +53,7 @@ export default function LandingPage() {
       <section
         className="relative min-h-screen flex items-center justify-center text-center overflow-hidden"
         style={{
-          backgroundImage: "url(/landing/hero-background.jpg)",
+          backgroundImage: "url(/landing/images/hero-background.webp)",
           backgroundSize: "cover",
           backgroundPosition: "center",
           backgroundRepeat: "no-repeat",

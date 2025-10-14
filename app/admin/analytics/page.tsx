@@ -63,7 +63,6 @@ export default function AdminAnalyticsPage() {
   const [searchedUser, setSearchedUser] = useState<UserAnalytics | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
-  const [isSearching, setIsSearching] = useState(false);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState<{ id: string; name: string | null; email: string } | null>(null);
 
@@ -103,7 +102,6 @@ export default function AdminAnalyticsPage() {
         return;
       }
 
-      setIsSearching(true);
       try {
         const response = await fetch(`/api/admin/analytics?email=${encodeURIComponent(searchQuery)}`);
         if (response.ok) {
@@ -116,8 +114,6 @@ export default function AdminAnalyticsPage() {
       } catch (error) {
         console.error('Failed to search user:', error);
         setSearchedUser(null);
-      } finally {
-        setIsSearching(false);
       }
     };
 

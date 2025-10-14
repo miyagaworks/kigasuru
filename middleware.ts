@@ -18,7 +18,16 @@ export default auth((req) => {
     nextUrl.pathname === '/apple-touch-icon.png' ||
     nextUrl.pathname === '/og-image.png';
 
-  const isPublicRoute = nextUrl.pathname === '/landing' || isAuthRoute || isApiAuthRoute || isStaticAsset;
+  const isPublicRoute =
+    nextUrl.pathname === '/' ||
+    nextUrl.pathname === '/landing' ||
+    nextUrl.pathname.startsWith('/learn') ||
+    nextUrl.pathname.startsWith('/icons-demo') ||
+    nextUrl.pathname === '/privacy' ||
+    nextUrl.pathname === '/terms' ||
+    isAuthRoute ||
+    isApiAuthRoute ||
+    isStaticAsset;
 
   // ホスト名でアプリとランディングページを分ける
   const hostname = req.headers.get('host') || '';
@@ -40,10 +49,8 @@ export default auth((req) => {
         // 未認証ユーザーは新規登録ページへ
         return NextResponse.redirect(new URL('/auth/signup', nextUrl));
       }
-    } else {
-      // kigasuru.com の場合は全員ランディングページへ
-      return NextResponse.redirect(new URL('/landing', nextUrl));
     }
+    // kigasuru.com (localhost含む) の場合はトップページを表示（リダイレクトしない）
   }
 
   // 認証されていないユーザーを保護されたルートから除外
