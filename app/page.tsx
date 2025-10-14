@@ -31,10 +31,21 @@ export default function LandingPage() {
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitSuccess, setSubmitSuccess] = useState(false);
+  const [submitError, setSubmitError] = useState('');
 
   const handleContactSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
+    setSubmitError('');
+    setSubmitSuccess(false);
+
+    // メールアドレスの半角英数字チェック
+    const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+    if (!emailRegex.test(contactForm.email)) {
+      setSubmitError('メールアドレスは半角英数字で入力してください');
+      setIsSubmitting(false);
+      return;
+    }
 
     try {
       const response = await fetch('/api/contact', {
@@ -43,13 +54,18 @@ export default function LandingPage() {
         body: JSON.stringify(contactForm),
       });
 
+      const data = await response.json();
+
       if (response.ok) {
         setSubmitSuccess(true);
         setContactForm({ name: '', email: '', message: '' });
+        setTimeout(() => setSubmitSuccess(false), 5000);
+      } else {
+        setSubmitError(data.error || '送信に失敗しました。もう一度お試しください。');
       }
     } catch (error) {
       console.error('Failed to send message:', error);
-      alert('送信に失敗しました。もう一度お試しください。');
+      setSubmitError('送信に失敗しました。もう一度お試しください。');
     } finally {
       setIsSubmitting(false);
     }
@@ -1886,15 +1902,21 @@ export default function LandingPage() {
                   className="block text-sm font-bold text-gray-700 mb-3"
                 >
                   メールアドレス <span className="text-red-500">*</span>
+                  <span className="text-xs font-normal text-gray-500 ml-2">
+                    (半角英数字のみ)
+                  </span>
                 </label>
                 <input
                   type="email"
                   id="email"
                   required
+                  pattern="[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}"
                   value={contactForm.email}
-                  onChange={(e) =>
-                    setContactForm({ ...contactForm, email: e.target.value })
-                  }
+                  onChange={(e) => {
+                    // 半角英数字以外を除外
+                    const value = e.target.value.replace(/[^a-zA-Z0-9._%+-@]/g, '');
+                    setContactForm({ ...contactForm, email: value });
+                  }}
                   className="w-full px-5 py-4 border-2 border-gray-200 rounded-xl focus:border-[var(--color-primary-green)] focus:outline-none transition-colors"
                   placeholder="example@email.com"
                 />
@@ -1919,6 +1941,27 @@ export default function LandingPage() {
                   placeholder="お問い合わせ内容をご記入ください"
                 />
               </div>
+
+              {/* 成功メッセージ */}
+              {submitSuccess && (
+                <div className="mb-6 p-4 bg-green-50 border-2 border-green-500 rounded-xl">
+                  <p className="text-green-700 font-bold text-center">
+                    ✓ お問い合わせを受け付けました
+                  </p>
+                  <p className="text-green-600 text-sm text-center mt-1">
+                    担当者より順次ご連絡させていただきます
+                  </p>
+                </div>
+              )}
+
+              {/* エラーメッセージ */}
+              {submitError && (
+                <div className="mb-6 p-4 bg-red-50 border-2 border-red-500 rounded-xl">
+                  <p className="text-red-700 font-bold text-center">
+                    ✗ {submitError}
+                  </p>
+                </div>
+              )}
 
               <button
                 type="submit"
