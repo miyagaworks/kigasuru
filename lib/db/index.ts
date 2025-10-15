@@ -230,12 +230,41 @@ export const getStatistics = async (filters: Partial<Shot> = {}) => {
 };
 
 /**
- * Save setting
+ * Save setting (saves to both IndexedDB and server)
  */
 export const saveSetting = async (key: string, value: unknown): Promise<string> => {
   console.log('[DB] saveSetting called - key:', key, 'value:', value, 'currentUserId:', currentUserId);
+
+  // Save to IndexedDB
   const result = await getDB().settings.put({ key, value });
   console.log('[DB] saveSetting completed - key:', key, 'result:', result);
+
+  // Also save to server (online only)
+  if (typeof navigator !== 'undefined' && navigator.onLine) {
+    try {
+      const payload: Record<string, unknown> = {};
+
+      // Map IndexedDB keys to server API format
+      if (key === 'customClubs') {
+        payload.clubs = value;
+      } else if (key === 'enabledInputFields') {
+        payload.enabledFields = value;
+      }
+
+      if (Object.keys(payload).length > 0) {
+        await fetch('/api/settings', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        });
+        console.log('[DB] Setting synced to server:', key);
+      }
+    } catch (error) {
+      console.error('[DB] Failed to sync setting to server:', error);
+      // Don't throw error - IndexedDB save was successful
+    }
+  }
+
   return result;
 };
 
@@ -251,14 +280,33 @@ export const getSetting = async <T = unknown>(key: string, defaultValue: T | nul
 };
 
 /**
- * Save calibration data
+ * Save calibration data (saves to both IndexedDB and server)
  */
 export const saveCalibration = async (data: Omit<Calibration, 'id' | 'timestamp'>): Promise<string> => {
-  return await getDB().calibration.put({
+  const result = await getDB().calibration.put({
     id: 'current',
     ...data,
     timestamp: Date.now(),
   });
+
+  // Also save to server (online only)
+  if (typeof navigator !== 'undefined' && navigator.onLine) {
+    try {
+      await fetch('/api/settings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          gyroCalibration: data,
+        }),
+      });
+      console.log('[DB] Calibration synced to server');
+    } catch (error) {
+      console.error('[DB] Failed to sync calibration to server:', error);
+      // Don't throw error - IndexedDB save was successful
+    }
+  }
+
+  return result;
 };
 
 /**
@@ -338,6 +386,66 @@ export const updateLocationForShots = async (
       })
     )
   );
+};
+
+/**
+ * Sync settings from server to IndexedDB
+ * サーバーから設定データを取得してIndexedDBに同期
+ */
+export const syncSettingsFromServer = async (): Promise<{ success: boolean; error?: string }> => {
+  try {
+    console.log('[DB] Syncing settings from server...');
+
+    // サーバーから設定データを取得
+    const response = await fetch('/api/settings', {
+      method: 'GET',
+      headers: { 'Content-Type': 'application/json' },
+    });
+
+    if (!response.ok) {
+      throw new Error(`Server returned ${response.status}`);
+    }
+
+    const data = await response.json();
+
+    if (!data.success || !data.settings) {
+      throw new Error('Invalid response from server');
+    }
+
+    const { clubs, enabledFields, gyroCalibration } = data.settings;
+    console.log('[DB] Received settings from server:', { clubs, enabledFields, gyroCalibration });
+
+    // IndexedDBに保存（サーバー同期を防ぐため、直接putを使用）
+    if (clubs) {
+      await getDB().settings.put({ key: 'customClubs', value: clubs });
+      console.log('[DB] Synced clubs to IndexedDB');
+    }
+
+    if (enabledFields) {
+      await getDB().settings.put({ key: 'enabledInputFields', value: enabledFields });
+      console.log('[DB] Synced enabled fields to IndexedDB');
+    }
+
+    if (gyroCalibration) {
+      await getDB().calibration.put({
+        id: 'current',
+        xOffset: gyroCalibration.xOffset,
+        yOffset: gyroCalibration.yOffset,
+        zOffset: gyroCalibration.zOffset,
+        timestamp: Date.now(),
+      });
+      console.log('[DB] Synced gyro calibration to IndexedDB');
+    }
+
+    console.log('[DB] Successfully synced settings from server');
+    return { success: true };
+  } catch (error) {
+    console.error('[DB] Failed to sync settings from server:', error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown error',
+    };
+  }
 };
 
 /**

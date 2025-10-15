@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { Navigation } from './Navigation';
 import { isAdmin } from '@/lib/admin';
-import { initDB, syncShotsFromServer } from '@/lib/db';
+import { initDB, syncShotsFromServer, syncSettingsFromServer } from '@/lib/db';
 
 /**
  * Main layout component with bottom navigation
@@ -32,11 +32,21 @@ export const Layout: React.FC<LayoutProps> = ({ children, showNav = true }) => {
 
       // サーバーからデータを同期（オンライン時のみ）
       if (typeof navigator !== 'undefined' && navigator.onLine) {
+        // 設定を同期
+        syncSettingsFromServer().then((result) => {
+          if (result.success) {
+            console.log('[Layout] Successfully synced settings from server');
+          } else {
+            console.error('[Layout] Failed to sync settings from server:', result.error);
+          }
+        });
+
+        // ショットデータを同期
         syncShotsFromServer().then((result) => {
           if (result.success) {
             console.log(`[Layout] Successfully synced ${result.synced} shots from server`);
           } else {
-            console.error('[Layout] Failed to sync from server:', result.error);
+            console.error('[Layout] Failed to sync shots from server:', result.error);
           }
         });
       }
