@@ -17,18 +17,20 @@ interface LayoutProps {
 }
 
 export const Layout: React.FC<LayoutProps> = ({ children, showNav = true }) => {
-  const { data: session } = useSession();
+  const { data: session, status } = useSession();
   const router = useRouter();
   const [showUserMenu, setShowUserMenu] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
   // Initialize IndexedDB with user ID
   useEffect(() => {
+    console.log('[Layout] Session status:', status);
+    console.log('[Layout] Session data:', session);
     if (session?.user?.id) {
       console.log('[Layout] Initializing DB for user:', session.user.id);
       initDB(session.user.id);
     }
-  }, [session?.user?.id]);
+  }, [session?.user?.id, session, status]);
 
   // Close menu when clicking outside
   useEffect(() => {
@@ -75,14 +77,17 @@ export const Layout: React.FC<LayoutProps> = ({ children, showNav = true }) => {
   return (
     <div className="bg-[var(--color-bg-main)]">
       {/* User menu button - fixed to top right */}
-      {session && (
+      {(status === 'loading' || session) && (
         <div className="fixed top-3 right-3 z-50" ref={menuRef}>
           <button
             onClick={() => setShowUserMenu(!showUserMenu)}
             className="w-10 h-10 rounded-full bg-[var(--color-primary-green)] text-white font-bold text-sm flex items-center justify-center hover:bg-[var(--color-primary-dark)] transition-colors overflow-hidden"
             style={{ boxShadow: '0 2px 8px rgba(0, 0, 0, 0.3)' }}
+            disabled={status === 'loading'}
           >
-            {session.user?.image ? (
+            {status === 'loading' ? (
+              <div className="animate-spin rounded-full h-5 w-5 border-2 border-white border-t-transparent"></div>
+            ) : session?.user?.image ? (
               session.user.image.startsWith('data:') ? (
                 /* eslint-disable-next-line @next/next/no-img-element */
                 <img
