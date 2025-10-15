@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { Navigation } from './Navigation';
 import { isAdmin } from '@/lib/admin';
-import { initDB } from '@/lib/db';
+import { initDB, syncShotsFromServer } from '@/lib/db';
 
 /**
  * Main layout component with bottom navigation
@@ -22,13 +22,24 @@ export const Layout: React.FC<LayoutProps> = ({ children, showNav = true }) => {
   const [showUserMenu, setShowUserMenu] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
-  // Initialize IndexedDB with user ID
+  // Initialize IndexedDB with user ID and sync from server
   useEffect(() => {
     console.log('[Layout] Session status:', status);
     console.log('[Layout] Session data:', session);
     if (session?.user?.id) {
       console.log('[Layout] Initializing DB for user:', session.user.id);
       initDB(session.user.id);
+
+      // サーバーからデータを同期（オンライン時のみ）
+      if (typeof navigator !== 'undefined' && navigator.onLine) {
+        syncShotsFromServer().then((result) => {
+          if (result.success) {
+            console.log(`[Layout] Successfully synced ${result.synced} shots from server`);
+          } else {
+            console.error('[Layout] Failed to sync from server:', result.error);
+          }
+        });
+      }
     }
   }, [session?.user?.id, session, status]);
 

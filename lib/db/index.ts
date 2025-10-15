@@ -340,4 +340,79 @@ export const updateLocationForShots = async (
   );
 };
 
+/**
+ * Sync shots from server to IndexedDB
+ * サーバーからショットデータを取得してIndexedDBに同期
+ */
+export const syncShotsFromServer = async (): Promise<{ success: boolean; synced: number; error?: string }> => {
+  try {
+    console.log('[DB] Syncing shots from server...');
+
+    // サーバーからショットデータを取得
+    const response = await fetch('/api/shots', {
+      method: 'GET',
+      headers: { 'Content-Type': 'application/json' },
+    });
+
+    if (!response.ok) {
+      throw new Error(`Server returned ${response.status}`);
+    }
+
+    const data = await response.json();
+
+    if (!data.success || !data.shots) {
+      throw new Error('Invalid response from server');
+    }
+
+    const serverShots = data.shots;
+    console.log('[DB] Received', serverShots.length, 'shots from server');
+
+    // IndexedDBの既存データを取得
+    const localShots = await getAllShots();
+    const localCreatedAts = new Set(localShots.map(shot => shot.createdAt));
+
+    // サーバーにあってローカルにないデータのみを追加
+    let syncedCount = 0;
+    for (const serverShot of serverShots) {
+      // サーバーのcreatedAtをタイムスタンプに変換
+      const serverCreatedAt = new Date(serverShot.createdAt).getTime();
+
+      // ローカルに存在しない場合のみ追加
+      if (!localCreatedAts.has(serverCreatedAt)) {
+        await addShot({
+          date: serverShot.date,
+          slope: serverShot.slope,
+          club: serverShot.club,
+          lie: serverShot.lie,
+          strength: serverShot.strength,
+          wind: serverShot.wind,
+          temperature: serverShot.temperature,
+          result: serverShot.result,
+          distance: serverShot.distance,
+          feeling: serverShot.feeling,
+          memo: serverShot.memo,
+          golfCourse: serverShot.golfCourse,
+          actualTemperature: serverShot.actualTemperature,
+          latitude: serverShot.latitude,
+          longitude: serverShot.longitude,
+          missType: serverShot.missType,
+          manualLocation: serverShot.manualLocation,
+          createdAt: serverCreatedAt,
+        });
+        syncedCount++;
+      }
+    }
+
+    console.log('[DB] Synced', syncedCount, 'new shots from server');
+    return { success: true, synced: syncedCount };
+  } catch (error) {
+    console.error('[DB] Failed to sync from server:', error);
+    return {
+      success: false,
+      synced: 0,
+      error: error instanceof Error ? error.message : 'Unknown error',
+    };
+  }
+};
+
 export default db;
