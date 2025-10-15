@@ -110,7 +110,7 @@ export const Layout: React.FC<LayoutProps> = ({ children, showNav = true }) => {
           </button>
 
           {/* Dropdown menu */}
-          {showUserMenu && (
+          {showUserMenu && session && (
             <div className="absolute top-12 right-0 w-64 bg-[var(--color-card-bg)] rounded-lg shadow-xl border border-[var(--color-neutral-300)] overflow-hidden">
               <div className="p-4 border-b border-[var(--color-neutral-300)] bg-[var(--color-neutral-200)]">
                 <p className="text-sm font-bold text-[var(--color-neutral-900)] truncate">
