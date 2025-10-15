@@ -1,7 +1,8 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useSession } from 'next-auth/react';
+import { useRouter } from 'next/navigation';
 import { Layout } from '@/components/Layout';
 import { getAllShots, type Shot, getSetting } from '@/lib/db';
 import { PwaInstallBanner } from '@/components/PwaInstallBanner';
@@ -45,31 +46,30 @@ export default function DashboardPage() {
   const [showSettingsGuide, setShowSettingsGuide] = useState(false);
   const [settingsGuideTemporarilyClosed, setSettingsGuideTemporarilyClosed] = useState(false);
 
-  useEffect(() => {
-    loadData();
-    checkAuthStatus();
-    prefetchMainPages();
-  }, []);
+  const router = useRouter();
 
   // Prefetch main pages for offline use
-  const prefetchMainPages = () => {
+  const prefetchMainPages = useCallback(() => {
     // Only prefetch when online
     if (typeof navigator !== 'undefined' && navigator.onLine) {
       console.log('[Dashboard] Prefetching main pages for offline use...');
 
-      // Use Next.js router prefetch for main pages
+      // Use Next.js router prefetch - this will prefetch JS chunks too
       const pages = ['/record', '/analysis', '/settings', '/history'];
       pages.forEach(page => {
-        // Create invisible links to trigger prefetch
-        const link = document.createElement('link');
-        link.rel = 'prefetch';
-        link.href = page;
-        document.head.appendChild(link);
+        router.prefetch(page);
+        console.log('[Dashboard] Prefetching:', page);
       });
 
       console.log('[Dashboard] Main pages prefetch initiated');
     }
-  };
+  }, [router]);
+
+  useEffect(() => {
+    loadData();
+    checkAuthStatus();
+    prefetchMainPages();
+  }, [prefetchMainPages]);
 
   // Check settings status only after session is ready
   useEffect(() => {
