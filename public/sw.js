@@ -1,4 +1,4 @@
-const CACHE_VERSION = 'v4';
+const CACHE_VERSION = 'v5';
 const STATIC_CACHE = `static-${CACHE_VERSION}`;
 const DYNAMIC_CACHE = `dynamic-${CACHE_VERSION}`;
 const OFFLINE_URL = '/offline';
@@ -206,13 +206,26 @@ self.addEventListener('fetch', (event) => {
         if (cachedResponse) {
           return cachedResponse;
         }
-        return fetch(request).then((response) => {
-          const responseClone = response.clone();
-          caches.open(DYNAMIC_CACHE).then((cache) => {
-            cache.put(request, responseClone);
+        return fetch(request)
+          .then((response) => {
+            // 成功したレスポンスのみキャッシュ
+            if (response && response.status === 200) {
+              const responseClone = response.clone();
+              caches.open(DYNAMIC_CACHE).then((cache) => {
+                cache.put(request, responseClone);
+              });
+            }
+            return response;
+          })
+          .catch((error) => {
+            // オフライン時：スクリプトが読み込めない場合はエラーをスロー
+            // これによりNext.jsがエラーを検知してフォールバックできる
+            console.error('[SW] Failed to fetch resource:', url.pathname, error);
+            return new Response('', {
+              status: 408,
+              statusText: 'Request Timeout',
+            });
           });
-          return response;
-        });
       })
     );
     return;
@@ -238,27 +251,72 @@ self.addEventListener('fetch', (event) => {
           return response;
         })
         .catch(() => {
-          // オフライン時：IndexedDBを使うページは直接返す
-          const url = new URL(request.url);
-          const offlineSafePages = ['/history', '/record', '/analysis', '/settings'];
-
-          if (offlineSafePages.some(page => url.pathname.startsWith(page))) {
-            return caches.match(request).then((cachedResponse) => {
-              if (cachedResponse) {
-                return cachedResponse;
-              }
-              // キャッシュになければルートページにフォールバック
-              return caches.match('/');
-            });
-          }
-
-          // その他のページはオフラインページを表示
-          return caches.match(OFFLINE_URL).then((offlinePage) => {
-            if (offlinePage) {
-              return offlinePage;
+          // オフライン時：キャッシュされたページのみ返す
+          return caches.match(request).then((cachedResponse) => {
+            if (cachedResponse) {
+              console.log('[SW] Serving cached page:', url.pathname);
+              return cachedResponse;
             }
-            // オフラインページもなければルートページを返す
-            return caches.match('/');
+
+            // キャッシュになければオフラインページを表示
+            console.log('[SW] Page not cached, showing offline page:', url.pathname);
+            return caches.match(OFFLINE_URL).then((offlinePage) => {
+              return offlinePage || new Response(
+                `
+                <!DOCTYPE html>
+                <html lang="ja">
+                <head>
+                  <meta charset="UTF-8">
+                  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                  <title>オフライン</title>
+                  <style>
+                    body {
+                      font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+                      text-align: center;
+                      padding: 50px 20px;
+                      background: #f5f5dc;
+                      margin: 0;
+                    }
+                    .container {
+                      max-width: 500px;
+                      margin: 0 auto;
+                      background: white;
+                      padding: 40px 20px;
+                      border-radius: 16px;
+                      box-shadow: 0 2px 16px rgba(0,0,0,0.1);
+                    }
+                    h1 { color: #286300; margin-bottom: 16px; }
+                    p { color: #666; line-height: 1.6; margin-bottom: 24px; }
+                    button {
+                      background: #286300;
+                      color: white;
+                      border: none;
+                      padding: 12px 32px;
+                      border-radius: 8px;
+                      font-size: 16px;
+                      cursor: pointer;
+                      margin: 8px;
+                      font-weight: bold;
+                    }
+                    button:active { background: #1f4d00; }
+                  </style>
+                </head>
+                <body>
+                  <div class="container">
+                    <h1>📡 オフラインです</h1>
+                    <p>このページはまだキャッシュされていません。<br>オンラインに接続してから再度アクセスしてください。</p>
+                    <button onclick="window.location.reload()">再読み込み</button>
+                    <button onclick="window.location.href='/'">ホームに戻る</button>
+                  </div>
+                </body>
+                </html>
+                `,
+                {
+                  status: 200,
+                  headers: { 'Content-Type': 'text/html; charset=utf-8' },
+                }
+              );
+            });
           });
         })
     );
