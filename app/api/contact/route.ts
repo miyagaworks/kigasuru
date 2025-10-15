@@ -61,24 +61,43 @@ export async function POST(request: Request) {
     `;
 
     // メール送信
+    let emailSent = false;
+    let emailError: string | null = null;
+
     try {
-      await sendEmail({
+      const result = await sendEmail({
         to: ['support@kigasuru.com'],
         subject: `【お問い合わせ】${name}様より`,
         html: htmlContent,
       });
 
-      console.log('[Contact API] Email sent successfully:', { name, email });
-    } catch (emailError) {
-      console.error('[Contact API] Email send error:', emailError);
-      // メール送信エラーの場合は、より具体的なエラーメッセージを返す
+      if (result.success) {
+        emailSent = true;
+        console.log('[Contact API] Email sent successfully:', { name, email });
+      } else {
+        emailError = 'Email send failed';
+        console.error('[Contact API] Email send failed:', result);
+      }
+    } catch (error) {
+      emailError = error instanceof Error ? error.message : 'Unknown error';
+      console.error('[Contact API] Email error:', error);
+    }
+
+    // メール送信に失敗した場合
+    if (!emailSent) {
       return NextResponse.json(
-        { error: 'メールの送信に失敗しました。時間をおいて再度お試しください。' },
+        {
+          error: 'メールの送信に失敗しました。時間をおいて再度お試しください。',
+          details: emailError
+        },
         { status: 500 }
       );
     }
 
-    return NextResponse.json({ success: true, message: 'お問い合わせを受け付けました' });
+    return NextResponse.json({
+      success: true,
+      message: 'お問い合わせを受け付けました'
+    });
   } catch (error) {
     console.error('[Contact API] Error:', error);
     return NextResponse.json(
