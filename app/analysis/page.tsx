@@ -82,6 +82,7 @@ function AnalysisContent() {
   const loadData = useCallback(async () => {
     try {
       const allShots = await getAllShots();
+      console.log('[Analysis] Loaded', allShots.length, 'shots from IndexedDB');
 
       // Extract unique golf courses
       const uniqueCourses = [...new Set(
@@ -175,41 +176,57 @@ function AnalysisContent() {
     loadData();
   }, [loadData]);
 
-  // Load custom clubs and enabled fields on mount
+  // Load custom clubs and enabled fields on mount (wait for session)
   useEffect(() => {
     const loadSettings = async () => {
-      const savedClubs = await getSetting<string[]>('customClubs', DEFAULT_CLUBS);
-      setClubs(savedClubs || DEFAULT_CLUBS);
+      try {
+        const savedClubs = await getSetting<string[]>('customClubs', DEFAULT_CLUBS);
+        setClubs(savedClubs || DEFAULT_CLUBS);
 
-      const savedFields = await getSetting<{
-        slope: boolean;
-        lie: boolean;
-        club: boolean;
-        strength: boolean;
-        wind: boolean;
-        temperature: boolean;
-        feeling: boolean;
-        memo: boolean;
-      }>('enabledInputFields', {
-        slope: true,
-        lie: true,
-        club: true,
-        strength: true,
-        wind: true,
-        temperature: true,
-        feeling: true,
-        memo: true,
-      });
-      setEnabledFields(savedFields || {
-        slope: true,
-        lie: true,
-        club: true,
-        strength: true,
-        wind: true,
-        temperature: true,
-        feeling: true,
-        memo: true,
-      });
+        const savedFields = await getSetting<{
+          slope: boolean;
+          lie: boolean;
+          club: boolean;
+          strength: boolean;
+          wind: boolean;
+          temperature: boolean;
+          feeling: boolean;
+          memo: boolean;
+        }>('enabledInputFields', {
+          slope: true,
+          lie: true,
+          club: true,
+          strength: true,
+          wind: true,
+          temperature: true,
+          feeling: true,
+          memo: true,
+        });
+        setEnabledFields(savedFields || {
+          slope: true,
+          lie: true,
+          club: true,
+          strength: true,
+          wind: true,
+          temperature: true,
+          feeling: true,
+          memo: true,
+        });
+      } catch (error) {
+        console.error('[Analysis] Failed to load settings:', error);
+        // Use defaults on error
+        setClubs(DEFAULT_CLUBS);
+        setEnabledFields({
+          slope: true,
+          lie: true,
+          club: true,
+          strength: true,
+          wind: true,
+          temperature: true,
+          feeling: true,
+          memo: true,
+        });
+      }
     };
     loadSettings();
   }, []);

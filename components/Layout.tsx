@@ -39,6 +39,8 @@ export const Layout: React.FC<LayoutProps> = ({ children, showNav = true }) => {
           } else {
             console.error('[Layout] Failed to sync settings from server:', result.error);
           }
+        }).catch((error) => {
+          console.error('[Layout] Error during settings sync:', error);
         });
 
         // ショットデータを同期
@@ -48,6 +50,8 @@ export const Layout: React.FC<LayoutProps> = ({ children, showNav = true }) => {
           } else {
             console.error('[Layout] Failed to sync shots from server:', result.error);
           }
+        }).catch((error) => {
+          console.error('[Layout] Error during shots sync:', error);
         });
       }
     }

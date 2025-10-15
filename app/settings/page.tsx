@@ -148,9 +148,15 @@ export default function SettingsPage() {
   useEffect(() => {
     if (session?.user?.id) {
       console.log('[Settings] Session ready, loading settings for user:', session.user.id);
-      loadThreshold();
-      loadClubs();
-      loadInputSettings();
+      Promise.all([
+        loadThreshold().catch(err => console.error('[Settings] Failed to load threshold:', err)),
+        loadClubs().catch(err => console.error('[Settings] Failed to load clubs:', err)),
+        loadInputSettings().catch(err => console.error('[Settings] Failed to load input settings:', err)),
+      ]).then(() => {
+        console.log('[Settings] All settings loaded successfully');
+      }).catch(err => {
+        console.error('[Settings] Error loading settings:', err);
+      });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [session?.user?.id]);
