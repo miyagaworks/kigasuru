@@ -27,9 +27,11 @@ export default function OfflinePage() {
           オフラインです
         </h1>
 
-        <p className="text-[var(--color-neutral-600)] mb-6">
-          インターネット接続が利用できません。<br />
-          ネットワークに接続してから再度お試しください。
+        <p className="text-[var(--color-neutral-600)] mb-2">
+          このページはまだキャッシュされていません。
+        </p>
+        <p className="text-sm text-[var(--color-neutral-500)] mb-6">
+          オンラインに接続して、一度アクセスすると次回からオフラインでも利用できるようになります。
         </p>
 
         <div className="space-y-3">
@@ -50,10 +52,9 @@ export default function OfflinePage() {
           </Link>
         </div>
 
-        <div className="mt-6 p-4 bg-[var(--color-neutral-100)] rounded-lg">
-          <p className="text-xs text-[var(--color-neutral-600)]">
-            💡 オフライン時でも、一部の機能（ショット記録、データ閲覧）は利用可能です。<br />
-            記録したデータは、次回オンライン時に自動で同期されます。
+        <div className="mt-6 p-4 bg-[var(--color-info-bg)] rounded-lg border border-[var(--color-info-border)]">
+          <p className="text-xs text-[var(--color-info-text)] leading-relaxed">
+            💡 <strong>ヒント：</strong>PWA（ホーム画面に追加したアプリ）を初めてインストールした直後は、オンライン状態で一度すべてのページ（記録、分析、設定、履歴）にアクセスしてください。その後はオフラインでも利用できます。
           </p>
         </div>
       </div>
