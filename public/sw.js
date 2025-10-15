@@ -1,4 +1,4 @@
-const CACHE_VERSION = 'v2';
+const CACHE_VERSION = 'v3';
 const STATIC_CACHE = `static-${CACHE_VERSION}`;
 const DYNAMIC_CACHE = `dynamic-${CACHE_VERSION}`;
 const OFFLINE_URL = '/offline';
@@ -128,7 +128,35 @@ self.addEventListener('fetch', (event) => {
           return response;
         })
         .catch(() => {
-          return caches.match(request);
+          // オフライン時の処理
+          if (request.method === 'POST') {
+            // POSTリクエストはオフラインではエラーを返す
+            // （クライアント側でIndexedDBに保存する）
+            return new Response(
+              JSON.stringify({
+                error: 'オフラインです。データはローカルに保存されます。',
+                offline: true
+              }),
+              {
+                status: 503,
+                statusText: 'Service Unavailable',
+                headers: { 'Content-Type': 'application/json' },
+              }
+            );
+          }
+          // GETリクエストはキャッシュから取得を試みる
+          return caches.match(request).then((cachedResponse) => {
+            if (cachedResponse) {
+              return cachedResponse;
+            }
+            return new Response(
+              JSON.stringify({ error: 'オフラインです' }),
+              {
+                status: 503,
+                headers: { 'Content-Type': 'application/json' },
+              }
+            );
+          });
         })
     );
     return;

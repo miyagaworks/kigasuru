@@ -495,32 +495,37 @@ function RecordContent() {
     setIsSaving(true);
 
     try {
-      // トライアルユーザーの場合、記録可能かチェック（編集時は除く）
-      if (!editId) {
-        const trialCheckResponse = await fetch('/api/trial/validate', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ shotDate: currentShot.date || new Date().toISOString() }),
-        });
+      // トライアルユーザーの場合、記録可能かチェック（編集時は除く、オンライン時のみ）
+      const isOnline = typeof navigator !== 'undefined' && navigator.onLine;
 
-        if (!trialCheckResponse.ok) {
-          throw new Error('トライアルチェックに失敗しました');
-        }
+      if (!editId && isOnline) {
+        try {
+          const trialCheckResponse = await fetch('/api/trial/validate', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ shotDate: currentShot.date || new Date().toISOString() }),
+          });
 
-        const trialCheck = await trialCheckResponse.json();
+          if (trialCheckResponse.ok) {
+            const trialCheck = await trialCheckResponse.json();
 
-        if (!trialCheck.canRecord) {
-          // トライアル制限に達している場合
-          const confirmUpgrade = window.confirm(
-            `${trialCheck.message}\n\nサブスクリプションページに移動しますか？`
-          );
+            if (!trialCheck.canRecord) {
+              // トライアル制限に達している場合
+              const confirmUpgrade = window.confirm(
+                `${trialCheck.message}\n\nサブスクリプションページに移動しますか？`
+              );
 
-          if (confirmUpgrade) {
-            router.push('/subscription');
+              if (confirmUpgrade) {
+                router.push('/subscription');
+              }
+
+              setIsSaving(false);
+              return;
+            }
           }
-
-          setIsSaving(false);
-          return;
+        } catch (error) {
+          // オフラインまたはAPIエラー時はスキップ（オフライン保存を許可）
+          console.log('[Record] Trial check skipped (offline or error):', error);
         }
       }
 
@@ -578,8 +583,6 @@ function RecordContent() {
         }, 500);
       } else {
         // Create new shot - Try to save to server first (if online)
-        const isOnline = typeof navigator !== 'undefined' && navigator.onLine;
-
         if (isOnline) {
           try {
             // Save to server
@@ -1511,21 +1514,21 @@ function RecordContent() {
         ) : autoCollectStatus.error ? (
           <>
             <div className="mb-4 p-3 bg-[var(--color-error-bg)] rounded-lg border border-[var(--color-error-border)]">
-              <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => autoCollect()}
+                  className="flex-shrink-0 px-2.5 py-1 bg-[var(--color-secondary-red)] text-white text-xs rounded hover:opacity-90 transition-opacity whitespace-nowrap"
+                >
+                  再取得
+                </button>
                 <div className="flex-1">
                   <p className="text-base font-medium text-[var(--color-error-text)] mb-1">
-                    自動収集に失敗しました
+                    自動取得に失敗しました
                   </p>
                   <p className="text-xs text-[var(--color-error-text)]">
                     {autoCollectStatus.error}
                   </p>
                 </div>
-                <button
-                  onClick={() => autoCollect()}
-                  className="ml-3 px-3 py-1 bg-[var(--color-secondary-red)] text-white text-xs rounded hover:opacity-90 transition-opacity whitespace-nowrap"
-                >
-                  再取得
-                </button>
               </div>
             </div>
 
