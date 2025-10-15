@@ -1,4 +1,4 @@
-const CACHE_VERSION = 'v3';
+const CACHE_VERSION = 'v4';
 const STATIC_CACHE = `static-${CACHE_VERSION}`;
 const DYNAMIC_CACHE = `dynamic-${CACHE_VERSION}`;
 const OFFLINE_URL = '/offline';
@@ -223,18 +223,42 @@ self.addEventListener('fetch', (event) => {
     event.respondWith(
       fetch(request)
         .then((response) => {
-          const responseClone = response.clone();
-          caches.open(DYNAMIC_CACHE).then((cache) => {
-            cache.put(request, responseClone);
-          });
+          // リダイレクトを含むレスポンスや認証が必要なレスポンスはキャッシュしない
+          if (response.type === 'opaqueredirect' || response.redirected || response.status === 302 || response.status === 301) {
+            return response;
+          }
+
+          // 成功したレスポンスのみキャッシュ
+          if (response && response.status === 200) {
+            const responseClone = response.clone();
+            caches.open(DYNAMIC_CACHE).then((cache) => {
+              cache.put(request, responseClone);
+            });
+          }
           return response;
         })
         .catch(() => {
-          return caches.match(request).then((cachedResponse) => {
-            if (cachedResponse) {
-              return cachedResponse;
+          // オフライン時：IndexedDBを使うページは直接返す
+          const url = new URL(request.url);
+          const offlineSafePages = ['/history', '/record', '/analysis', '/settings'];
+
+          if (offlineSafePages.some(page => url.pathname.startsWith(page))) {
+            return caches.match(request).then((cachedResponse) => {
+              if (cachedResponse) {
+                return cachedResponse;
+              }
+              // キャッシュになければルートページにフォールバック
+              return caches.match('/');
+            });
+          }
+
+          // その他のページはオフラインページを表示
+          return caches.match(OFFLINE_URL).then((offlinePage) => {
+            if (offlinePage) {
+              return offlinePage;
             }
-            return caches.match(OFFLINE_URL);
+            // オフラインページもなければルートページを返す
+            return caches.match('/');
           });
         })
     );
