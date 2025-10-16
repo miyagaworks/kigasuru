@@ -1199,6 +1199,15 @@ export default function LandingPage() {
                 </li>
                 <li>
                   <a
+                    href="/transactions"
+                    className="text-gray-400 hover:text-white transition-colors flex items-center gap-2 group"
+                  >
+                    <span className="w-1.5 h-1.5 bg-blue-400 rounded-full group-hover:w-2 group-hover:h-2 transition-all"></span>
+                    特定商取引法に基づく表記
+                  </a>
+                </li>
+                <li>
+                  <a
                     href="#contact"
                     onClick={(e) => {
                       e.preventDefault();
