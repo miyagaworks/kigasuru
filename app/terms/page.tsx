@@ -262,6 +262,22 @@ export default function Terms() {
             上手くなる気がするぅぅぅ
           </Link>
           <p className="text-gray-400 mt-3">データで変わる、あなたのゴルフ</p>
+
+          <div className="flex flex-wrap justify-center gap-6 mt-6 text-sm text-gray-400">
+            <Link href="/privacy" className="hover:text-white transition-colors">
+              プライバシーポリシー
+            </Link>
+            <Link href="/terms" className="hover:text-white transition-colors font-semibold">
+              利用規約
+            </Link>
+            <Link href="/transactions" className="hover:text-white transition-colors">
+              特定商取引法に基づく表記
+            </Link>
+          </div>
+
+          <p className="text-gray-500 text-sm mt-6">
+            &copy; 2025 Senrigan Inc. All rights reserved.
+          </p>
         </div>
       </footer>
     </div>
