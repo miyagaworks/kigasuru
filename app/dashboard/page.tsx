@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
+import Image from 'next/image';
 import { Layout } from '@/components/Layout';
 import { getAllShots, type Shot, getSetting } from '@/lib/db';
 import { PwaInstallBanner } from '@/components/PwaInstallBanner';
@@ -342,6 +343,13 @@ export default function DashboardPage() {
     }
   };
 
+  // データが存在するかチェック
+  const hasData = allClubPerformance.length > 0 ||
+                  todayClubPerformance.length > 0 ||
+                  distancePerformance.some((d) => d.shotCount > 0) ||
+                  clubTrends.length > 0 ||
+                  worstClubs.length > 0;
+
   return (
     <Layout>
       <div className="p-4">
@@ -349,6 +357,20 @@ export default function DashboardPage() {
           <div className="space-y-6">
             {/* スペーサー */}
             <div className="h-4"></div>
+
+            {/* データがない場合は初期画像を表示 */}
+            {!hasData && (
+              <div className="flex justify-center items-center min-h-[60vh]">
+                <Image
+                  src="/assets/images/first_dashboard.png"
+                  alt="初回ダッシュボード"
+                  width={600}
+                  height={800}
+                  className="max-w-full h-auto rounded-lg shadow-lg"
+                  priority
+                />
+              </div>
+            )}
 
             {/* 1. 今日のクラブ別パフォーマンス */}
             {todayClubPerformance.length > 0 && (

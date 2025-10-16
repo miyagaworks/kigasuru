@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { Layout } from '@/components/Layout';
 import { Icon } from '@/components/Icon';
@@ -16,10 +16,31 @@ export default function RoundHistoryPage() {
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [roundDates, setRoundDates] = useState<Set<string>>(new Set());
+  const [selectedShots, setSelectedShots] = useState<Shot[]>([]);
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  // Get shots for selected date
+  const getShotsForDate = useCallback((dateStr: string) => {
+    return shots.filter(shot => {
+      const shotDate = new Date(shot.date);
+      const shotDateStr = `${shotDate.getFullYear()}-${String(shotDate.getMonth() + 1).padStart(2, '0')}-${String(shotDate.getDate()).padStart(2, '0')}`;
+      return shotDateStr === dateStr;
+    });
+  }, [shots]);
 
   useEffect(() => {
     loadShots();
   }, []);
+
+  // Update selectedShots when shots or selectedDate changes
+  useEffect(() => {
+    if (selectedDate) {
+      const shotsForDate = getShotsForDate(selectedDate);
+      setSelectedShots(shotsForDate);
+    } else {
+      setSelectedShots([]);
+    }
+  }, [shots, selectedDate, getShotsForDate]);
 
   const loadShots = async () => {
     try {
@@ -40,24 +61,20 @@ export default function RoundHistoryPage() {
   };
 
   const handleDeleteShot = async (shotId: number) => {
+    if (isDeleting) return; // Prevent multiple deletions at once
+
     if (window.confirm('このショット記録を削除しますか？')) {
       try {
+        setIsDeleting(true);
         await deleteShot(shotId);
-        loadShots();
+        await loadShots();
       } catch (error) {
         console.error('Failed to delete shot:', error);
         alert('削除に失敗しました');
+      } finally {
+        setIsDeleting(false);
       }
     }
-  };
-
-  // Get shots for selected date
-  const getShotsForDate = (dateStr: string) => {
-    return shots.filter(shot => {
-      const shotDate = new Date(shot.date);
-      const shotDateStr = `${shotDate.getFullYear()}-${String(shotDate.getMonth() + 1).padStart(2, '0')}-${String(shotDate.getDate()).padStart(2, '0')}`;
-      return shotDateStr === dateStr;
-    });
   };
 
   // Calendar rendering
@@ -116,8 +133,6 @@ export default function RoundHistoryPage() {
 
     return days;
   };
-
-  const selectedShots = selectedDate ? getShotsForDate(selectedDate) : [];
 
   // Helper functions for labels
   const getWindLabel = (windData: string | null) => {
@@ -211,9 +226,9 @@ export default function RoundHistoryPage() {
               </p>
             ) : (
               <div className="space-y-3">
-                {selectedShots.map((shot, index) => (
+                {selectedShots.map((shot) => (
                   <div
-                    key={shot.id || index}
+                    key={shot.id}
                     className="bg-[var(--color-card-bg)] rounded-lg p-4 border border-[var(--color-neutral-300)]"
                   >
                     <div className="flex justify-between items-start mb-2">
@@ -239,13 +254,15 @@ export default function RoundHistoryPage() {
                             onClick={() => router.push(`/record?edit=${shot.id}`)}
                             className="p-2 hover:bg-[var(--color-neutral-100)] rounded transition-colors"
                             aria-label="編集"
+                            disabled={isDeleting}
                           >
                             <Icon category="ui" name="edit" size={20} />
                           </button>
                           <button
-                            onClick={() => shot.id && handleDeleteShot(shot.id)}
-                            className="p-2 hover:bg-[var(--color-error-bg)] rounded transition-colors"
+                            onClick={() => handleDeleteShot(shot.id!)}
+                            className="p-2 hover:bg-[var(--color-error-bg)] rounded transition-colors disabled:opacity-50"
                             aria-label="削除"
+                            disabled={isDeleting}
                           >
                             <Icon category="ui" name="delete" size={20} />
                           </button>

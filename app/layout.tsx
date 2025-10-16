@@ -17,7 +17,7 @@ export const metadata: Metadata = {
   metadataBase: new URL(
     process.env.NEXT_PUBLIC_APP_URL || "https://kigasuru.vercel.app"
   ),
-  title: "上手くなる気がするぅぅぅ PRO",
+  title: "上手くなる気がするぅぅぅ",
   description:
     "科学的ゴルフ上達アプリ - ジャイロセンサーで傾斜を自動検出し、6次元データでショットを記録・分析",
   manifest: "/manifest.json",
@@ -36,22 +36,22 @@ export const metadata: Metadata = {
   openGraph: {
     type: "website",
     locale: "ja_JP",
-    siteName: "上手くなる気がするぅぅぅ PRO",
-    title: "上手くなる気がするぅぅぅ PRO",
+    siteName: "上手くなる気がするぅぅぅ",
+    title: "上手くなる気がするぅぅぅ",
     description: "科学的ゴルフ上達アプリ - ジャイロセンサーで傾斜を自動検出",
     images: [
       {
         url: "/og-image.png",
         width: 1200,
         height: 700,
-        alt: "上手くなる気がするぅぅぅ PRO",
+        alt: "上手くなる気がするぅぅぅ",
         type: "image/png",
       },
     ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "上手くなる気がするぅぅぅ PRO",
+    title: "上手くなる気がするぅぅぅ",
     description: "科学的ゴルフ上達アプリ - ジャイロセンサーで傾斜を自動検出",
     images: ["/og-image.png"],
     creator: "@上手くなる気がするぅぅぅ",
