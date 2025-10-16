@@ -12,8 +12,6 @@ interface DeviceInfo {
  */
 export function useExternalBrowser() {
   const [deviceInfo, setDeviceInfo] = useState<DeviceInfo | null>(null);
-  const [showBrowserInstructions, setShowBrowserInstructions] = useState(false);
-  const [debugInfo, setDebugInfo] = useState<string[]>([]);
 
   // デバイス情報を取得
   useEffect(() => {
@@ -36,55 +34,46 @@ export function useExternalBrowser() {
 
   // app.kigasuru.comを外部ブラウザで開く
   const openInExternalBrowser = (path = '/auth/signup') => {
-    // 最初に必ず表示されるアラート（関数が呼ばれたことを確認）
-    alert('ボタンがクリックされました');
-
-    const logs: string[] = [];
-
     if (!deviceInfo) {
-      alert('デバイス情報がまだ準備できていません');
+      // デバイス情報がまだ準備できていない場合は通常のリダイレクト
+      window.location.href = `https://app.kigasuru.com${path}`;
       return;
     }
-
-    // デバッグ情報をアラートで表示
-    const debugMsg = `デバイス検出:\niOS: ${deviceInfo.isIOS}\nAndroid: ${deviceInfo.isAndroid}\nLINE: ${deviceInfo.isLine}\n\nUserAgent:\n${deviceInfo.userAgent}`;
-    alert(debugMsg);
-
-    logs.push(`Device: iOS=${deviceInfo.isIOS}, Android=${deviceInfo.isAndroid}, LINE=${deviceInfo.isLine}`);
-    logs.push(`UserAgent: ${deviceInfo.userAgent}`);
 
     const appUrl = `https://app.kigasuru.com${path}`;
 
     if (deviceInfo.isLine) {
+      // LINEブラウザの場合、外部ブラウザで開く
       if (deviceInfo.isIOS) {
-        // iOS: 直接Safariで開くように案内
-        alert('iOSのLINEブラウザを検出しました。\n\n右上の「…」メニューから「Safariで開く」を選択してください。');
-        setShowBrowserInstructions(true);
+        // iOS: Safariで開く
+        // 方法1: FTPスキームを使う（最も確実）
+        window.location.href = `ftp://${appUrl.replace('https://', '')}`;
+
+        // フォールバック: 1秒後に通常のURLも試す
+        setTimeout(() => {
+          window.location.href = appUrl;
+        }, 1000);
       } else if (deviceInfo.isAndroid) {
-        // Android: 直接Chromeで開くように案内
-        alert('AndroidのLINEブラウザを検出しました。\n\n右上のメニューから「他のアプリで開く」→「Chrome」を選択してください。');
-        setShowBrowserInstructions(true);
+        // Android: intentスキームでChromeを開く
+        const intentUrl = `intent://${appUrl.replace('https://', '')}#Intent;scheme=https;package=com.android.chrome;end`;
+        window.location.href = intentUrl;
+
+        // フォールバック
+        setTimeout(() => {
+          window.location.href = appUrl;
+        }, 1000);
       } else {
-        // 判定できない場合
-        alert('LINEブラウザを検出しましたが、端末を判別できませんでした。\n\nメニューから外部ブラウザで開いてください。');
-        setShowBrowserInstructions(true);
+        // 判定できない場合は通常のリダイレクト
+        window.location.href = appUrl;
       }
-
-      setDebugInfo(logs);
-
     } else {
       // LINE以外のブラウザの場合は通常通り開く
-      logs.push(`Not LINE browser - redirecting to: ${appUrl}`);
-      setDebugInfo(logs);
       window.location.href = appUrl;
     }
   };
 
   return {
     deviceInfo,
-    showBrowserInstructions,
-    setShowBrowserInstructions,
     openInExternalBrowser,
-    debugInfo
   };
 }
