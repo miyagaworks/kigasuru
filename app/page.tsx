@@ -17,6 +17,8 @@ import {
 import SlopeSelectionDemo from '@/components/SlopeSelectionDemo';
 import ShotPatternDemo from '@/components/ShotPatternDemo';
 import WorstClubsDemo from '@/components/WorstClubsDemo';
+import { useExternalBrowser } from '@/hooks/useExternalBrowser';
+import { BrowserInstructionsModal } from '@/components/BrowserInstructionsModal';
 
 /**
  * メインランディングページ - 上手くなる気がするぅぅぅ
@@ -32,6 +34,9 @@ export default function LandingPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitSuccess, setSubmitSuccess] = useState(false);
   const [submitError, setSubmitError] = useState('');
+
+  // 外部ブラウザで開くフック
+  const { deviceInfo, showBrowserInstructions, setShowBrowserInstructions, openInExternalBrowser } = useExternalBrowser();
 
   const handleContactSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -73,6 +78,18 @@ export default function LandingPage() {
 
   return (
     <div className="min-h-screen bg-white">
+      {/* バージョン表示（デバッグ用） - 最前面に表示 */}
+      <div className="fixed top-0 left-0 right-0 bg-red-600 text-white text-center py-2 text-sm font-bold z-[9999] shadow-lg">
+        バージョン: v2025-10-16-04:00 | デバッグモード
+      </div>
+
+      {/* LINEアプリ内ブラウザの案内 */}
+      <BrowserInstructionsModal
+        isOpen={showBrowserInstructions}
+        onClose={() => setShowBrowserInstructions(false)}
+        deviceInfo={deviceInfo}
+      />
+
       {/* ヒーローセクション */}
       <section className="relative h-screen flex items-center justify-center text-center overflow-hidden bg-gradient-to-b from-green-50 to-white">
         {/* 背景画像 */}
@@ -180,7 +197,7 @@ export default function LandingPage() {
           </p>
 
           <button
-            onClick={() => router.push("/auth/signup")}
+            onClick={() => openInExternalBrowser('/auth/signup')}
             className="group px-12 py-5 bg-white text-[var(--color-primary-green)] text-lg font-bold rounded-xl hover:bg-gray-50 transition-all shadow-2xl hover:scale-105"
           >
             <span className="flex items-center justify-center gap-2">
@@ -1139,7 +1156,7 @@ export default function LandingPage() {
           </p>
 
           <button
-            onClick={() => router.push("/auth/signup")}
+            onClick={() => openInExternalBrowser('/auth/signup')}
             className="group px-12 py-5 bg-white text-[var(--color-primary-green)] text-lg font-bold rounded-xl hover:bg-gray-50 transition-all shadow-2xl hover:scale-105"
           >
             <span className="flex items-center justify-center gap-2">
@@ -1497,7 +1514,7 @@ export default function LandingPage() {
           </p>
 
           <button
-            onClick={() => router.push("/auth/signup")}
+            onClick={() => openInExternalBrowser('/auth/signup')}
             className="group px-12 py-5 bg-white text-[var(--color-primary-green)] text-lg font-bold rounded-xl hover:bg-gray-50 transition-all shadow-2xl hover:scale-105"
           >
             <span className="flex items-center justify-center gap-2">
@@ -1627,7 +1644,7 @@ export default function LandingPage() {
               </ul>
 
               <button
-                onClick={() => router.push("/auth/signup")}
+                onClick={() => openInExternalBrowser('/auth/signup')}
                 className="w-full py-4 bg-[var(--color-primary-green)] text-white font-bold rounded-xl hover:bg-[var(--color-primary-dark)] transition-all shadow-lg hover:shadow-xl"
               >
                 月額プランを始める
@@ -1719,7 +1736,7 @@ export default function LandingPage() {
               </ul>
 
               <button
-                onClick={() => router.push("/auth/signup")}
+                onClick={() => openInExternalBrowser('/auth/signup')}
                 className="w-full py-4 bg-gradient-to-r from-[var(--color-primary-green)] to-[var(--color-primary-dark)] text-white font-bold rounded-xl hover:shadow-2xl transition-all shadow-lg"
               >
                 年額プランを始める（お得）
@@ -2009,7 +2026,7 @@ export default function LandingPage() {
           </p>
 
           <button
-            onClick={() => router.push("/auth/signup")}
+            onClick={() => openInExternalBrowser('/auth/signup')}
             className="group px-14 py-6 bg-white text-[var(--color-primary-green)] text-xl font-bold rounded-2xl hover:bg-gray-50 transition-all shadow-2xl hover:scale-105"
           >
             <span className="flex items-center justify-center gap-3">
