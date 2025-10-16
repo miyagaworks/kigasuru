@@ -14,6 +14,7 @@ export default function SignUpPage() {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [agreedToTerms, setAgreedToTerms] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -31,6 +32,11 @@ export default function SignUpPage() {
   const handleEmailSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
+
+    if (!agreedToTerms) {
+      setError('利用規約とプライバシーポリシーに同意してください');
+      return;
+    }
 
     if (password !== confirmPassword) {
       setError('パスワードが一致しません');
@@ -79,6 +85,12 @@ export default function SignUpPage() {
 
   const handleOAuthSignUp = async (provider: 'google') => {
     setError(null);
+
+    if (!agreedToTerms) {
+      setError('利用規約とプライバシーポリシーに同意してください');
+      return;
+    }
+
     setLoading(true);
 
     try {
@@ -135,12 +147,47 @@ export default function SignUpPage() {
         )}
 
         <div className="space-y-4">
+          {/* 利用規約・プライバシーポリシー同意チェックボックス（共通） */}
+          <div className="flex items-start gap-3 p-4 bg-[var(--color-neutral-100)] rounded-lg border border-[var(--color-neutral-300)]">
+            <input
+              type="checkbox"
+              id="agree-to-terms"
+              checked={agreedToTerms}
+              onChange={(e) => setAgreedToTerms(e.target.checked)}
+              disabled={loading}
+              className="mt-1 w-4 h-4 text-[var(--color-primary-green)] bg-white border-[var(--color-neutral-400)] rounded focus:ring-2 focus:ring-[var(--color-primary-green)] cursor-pointer"
+            />
+            <label
+              htmlFor="agree-to-terms"
+              className="text-sm text-[var(--color-neutral-800)] leading-relaxed cursor-pointer select-none"
+            >
+              <Link
+                href="/terms"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-[var(--color-primary-green)] hover:underline font-medium"
+              >
+                利用規約
+              </Link>
+              および
+              <Link
+                href="/privacy"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-[var(--color-primary-green)] hover:underline font-medium"
+              >
+                プライバシーポリシー
+              </Link>
+              に同意します
+            </label>
+          </div>
+
           {/* Google Sign Up */}
           <Button
             variant="outline"
             className="w-full h-12 border-[var(--color-neutral-400)] hover:bg-[var(--color-neutral-200)] flex items-center justify-center gap-2"
             onClick={() => handleOAuthSignUp("google")}
-            disabled={loading}
+            disabled={loading || !agreedToTerms}
           >
             <svg width="20" height="20" viewBox="0 0 24 24">
               <path
@@ -372,6 +419,7 @@ export default function SignUpPage() {
                 </button>
               </div>
             </div>
+
             <Button
               type="submit"
               className="w-full h-12 bg-[var(--color-primary-green)] hover:bg-[var(--color-primary-dark)] text-white disabled:opacity-50 disabled:cursor-not-allowed"
@@ -382,7 +430,8 @@ export default function SignUpPage() {
                 !password.trim() ||
                 !confirmPassword.trim() ||
                 password.length < 8 ||
-                password !== confirmPassword
+                password !== confirmPassword ||
+                !agreedToTerms
               }
             >
               {loading ? "登録中..." : "登録"}
