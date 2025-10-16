@@ -44,23 +44,34 @@ export function useExternalBrowser() {
 
       if (deviceInfo.isIOS) {
         // iOS: Safariで開く
+        // x-safari-https:// の後に // を付ける
         targetUrl = `x-safari-https://app.kigasuru.com${path}`;
         console.log('[useExternalBrowser] Opening in Safari (iOS):', targetUrl);
+
+        // iframeを使った方法も試す
+        const iframe = document.createElement('iframe');
+        iframe.style.display = 'none';
+        iframe.src = targetUrl;
+        document.body.appendChild(iframe);
+
+        setTimeout(() => {
+          document.body.removeChild(iframe);
+        }, 100);
+
       } else if (deviceInfo.isAndroid) {
-        // Android: Chromeで開く
-        targetUrl = `googlechrome://app.kigasuru.com${path}`;
+        // Android: intent URLを使用
+        targetUrl = `intent://app.kigasuru.com${path}#Intent;scheme=https;package=com.android.chrome;end`;
         console.log('[useExternalBrowser] Opening in Chrome (Android):', targetUrl);
+        window.location.href = targetUrl;
       } else {
         targetUrl = appUrl;
+        window.location.href = targetUrl;
       }
 
-      // URLスキームで外部ブラウザを開く
-      window.location.href = targetUrl;
-
-      // フォールバック: 1秒後に手動案内を表示
+      // フォールバック: 1.5秒後に手動案内を表示
       setTimeout(() => {
         setShowBrowserInstructions(true);
-      }, 1000);
+      }, 1500);
 
     } else {
       // LINE以外のブラウザの場合は通常通り開く
