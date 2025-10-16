@@ -21,11 +21,11 @@ export default auth((req) => {
 
   const isPublicRoute =
     nextUrl.pathname === '/' ||
-    nextUrl.pathname === '/landing' ||
     nextUrl.pathname.startsWith('/learn') ||
     nextUrl.pathname.startsWith('/icons-demo') ||
     nextUrl.pathname === '/privacy' ||
     nextUrl.pathname === '/terms' ||
+    nextUrl.pathname === '/transactions' ||
     isAuthRoute ||
     isApiAuthRoute ||
     isPublicApiRoute ||

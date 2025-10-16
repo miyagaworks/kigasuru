@@ -11,7 +11,7 @@ export default function TransactionsPage() {
       <header className="bg-white border-b border-gray-200 sticky top-0 z-50 shadow-sm">
         <div className="max-w-4xl mx-auto px-6 py-4">
           <Link
-            href="/landing"
+            href="/"
             className="text-[var(--color-primary-green)] hover:text-[var(--color-primary-dark)] font-bold text-lg transition-colors flex items-center gap-2"
           >
             <svg
@@ -192,7 +192,7 @@ export default function TransactionsPage() {
         {/* フッターリンク */}
         <div className="mt-8 text-center">
           <Link
-            href="/landing"
+            href="/"
             className="inline-flex items-center gap-2 px-6 py-3 bg-[var(--color-primary-green)] text-white font-bold rounded-lg hover:bg-[var(--color-primary-dark)] transition-colors shadow-lg"
           >
             <svg
