@@ -39,10 +39,13 @@ export function useExternalBrowser() {
     const logs: string[] = [];
 
     if (!deviceInfo) {
-      logs.push('Device info not ready');
-      setDebugInfo(logs);
+      alert('デバイス情報がまだ準備できていません');
       return;
     }
+
+    // デバッグ情報をアラートで表示
+    const debugMsg = `デバイス検出:\niOS: ${deviceInfo.isIOS}\nAndroid: ${deviceInfo.isAndroid}\nLINE: ${deviceInfo.isLine}\n\nUserAgent:\n${deviceInfo.userAgent}`;
+    alert(debugMsg);
 
     logs.push(`Device: iOS=${deviceInfo.isIOS}, Android=${deviceInfo.isAndroid}, LINE=${deviceInfo.isLine}`);
     logs.push(`UserAgent: ${deviceInfo.userAgent}`);
@@ -50,46 +53,21 @@ export function useExternalBrowser() {
     const appUrl = `https://app.kigasuru.com${path}`;
 
     if (deviceInfo.isLine) {
-      let targetUrl: string;
-
       if (deviceInfo.isIOS) {
-        // iOS: Safariで開く
-        targetUrl = `x-safari-https://app.kigasuru.com${path}`;
-        logs.push(`iOS detected - Using: ${targetUrl}`);
-
-        // iframeを使った方法も試す
-        try {
-          const iframe = document.createElement('iframe');
-          iframe.style.display = 'none';
-          iframe.src = targetUrl;
-          document.body.appendChild(iframe);
-          logs.push('iframe created successfully');
-
-          setTimeout(() => {
-            document.body.removeChild(iframe);
-            logs.push('iframe removed');
-          }, 100);
-        } catch (error) {
-          logs.push(`iframe error: ${error}`);
-        }
-
+        // iOS: 直接Safariで開くように案内
+        alert('iOSのLINEブラウザを検出しました。\n\n右上の「…」メニューから「Safariで開く」を選択してください。');
+        setShowBrowserInstructions(true);
       } else if (deviceInfo.isAndroid) {
-        // Android: intent URLを使用
-        targetUrl = `intent://app.kigasuru.com${path}#Intent;scheme=https;package=com.android.chrome;end`;
-        logs.push(`Android detected - Using: ${targetUrl}`);
-        window.location.href = targetUrl;
+        // Android: 直接Chromeで開くように案内
+        alert('AndroidのLINEブラウザを検出しました。\n\n右上のメニューから「他のアプリで開く」→「Chrome」を選択してください。');
+        setShowBrowserInstructions(true);
       } else {
-        targetUrl = appUrl;
-        logs.push(`Unknown platform - Using normal URL: ${targetUrl}`);
-        window.location.href = targetUrl;
+        // 判定できない場合
+        alert('LINEブラウザを検出しましたが、端末を判別できませんでした。\n\nメニューから外部ブラウザで開いてください。');
+        setShowBrowserInstructions(true);
       }
 
       setDebugInfo(logs);
-
-      // フォールバック: 1.5秒後に手動案内を表示
-      setTimeout(() => {
-        setShowBrowserInstructions(true);
-      }, 1500);
 
     } else {
       // LINE以外のブラウザの場合は通常通り開く
