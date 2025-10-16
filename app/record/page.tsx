@@ -599,8 +599,11 @@ function RecordContent() {
             const result = await response.json();
             console.log('[Record] Shot saved to server:', result.shotId);
 
-            // Also save to IndexedDB for offline access
-            await addShot(currentShot as Partial<Shot>);
+            // Also save to IndexedDB for offline access with serverId
+            await addShot({
+              ...currentShot,
+              serverId: result.shotId, // Save server ID for future deletion
+            } as Partial<Shot>);
           } catch (error) {
             console.error('[Record] Failed to save to server, saving to IndexedDB only:', error);
             // Fallback: Save to IndexedDB only (will sync later)

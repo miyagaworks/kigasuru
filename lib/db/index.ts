@@ -143,6 +143,7 @@ export const db = getDB();
  */
 export const addShot = async (shotData: Partial<Shot>): Promise<number> => {
   const shot: Shot = {
+    serverId: shotData.serverId || null,
     date: shotData.date || new Date().toISOString(),
     slope: shotData.slope || '',
     club: shotData.club || '',
@@ -160,7 +161,7 @@ export const addShot = async (shotData: Partial<Shot>): Promise<number> => {
     longitude: shotData.longitude || null,
     missType: shotData.missType || null,
     manualLocation: shotData.manualLocation || false,
-    createdAt: Date.now(),
+    createdAt: shotData.createdAt || Date.now(),
   };
   return await getDB().shots.add(shot);
 };
