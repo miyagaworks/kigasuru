@@ -26,7 +26,7 @@ export default function LandingPage() {
     if (typeof window !== 'undefined') {
       // キャッシュコントロール用のタイムスタンプをチェック
       const lastUpdate = localStorage.getItem('landing-last-update');
-      const currentVersion = '2025-10-16-v3'; // デプロイごとに変更
+      const currentVersion = '2025-10-16-v4'; // デプロイごとに変更
 
       if (lastUpdate !== currentVersion) {
         console.log('[Landing] New version detected, clearing cache');
