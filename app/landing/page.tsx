@@ -26,7 +26,7 @@ export default function LandingPage() {
     if (typeof window !== 'undefined') {
       // キャッシュコントロール用のタイムスタンプをチェック
       const lastUpdate = localStorage.getItem('landing-last-update');
-      const currentVersion = '2025-10-16-v4'; // デプロイごとに変更
+      const currentVersion = '2025-10-16-v5'; // デプロイごとに変更
 
       if (lastUpdate !== currentVersion) {
         console.log('[Landing] New version detected, clearing cache');
@@ -1204,19 +1204,6 @@ export default function LandingPage() {
                   >
                     <span className="w-1.5 h-1.5 bg-blue-400 rounded-full group-hover:w-2 group-hover:h-2 transition-all"></span>
                     特定商取引法に基づく表記
-                  </a>
-                </li>
-                <li>
-                  <a
-                    href="#contact"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      document.querySelector('section:has(h2:contains("お問い合わせ"))')?.scrollIntoView({ behavior: 'smooth' });
-                    }}
-                    className="text-gray-400 hover:text-white transition-colors flex items-center gap-2 group"
-                  >
-                    <span className="w-1.5 h-1.5 bg-blue-400 rounded-full group-hover:w-2 group-hover:h-2 transition-all"></span>
-                    お問い合わせ
                   </a>
                 </li>
               </ul>
