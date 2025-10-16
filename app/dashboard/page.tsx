@@ -777,10 +777,10 @@ export default function DashboardPage() {
 
             {/* 6. 要練習クラブ（ミスショットが多い順） */}
             {clubsNeedingPractice.length > 0 && (
-              <div className="bg-[var(--color-warning-bg)] rounded-lg shadow-md p-4 border-l-4 border-[var(--color-warning-text)]">
-                <h2 className="text-lg font-bold text-[var(--color-warning-text)] mb-4 flex items-center gap-2">
+              <div className="bg-[var(--color-neutral-100)] rounded-lg shadow-md p-4 border-l-4 border-[var(--color-neutral-700)]">
+                <h2 className="text-lg font-bold text-[var(--color-neutral-900)] mb-4 flex items-center gap-2">
                   <svg
-                    className="w-6 h-6 text-[var(--color-warning-text)]"
+                    className="w-6 h-6 text-[var(--color-neutral-700)]"
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
@@ -835,7 +835,7 @@ export default function DashboardPage() {
                             <p className={`${index === 0 ? 'text-sm' : 'text-xs'} text-[var(--color-neutral-600)] leading-tight`}>
                               ワースト
                             </p>
-                            <p className={`${index === 0 ? 'text-xl' : 'text-base'} font-bold text-[var(--color-warning-text)] leading-tight`}>
+                            <p className={`${index === 0 ? 'text-xl' : 'text-base'} font-bold text-[var(--color-neutral-800)] leading-tight`}>
                               {index + 1}位
                             </p>
                           </div>
@@ -852,10 +852,10 @@ export default function DashboardPage() {
                           <div className="flex gap-2 justify-end">
                             {topMissTypes.map(([missType, count]) => (
                               <div key={missType} className="flex items-baseline gap-1">
-                                <span className="text-sm font-bold text-[var(--color-warning-text)]">
+                                <span className="text-sm font-bold text-[var(--color-neutral-700)]">
                                   {missTypeLabels[missType] || missType}
                                 </span>
-                                <span className="text-lg font-bold text-[var(--color-warning-text)]">
+                                <span className="text-lg font-bold text-[var(--color-neutral-900)]">
                                   {count}
                                 </span>
                               </div>
