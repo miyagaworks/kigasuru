@@ -98,6 +98,10 @@ export class KigasuruDB extends Dexie {
 let dbInstance: KigasuruDB | null = null;
 let currentUserId: string | null = null;
 
+// Simple in-memory cache for getAllShots
+let shotsCache: { data: Shot[]; timestamp: number } | null = null;
+const CACHE_TTL = 30000; // 30 seconds cache
+
 /**
  * ユーザーIDを設定してDBインスタンスを初期化
  */
@@ -163,14 +167,37 @@ export const addShot = async (shotData: Partial<Shot>): Promise<number> => {
     manualLocation: shotData.manualLocation || false,
     createdAt: shotData.createdAt || Date.now(),
   };
-  return await getDB().shots.add(shot);
+  const result = await getDB().shots.add(shot);
+  invalidateShotsCache(); // Invalidate cache when adding shots
+  return result;
 };
 
 /**
- * Get all shots
+ * Get all shots (with caching)
  */
-export const getAllShots = async (): Promise<Shot[]> => {
-  return await getDB().shots.orderBy('createdAt').reverse().toArray();
+export const getAllShots = async (skipCache = false): Promise<Shot[]> => {
+  // Check cache first
+  if (!skipCache && shotsCache && Date.now() - shotsCache.timestamp < CACHE_TTL) {
+    console.log('[DB] Returning cached shots');
+    return shotsCache.data;
+  }
+
+  // Fetch from IndexedDB
+  const shots = await getDB().shots.orderBy('createdAt').reverse().toArray();
+
+  // Update cache
+  shotsCache = { data: shots, timestamp: Date.now() };
+  console.log('[DB] Updated shots cache');
+
+  return shots;
+};
+
+/**
+ * Invalidate shots cache
+ */
+export const invalidateShotsCache = (): void => {
+  shotsCache = null;
+  console.log('[DB] Shots cache invalidated');
 };
 
 /**
@@ -330,14 +357,17 @@ export const getCalibration = async (): Promise<Calibration | undefined> => {
  * Update a shot record
  */
 export const updateShot = async (shotId: number, updates: Partial<Shot>): Promise<number> => {
-  return await getDB().shots.update(shotId, updates);
+  const result = await getDB().shots.update(shotId, updates);
+  invalidateShotsCache(); // Invalidate cache when updating shots
+  return result;
 };
 
 /**
  * Delete a shot record
  */
 export const deleteShot = async (shotId: number): Promise<void> => {
-  return await getDB().shots.delete(shotId);
+  await getDB().shots.delete(shotId);
+  invalidateShotsCache(); // Invalidate cache when deleting shots
 };
 
 /**
