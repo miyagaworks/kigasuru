@@ -46,13 +46,14 @@ export function useExternalBrowser() {
       // LINEブラウザの場合、外部ブラウザで開く
       if (deviceInfo.isIOS) {
         // iOS: Safariで開く
-        // 方法1: FTPスキームを使う（最も確実）
-        window.location.href = `ftp://${appUrl.replace('https://', '')}`;
+        // 方法1: 新しいウィンドウで開く（target="_blank"をJSで実行）
+        const newWindow = window.open(appUrl, '_blank');
 
-        // フォールバック: 1秒後に通常のURLも試す
-        setTimeout(() => {
+        // 方法2: 開けなかった場合のフォールバック（ユーザージェスチャーが必要）
+        if (!newWindow) {
+          // ポップアップがブロックされた場合、直接リダイレクト
           window.location.href = appUrl;
-        }, 1000);
+        }
       } else if (deviceInfo.isAndroid) {
         // Android: intentスキームでChromeを開く
         const intentUrl = `intent://${appUrl.replace('https://', '')}#Intent;scheme=https;package=com.android.chrome;end`;
