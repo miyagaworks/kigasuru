@@ -798,23 +798,23 @@ export default function DashboardPage() {
                   {clubsNeedingPractice.slice(0, 3).map((club, index) => {
                     // ミスタイプのラベルマップ
                     const missTypeLabels: Record<string, string> = {
-                      'top': '丸ト',
-                      'choro': '丸チ',
-                      'duff': '丸ダ',
-                      'over': '丸オ',
-                      'shank': '丸シ',
-                      'pull': '丸ヒ',
+                      'top': 'トップ',
+                      'choro': 'チョロ',
+                      'duff': 'ダフリ',
+                      'over': 'オーバー',
+                      'shank': 'シャンク',
+                      'pull': 'ヒッカケ',
                     };
 
-                    // 上位2つのミスタイプを取得（表示制限）
+                    // 上位3つのミスタイプを取得（表示制限）
                     const topMissTypes = Object.entries(club.missTypeCounts)
                       .sort(([, a], [, b]) => b - a)
-                      .slice(0, 2);
+                      .slice(0, 3);
 
                     return (
                       <div
                         key={club.club}
-                        className="flex items-center justify-between bg-white/50 rounded-lg p-3"
+                        className="flex items-center justify-between bg-[var(--color-neutral-200)] rounded-lg p-3"
                       >
                         <div className="flex items-center gap-3">
                           {/* ゴルフクラブアイコン */}
@@ -849,15 +849,15 @@ export default function DashboardPage() {
                           </div>
                         </div>
                         <div className="text-right">
-                          <div className="flex gap-2 justify-end">
+                          <div className="flex gap-3 justify-end">
                             {topMissTypes.map(([missType, count]) => (
-                              <div key={missType} className="flex items-baseline gap-1">
-                                <span className="text-sm font-bold text-[var(--color-neutral-700)]">
+                              <div key={missType} className="text-center">
+                                <p className="text-xs text-[var(--color-neutral-600)] mb-1">
                                   {missTypeLabels[missType] || missType}
-                                </span>
-                                <span className="text-lg font-bold text-[var(--color-neutral-900)]">
+                                </p>
+                                <p className="text-xl font-bold text-[var(--color-neutral-900)]">
                                   {count}
-                                </span>
+                                </p>
                               </div>
                             ))}
                           </div>
