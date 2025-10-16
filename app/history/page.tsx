@@ -66,36 +66,58 @@ export default function RoundHistoryPage() {
     if (window.confirm('このショット記録を削除しますか？')) {
       try {
         setIsDeleting(true);
+        console.log('[History] Starting deletion for shot:', shotId);
 
         // Get shot details to find serverId
         const shot = await getShot(shotId);
+        console.log('[History] Shot details:', { id: shotId, serverId: shot?.serverId });
 
-        // Delete from IndexedDB
+        // Delete from IndexedDB first
         await deleteShot(shotId);
+        console.log('[History] Shot deleted from IndexedDB');
 
         // Delete from server (if online and has serverId)
         if (shot?.serverId && typeof navigator !== 'undefined' && navigator.onLine) {
+          console.log('[History] Attempting to delete from server:', shot.serverId);
           try {
             const response = await fetch(`/api/shots/${shot.serverId}`, {
               method: 'DELETE',
+              headers: {
+                'Content-Type': 'application/json',
+              },
             });
 
+            console.log('[History] Server response:', response.status, response.statusText);
+
             if (!response.ok) {
-              console.error('Failed to delete from server:', response.status);
+              const errorText = await response.text();
+              console.error('[History] Server deletion failed:', {
+                status: response.status,
+                statusText: response.statusText,
+                error: errorText
+              });
               // Continue anyway - IndexedDB deletion was successful
             } else {
-              console.log('[History] Shot deleted from server:', shot.serverId);
+              console.log('[History] Shot successfully deleted from server:', shot.serverId);
             }
           } catch (error) {
-            console.error('Failed to delete from server:', error);
+            console.error('[History] Server deletion error:', error);
             // Continue anyway - IndexedDB deletion was successful
           }
+        } else {
+          console.log('[History] Skipping server deletion:', {
+            hasServerId: !!shot?.serverId,
+            isOnline: navigator.onLine
+          });
         }
 
+        // Reload shots to update UI
+        console.log('[History] Reloading shots...');
         await loadShots();
+        console.log('[History] Deletion complete');
       } catch (error) {
-        console.error('Failed to delete shot:', error);
-        alert('削除に失敗しました');
+        console.error('[History] Failed to delete shot:', error);
+        alert('削除に失敗しました: ' + (error instanceof Error ? error.message : String(error)));
       } finally {
         setIsDeleting(false);
       }
