@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+
 import {
   Cloud,
   Wind,
@@ -24,7 +24,6 @@ import { useExternalBrowser } from '@/hooks/useExternalBrowser';
  * Kindle本の内容を完全に反映した本格的LP
  */
 export default function LandingPage() {
-  const router = useRouter();
   const [contactForm, setContactForm] = useState({
     name: '',
     email: '',

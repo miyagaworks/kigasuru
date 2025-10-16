@@ -4,7 +4,6 @@ import React, { useState } from 'react';
 import Image from 'next/image';
 import { Icon } from '@/components/Icon';
 import { useExternalBrowser } from '@/hooks/useExternalBrowser';
-import { BrowserInstructionsModal } from '@/components/BrowserInstructionsModal';
 
 /**
  * ランディングページ - 上手くなる気がするぅぅぅ
@@ -19,7 +18,7 @@ export default function LandingPage() {
   const [submitSuccess, setSubmitSuccess] = useState(false);
 
   // 外部ブラウザで開くフック
-  const { deviceInfo, showBrowserInstructions, setShowBrowserInstructions, openInExternalBrowser, debugInfo } = useExternalBrowser();
+  const { openInExternalBrowser } = useExternalBrowser();
 
   // ページ読み込み時にキャッシュをクリアして強制リロード（開発・デバッグ用）
   React.useEffect(() => {
@@ -76,35 +75,6 @@ export default function LandingPage() {
       {/* Conversion Tracking Placeholder */}
       {/* TODO: Add conversion tracking code */}
 
-      {/* バージョン表示（デバッグ用） - 最前面に表示 */}
-      <div className="fixed top-0 left-0 right-0 bg-red-600 text-white text-center py-2 text-sm font-bold z-[9999] shadow-lg">
-        バージョン: v2025-10-16-03:00 | デバッグモード
-      </div>
-
-      {/* デバッグ情報（開発・テスト用） */}
-      {debugInfo.length > 0 && (
-        <div className="fixed top-4 right-4 bg-black/90 text-white p-4 rounded-lg max-w-md z-[100] text-xs font-mono">
-          <div className="flex justify-between items-start mb-2">
-            <strong className="text-yellow-400">Debug Info:</strong>
-            <button
-              onClick={() => window.location.reload()}
-              className="text-red-400 ml-2"
-            >
-              ✕
-            </button>
-          </div>
-          {debugInfo.map((log, i) => (
-            <div key={i} className="mb-1">{log}</div>
-          ))}
-        </div>
-      )}
-
-      {/* LINEアプリ内ブラウザの案内 */}
-      <BrowserInstructionsModal
-        isOpen={showBrowserInstructions}
-        onClose={() => setShowBrowserInstructions(false)}
-        deviceInfo={deviceInfo}
-      />
 
       {/* ヒーローセクション */}
       <section
