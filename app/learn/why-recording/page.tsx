@@ -17,19 +17,12 @@ import {
   BookOpen
 } from 'lucide-react';
 import { useExternalBrowser } from '@/hooks/useExternalBrowser';
-import { BrowserInstructionsModal } from '@/components/BrowserInstructionsModal';
 
 export default function WhyRecording() {
-  const { deviceInfo, showBrowserInstructions, setShowBrowserInstructions, openInExternalBrowser } = useExternalBrowser();
+  const { openInExternalBrowser } = useExternalBrowser();
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-50 via-white to-slate-50">
       {/* LINEアプリ内ブラウザの案内 */}
-      <BrowserInstructionsModal
-        isOpen={showBrowserInstructions}
-        onClose={() => setShowBrowserInstructions(false)}
-        deviceInfo={deviceInfo}
-      />
-
       {/* ヘッダー */}
       <header className="bg-white shadow-sm sticky top-0 z-50 border-b border-gray-200">
         <div className="container mx-auto px-4 sm:px-6 py-4">
