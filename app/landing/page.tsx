@@ -19,7 +19,7 @@ export default function LandingPage() {
   const [submitSuccess, setSubmitSuccess] = useState(false);
 
   // 外部ブラウザで開くフック
-  const { deviceInfo, showBrowserInstructions, setShowBrowserInstructions, openInExternalBrowser } = useExternalBrowser();
+  const { deviceInfo, showBrowserInstructions, setShowBrowserInstructions, openInExternalBrowser, debugInfo } = useExternalBrowser();
 
   const handleContactSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -51,6 +51,24 @@ export default function LandingPage() {
 
       {/* Conversion Tracking Placeholder */}
       {/* TODO: Add conversion tracking code */}
+
+      {/* デバッグ情報（開発・テスト用） */}
+      {debugInfo.length > 0 && (
+        <div className="fixed top-4 right-4 bg-black/90 text-white p-4 rounded-lg max-w-md z-[100] text-xs font-mono">
+          <div className="flex justify-between items-start mb-2">
+            <strong className="text-yellow-400">Debug Info:</strong>
+            <button
+              onClick={() => window.location.reload()}
+              className="text-red-400 ml-2"
+            >
+              ✕
+            </button>
+          </div>
+          {debugInfo.map((log, i) => (
+            <div key={i} className="mb-1">{log}</div>
+          ))}
+        </div>
+      )}
 
       {/* LINEアプリ内ブラウザの案内 */}
       <BrowserInstructionsModal
