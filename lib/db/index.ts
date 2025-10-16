@@ -487,16 +487,19 @@ export const syncShotsFromServer = async (): Promise<{ success: boolean; synced:
 
     // IndexedDBの既存データを取得
     const localShots = await getAllShots();
-    const localCreatedAts = new Set(localShots.map(shot => shot.createdAt));
+    const localShotsMap = new Map(localShots.map(shot => [shot.createdAt, shot]));
 
-    // サーバーにあってローカルにないデータのみを追加
+    // サーバーからのショットを処理（新規追加 or serverId更新）
     let syncedCount = 0;
+    let updatedCount = 0;
     for (const serverShot of serverShots) {
       // サーバーのcreatedAtをタイムスタンプに変換
       const serverCreatedAt = new Date(serverShot.createdAt).getTime();
 
-      // ローカルに存在しない場合のみ追加
-      if (!localCreatedAts.has(serverCreatedAt)) {
+      const existingShot = localShotsMap.get(serverCreatedAt);
+
+      if (!existingShot) {
+        // ローカルに存在しない場合は新規追加
         await addShot({
           serverId: serverShot.id, // Save server ID
           date: serverShot.date,
@@ -519,10 +522,14 @@ export const syncShotsFromServer = async (): Promise<{ success: boolean; synced:
           createdAt: serverCreatedAt,
         });
         syncedCount++;
+      } else if (!existingShot.serverId && existingShot.id) {
+        // ローカルに存在するがserverIdがない場合は更新
+        await updateShot(existingShot.id, { serverId: serverShot.id });
+        updatedCount++;
       }
     }
 
-    console.log('[DB] Synced', syncedCount, 'new shots from server');
+    console.log(`[DB] Synced ${syncedCount} new shots from server, updated ${updatedCount} existing shots with serverId`);
     return { success: true, synced: syncedCount };
   } catch (error) {
     console.error('[DB] Failed to sync from server:', error);
