@@ -27,7 +27,7 @@ export default function LandingPage() {
     if (typeof window !== 'undefined') {
       // キャッシュコントロール用のタイムスタンプをチェック
       const lastUpdate = localStorage.getItem('landing-last-update');
-      const currentVersion = '2025-10-16-v2'; // デプロイごとに変更
+      const currentVersion = '2025-10-16-v3'; // デプロイごとに変更
 
       if (lastUpdate !== currentVersion) {
         console.log('[Landing] New version detected, clearing cache');
@@ -76,9 +76,9 @@ export default function LandingPage() {
       {/* Conversion Tracking Placeholder */}
       {/* TODO: Add conversion tracking code */}
 
-      {/* バージョン表示（デバッグ用） */}
-      <div className="fixed top-2 left-2 bg-black text-yellow-400 px-3 py-1 rounded text-xs font-mono z-[200]">
-        v2025-10-16-02:30
+      {/* バージョン表示（デバッグ用） - 最前面に表示 */}
+      <div className="fixed top-0 left-0 right-0 bg-red-600 text-white text-center py-2 text-sm font-bold z-[9999] shadow-lg">
+        バージョン: v2025-10-16-03:00 | デバッグモード
       </div>
 
       {/* デバッグ情報（開発・テスト用） */}
