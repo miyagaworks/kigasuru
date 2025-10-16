@@ -36,6 +36,9 @@ export function useExternalBrowser() {
 
   // app.kigasuru.comを外部ブラウザで開く
   const openInExternalBrowser = (path = '/auth/signup') => {
+    // 最初に必ず表示されるアラート（関数が呼ばれたことを確認）
+    alert('ボタンがクリックされました');
+
     const logs: string[] = [];
 
     if (!deviceInfo) {
