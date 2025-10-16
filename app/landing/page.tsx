@@ -1056,17 +1056,6 @@ export default function LandingPage() {
               >
                 {isSubmitting ? "送信中..." : "送信する"}
               </button>
-
-              <p className="text-sm text-[var(--color-neutral-600)] mt-6 text-center">
-                または、
-                <a
-                  href="mailto:support@kigasuru.com"
-                  className="text-[var(--color-primary-green)] hover:underline font-semibold"
-                >
-                  support@kigasuru.com
-                </a>{" "}
-                までメールでお問い合わせください
-              </p>
             </form>
           )}
         </div>
@@ -1210,7 +1199,11 @@ export default function LandingPage() {
                 </li>
                 <li>
                   <a
-                    href="mailto:support@kigasuru.com"
+                    href="#contact"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      document.querySelector('section:has(h2:contains("お問い合わせ"))')?.scrollIntoView({ behavior: 'smooth' });
+                    }}
                     className="text-gray-400 hover:text-white transition-colors flex items-center gap-2 group"
                   >
                     <span className="w-1.5 h-1.5 bg-blue-400 rounded-full group-hover:w-2 group-hover:h-2 transition-all"></span>

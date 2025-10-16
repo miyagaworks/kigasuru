@@ -180,7 +180,10 @@ export default function PrivacyPolicy() {
             </p>
             <div className="bg-gray-50 rounded-lg p-6">
               <p className="text-gray-700">
-                Eメールアドレス: <a href="mailto:support@kigasuru.com" className="text-[var(--color-primary-green)] hover:underline">support@kigasuru.com</a>
+                <Link href="/#contact" className="text-[var(--color-primary-green)] hover:underline font-semibold">
+                  お問い合わせフォーム
+                </Link>
+                からお問い合わせください
               </p>
             </div>
           </section>

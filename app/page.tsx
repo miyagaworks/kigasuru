@@ -1914,11 +1914,11 @@ export default function LandingPage() {
                   type="email"
                   id="email"
                   required
-                  pattern="[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}"
+                  pattern="[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}"
                   value={contactForm.email}
                   onChange={(e) => {
                     // 半角英数字以外を除外
-                    const value = e.target.value.replace(/[^a-zA-Z0-9._%+-@]/g, '');
+                    const value = e.target.value.replace(/[^a-zA-Z0-9._%+\-@]/g, '');
                     setContactForm({ ...contactForm, email: value });
                   }}
                   className="w-full px-5 py-4 border-2 border-gray-200 rounded-xl focus:border-[var(--color-primary-green)] focus:outline-none transition-colors"
@@ -1974,17 +1974,6 @@ export default function LandingPage() {
               >
                 {isSubmitting ? "送信中..." : "送信する"}
               </button>
-
-              <p className="text-sm text-gray-600 mt-6 text-center">
-                または、
-                <a
-                  href="mailto:support@kigasuru.com"
-                  className="text-[var(--color-primary-green)] hover:underline font-semibold"
-                >
-                  support@kigasuru.com
-                </a>{" "}
-                までメールでお問い合わせください
-              </p>
             </form>
           )}
         </div>
@@ -2140,7 +2129,16 @@ export default function LandingPage() {
                 </li>
                 <li>
                   <a
-                    href="mailto:support@kigasuru.com"
+                    href="#contact"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      const allSections = Array.from(document.querySelectorAll('section'));
+                      const targetSection = allSections.find(section =>
+                        section.textContent?.includes('お問い合わせ') &&
+                        section.querySelector('form')
+                      );
+                      targetSection?.scrollIntoView({ behavior: 'smooth' });
+                    }}
                     className="text-gray-400 hover:text-white transition-colors flex items-center gap-2 group"
                   >
                     <span className="w-1.5 h-1.5 bg-blue-400 rounded-full group-hover:w-2 group-hover:h-2 transition-all"></span>
