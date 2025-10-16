@@ -21,6 +21,30 @@ export default function LandingPage() {
   // 外部ブラウザで開くフック
   const { deviceInfo, showBrowserInstructions, setShowBrowserInstructions, openInExternalBrowser, debugInfo } = useExternalBrowser();
 
+  // ページ読み込み時にキャッシュをクリアして強制リロード（開発・デバッグ用）
+  React.useEffect(() => {
+    // ページが完全にロードされたかチェック
+    if (typeof window !== 'undefined') {
+      // キャッシュコントロール用のタイムスタンプをチェック
+      const lastUpdate = localStorage.getItem('landing-last-update');
+      const currentVersion = '2025-10-16-v2'; // デプロイごとに変更
+
+      if (lastUpdate !== currentVersion) {
+        console.log('[Landing] New version detected, clearing cache');
+        localStorage.setItem('landing-last-update', currentVersion);
+
+        // Service Workerのキャッシュをクリア
+        if ('serviceWorker' in navigator && 'caches' in window) {
+          caches.keys().then((names) => {
+            names.forEach((name) => {
+              caches.delete(name);
+            });
+          });
+        }
+      }
+    }
+  }, []);
+
   const handleContactSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
@@ -51,6 +75,11 @@ export default function LandingPage() {
 
       {/* Conversion Tracking Placeholder */}
       {/* TODO: Add conversion tracking code */}
+
+      {/* バージョン表示（デバッグ用） */}
+      <div className="fixed top-2 left-2 bg-black text-yellow-400 px-3 py-1 rounded text-xs font-mono z-[200]">
+        v2025-10-16-02:30
+      </div>
 
       {/* デバッグ情報（開発・テスト用） */}
       {debugInfo.length > 0 && (
