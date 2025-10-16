@@ -366,7 +366,7 @@ export default function DashboardPage() {
                   alt="初回ダッシュボード"
                   width={600}
                   height={800}
-                  className="max-w-full h-auto rounded-lg shadow-lg"
+                  className="max-w-full h-auto rounded-lg"
                   priority
                 />
               </div>
