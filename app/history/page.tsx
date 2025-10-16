@@ -4,7 +4,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { Layout } from '@/components/Layout';
 import { Icon } from '@/components/Icon';
-import { getAllShots, deleteShot, type Shot } from '@/lib/db';
+import { getAllShots, deleteShot, getShot, type Shot } from '@/lib/db';
 import { getSlopeDisplayName } from '@/lib/sensors/gyro';
 
 /**
@@ -66,7 +66,32 @@ export default function RoundHistoryPage() {
     if (window.confirm('このショット記録を削除しますか？')) {
       try {
         setIsDeleting(true);
+
+        // Get shot details to find serverId
+        const shot = await getShot(shotId);
+
+        // Delete from IndexedDB
         await deleteShot(shotId);
+
+        // Delete from server (if online and has serverId)
+        if (shot?.serverId && typeof navigator !== 'undefined' && navigator.onLine) {
+          try {
+            const response = await fetch(`/api/shots/${shot.serverId}`, {
+              method: 'DELETE',
+            });
+
+            if (!response.ok) {
+              console.error('Failed to delete from server:', response.status);
+              // Continue anyway - IndexedDB deletion was successful
+            } else {
+              console.log('[History] Shot deleted from server:', shot.serverId);
+            }
+          } catch (error) {
+            console.error('Failed to delete from server:', error);
+            // Continue anyway - IndexedDB deletion was successful
+          }
+        }
+
         await loadShots();
       } catch (error) {
         console.error('Failed to delete shot:', error);

@@ -7,6 +7,7 @@ import Dexie, { type Table } from 'dexie';
 
 export interface Shot {
   id?: number;
+  serverId?: string | null; // Server database ID (cuid)
   date: string;
   slope: string;
   club: string;
@@ -80,6 +81,14 @@ export class KigasuruDB extends Dexie {
     }).upgrade(tx => {
       return tx.table('shots').toCollection().modify(shot => {
         if (shot.manualLocation === undefined) shot.manualLocation = false;
+      });
+    });
+
+    this.version(5).stores({
+      shots: '++id, serverId, date, slope, club, lie, strength, wind, temperature, result, distance, feeling, memo, createdAt, golfCourse, actualTemperature, latitude, longitude, missType, manualLocation',
+    }).upgrade(tx => {
+      return tx.table('shots').toCollection().modify(shot => {
+        if (shot.serverId === undefined) shot.serverId = null;
       });
     });
   }
@@ -488,6 +497,7 @@ export const syncShotsFromServer = async (): Promise<{ success: boolean; synced:
       // ローカルに存在しない場合のみ追加
       if (!localCreatedAts.has(serverCreatedAt)) {
         await addShot({
+          serverId: serverShot.id, // Save server ID
           date: serverShot.date,
           slope: serverShot.slope,
           club: serverShot.club,

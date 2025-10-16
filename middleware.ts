@@ -9,6 +9,7 @@ export default auth((req) => {
   const isAuthRoute = nextUrl.pathname.startsWith('/auth');
   const isApiAuthRoute = nextUrl.pathname.startsWith('/api/auth');
   const isAdminRoute = nextUrl.pathname.startsWith('/admin');
+  const isPublicApiRoute = nextUrl.pathname === '/api/contact'; // Public contact form API
 
   // PWA and static files that should be publicly accessible
   const isStaticAsset =
@@ -27,6 +28,7 @@ export default auth((req) => {
     nextUrl.pathname === '/terms' ||
     isAuthRoute ||
     isApiAuthRoute ||
+    isPublicApiRoute ||
     isStaticAsset;
 
   // ホスト名でアプリとランディングページを分ける
