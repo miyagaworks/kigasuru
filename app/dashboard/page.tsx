@@ -32,6 +32,13 @@ interface ClubTrend {
   shotCount: number;
 }
 
+interface ClubMissPerformance {
+  club: string;
+  missTypeCounts: Record<string, number>; // missType -> count
+  totalMissCount: number;
+  shotCount: number;
+}
+
 /**
  * Dashboard page - Main entry point after login
  */
@@ -42,6 +49,7 @@ export default function DashboardPage() {
   const [worstClubs, setWorstClubs] = useState<ClubPerformance[]>([]);
   const [distancePerformance, setDistancePerformance] = useState<DistancePerformance[]>([]);
   const [clubTrends, setClubTrends] = useState<ClubTrend[]>([]);
+  const [clubsNeedingPractice, setClubsNeedingPractice] = useState<ClubMissPerformance[]>([]);
   const [loading, setLoading] = useState(true);
   const [needsAdditionalAuth, setNeedsAdditionalAuth] = useState(false);
   const [showSettingsGuide, setShowSettingsGuide] = useState(false);
@@ -300,6 +308,38 @@ export default function DashboardPage() {
 
       setClubTrends(calculateClubTrends(shots));
 
+      // 要練習クラブを計算（ミスショットが多いクラブ）
+      const calculateClubsNeedingPractice = (targetShots: Shot[]): ClubMissPerformance[] => {
+        const clubMissData: Record<string, { missTypeCounts: Record<string, number>; totalMissCount: number; shotCount: number }> = {};
+
+        targetShots.forEach(shot => {
+          if (!clubMissData[shot.club]) {
+            clubMissData[shot.club] = { missTypeCounts: {}, totalMissCount: 0, shotCount: 0 };
+          }
+          clubMissData[shot.club].shotCount++;
+
+          // ミスタイプがある場合のみカウント
+          if (shot.missType) {
+            clubMissData[shot.club].missTypeCounts[shot.missType] =
+              (clubMissData[shot.club].missTypeCounts[shot.missType] || 0) + 1;
+            clubMissData[shot.club].totalMissCount++;
+          }
+        });
+
+        // ミスショットが1回以上あるクラブのみフィルター、ミス回数が多い順にソート
+        return Object.entries(clubMissData)
+          .filter(([, data]) => data.totalMissCount > 0 && data.shotCount >= 3) // 3ショット以上
+          .map(([club, data]) => ({
+            club,
+            missTypeCounts: data.missTypeCounts,
+            totalMissCount: data.totalMissCount,
+            shotCount: data.shotCount
+          }))
+          .sort((a, b) => b.totalMissCount - a.totalMissCount);
+      };
+
+      setClubsNeedingPractice(calculateClubsNeedingPractice(shots));
+
     } catch (error) {
       console.error('Failed to load data:', error);
     } finally {
@@ -348,7 +388,8 @@ export default function DashboardPage() {
                   todayClubPerformance.length > 0 ||
                   distancePerformance.some((d) => d.shotCount > 0) ||
                   clubTrends.length > 0 ||
-                  worstClubs.length > 0;
+                  worstClubs.length > 0 ||
+                  clubsNeedingPractice.length > 0;
 
   return (
     <Layout>
@@ -730,6 +771,100 @@ export default function DashboardPage() {
                       </div>
                     </div>
                   ))}
+                </div>
+              </div>
+            )}
+
+            {/* 6. 要練習クラブ（ミスショットが多い順） */}
+            {clubsNeedingPractice.length > 0 && (
+              <div className="bg-[var(--color-warning-bg)] rounded-lg shadow-md p-4 border-l-4 border-[var(--color-warning-text)]">
+                <h2 className="text-lg font-bold text-[var(--color-warning-text)] mb-4 flex items-center gap-2">
+                  <svg
+                    className="w-6 h-6 text-[var(--color-warning-text)]"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                    />
+                  </svg>
+                  要練習クラブ（3ショット以上）
+                </h2>
+                <div className="space-y-2">
+                  {clubsNeedingPractice.slice(0, 3).map((club, index) => {
+                    // ミスタイプのラベルマップ
+                    const missTypeLabels: Record<string, string> = {
+                      'top': '丸ト',
+                      'choro': '丸チ',
+                      'duff': '丸ダ',
+                      'over': '丸オ',
+                      'shank': '丸シ',
+                      'pull': '丸ヒ',
+                    };
+
+                    // 上位2つのミスタイプを取得（表示制限）
+                    const topMissTypes = Object.entries(club.missTypeCounts)
+                      .sort(([, a], [, b]) => b - a)
+                      .slice(0, 2);
+
+                    return (
+                      <div
+                        key={club.club}
+                        className="flex items-center justify-between bg-white/50 rounded-lg p-3"
+                      >
+                        <div className="flex items-center gap-3">
+                          {/* ゴルフクラブアイコン */}
+                          <svg
+                            className="w-8 h-8 text-[var(--color-neutral-700)] flex-shrink-0"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"
+                            />
+                          </svg>
+                          <div className="text-center">
+                            <p className={`${index === 0 ? 'text-sm' : 'text-xs'} text-[var(--color-neutral-600)] leading-tight`}>
+                              ワースト
+                            </p>
+                            <p className={`${index === 0 ? 'text-xl' : 'text-base'} font-bold text-[var(--color-warning-text)] leading-tight`}>
+                              {index + 1}位
+                            </p>
+                          </div>
+                          <div>
+                            <span className="text-lg font-bold text-[var(--color-neutral-900)]">
+                              {club.club}
+                            </span>
+                            <p className="text-xs text-[var(--color-neutral-600)]">
+                              {club.shotCount}ショット
+                            </p>
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <div className="flex gap-2 justify-end">
+                            {topMissTypes.map(([missType, count]) => (
+                              <div key={missType} className="flex items-baseline gap-1">
+                                <span className="text-sm font-bold text-[var(--color-warning-text)]">
+                                  {missTypeLabels[missType] || missType}
+                                </span>
+                                <span className="text-lg font-bold text-[var(--color-warning-text)]">
+                                  {count}
+                                </span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
             )}
