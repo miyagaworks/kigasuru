@@ -303,3 +303,19 @@ model UserSettings {
 
   @@index([userId])
 }
+
+// =====================================================
+// Security Models
+// =====================================================
+
+// ログイン試行回数制限
+model LoginAttempt {
+  id        String   @id @default(cuid())
+  email     String
+  ipAddress String?
+  success   Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@index([email, createdAt])
+  @@index([ipAddress, createdAt])
+}

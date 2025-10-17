@@ -5,6 +5,7 @@ import Google from 'next-auth/providers/google';
 import { LoginSchema } from '@/lib/auth/schemas';
 import bcrypt from 'bcryptjs';
 import { prisma } from '@/lib/prisma';
+import { checkLoginAttempts, recordLoginAttempt } from '@/lib/auth/login-attempt';
 
 export default {
   providers: [
@@ -44,6 +45,13 @@ export default {
           const { email, password } = validatedFields.data;
           const normalizedEmail = email.toLowerCase();
 
+          // ログイン試行回数チェック
+          const attemptCheck = await checkLoginAttempts(normalizedEmail);
+          if (!attemptCheck.allowed) {
+            console.error('[Login] Account locked due to too many failed attempts:', normalizedEmail);
+            throw new Error(attemptCheck.message || 'ログイン試行回数が上限に達しました。');
+          }
+
           const user = await prisma.user.findUnique({
             where: { email: normalizedEmail },
             select: {
@@ -56,19 +64,27 @@ export default {
           });
 
           if (!user || !user.password) {
+            // 失敗を記録
+            await recordLoginAttempt(normalizedEmail, false);
             return null;
           }
 
           const passwordsMatch = await bcrypt.compare(password, user.password);
           if (!passwordsMatch) {
+            // 失敗を記録
+            await recordLoginAttempt(normalizedEmail, false);
             return null;
           }
 
           // メール認証チェック
           if (!user.emailVerified) {
             console.error('メール未認証:', email);
+            await recordLoginAttempt(normalizedEmail, false);
             return null;
           }
+
+          // 成功を記録
+          await recordLoginAttempt(normalizedEmail, true);
 
           return {
             id: user.id,
@@ -77,6 +93,10 @@ export default {
           };
         } catch (error) {
           console.error('認証エラー:', error);
+          // エラーメッセージを保持してスロー（ロックアウトメッセージを表示するため）
+          if (error instanceof Error && error.message.includes('ログイン試行回数')) {
+            throw error;
+          }
           return null;
         }
       },

@@ -85,12 +85,25 @@ function SignInForm() {
       });
 
       if (result?.error) {
-        setError('メールアドレスまたはパスワードが正しくありません');
+        // NextAuthからのエラーメッセージをチェック
+        if (result.error === 'CredentialsSignin') {
+          setError('メールアドレスまたはパスワードが正しくありません');
+        } else if (result.error.includes('ログイン試行回数')) {
+          // ロックアウトメッセージを表示
+          setError(result.error);
+        } else {
+          setError('ログインに失敗しました');
+        }
       } else if (result?.ok) {
         window.location.href = searchParams?.get('callbackUrl') || '/dashboard';
       }
-    } catch {
-      setError('ログインに失敗しました');
+    } catch (err) {
+      // キャッチしたエラーがロックアウトメッセージの場合
+      if (err instanceof Error && err.message.includes('ログイン試行回数')) {
+        setError(err.message);
+      } else {
+        setError('ログインに失敗しました');
+      }
     } finally {
       setEmailLoading(false);
     }

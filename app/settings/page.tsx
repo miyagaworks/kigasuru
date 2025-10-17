@@ -861,7 +861,7 @@ export default function SettingsPage() {
             </div>
             <div className="flex justify-between">
               <span className="text-[var(--color-neutral-600)]">アプリ名</span>
-              <span className="font-medium">上手くなる気がするぅぅぅ PRO</span>
+              <span className="font-medium">上手くなる気がするぅぅぅ</span>
             </div>
           </div>
         </div>
