@@ -180,9 +180,14 @@ export default function PrivacyPolicy() {
             </p>
             <div className="bg-gray-50 rounded-lg p-6">
               <p className="text-gray-700">
-                <Link href="/#contact" className="text-[var(--color-primary-green)] hover:underline font-semibold">
+                <button
+                  onClick={() => {
+                    window.location.href = '/#contact';
+                  }}
+                  className="text-[var(--color-primary-green)] hover:underline font-semibold cursor-pointer bg-transparent border-none p-0 inline"
+                >
                   お問い合わせフォーム
-                </Link>
+                </button>
                 からお問い合わせください
               </p>
             </div>
