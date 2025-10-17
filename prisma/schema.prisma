@@ -30,6 +30,10 @@ model User {
   stripeCustomerId       String? @unique
   stripeSubscriptionId   String? @unique
 
+  // 二要素認証（TOTP）
+  twoFactorEnabled Boolean  @default(false)
+  twoFactorSecret  String?  // encrypted secret
+  backupCodes      String?  // JSON array of encrypted backup codes
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -333,4 +337,73 @@ model LoginEvent {
 
   @@index([userId, createdAt])
   @@index([notified])
+}
+
+// IPアドレスブラックリスト
+model IpBlacklist {
+  id          String   @id @default(cuid())
+  ipAddress   String   @unique
+  reason      String?  // ブロック理由
+  blockedBy   String?  // ブロックした管理者
+  expiresAt   DateTime? // 期限付きブロックの場合
+  createdAt   DateTime @default(now())
+
+  @@index([ipAddress])
+  @@index([expiresAt])
+}
+
+// IPアドレスホワイトリスト
+model IpWhitelist {
+  id          String   @id @default(cuid())
+  ipAddress   String   @unique
+  description String?  // ホワイトリストの説明
+  addedBy     String?  // 追加した管理者
+  createdAt   DateTime @default(now())
+
+  @@index([ipAddress])
+}
+
+// 国別アクセス制限
+model CountryRestriction {
+  id            String   @id @default(cuid())
+  countryCode   String   @unique // ISO 3166-1 alpha-2
+  countryName   String
+  blocked       Boolean  @default(true)
+  reason        String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([countryCode])
+  @@index([blocked])
+}
+
+// WebAuthn認証情報（パスキー・指紋認証）
+model WebAuthnCredential {
+  id                String   @id @default(cuid())
+  userId            String
+  credentialID      String   @unique // Base64URL encoded
+  publicKey         String   // Base64URL encoded
+  counter           BigInt   @default(0)
+  deviceType        String   // "platform" or "cross-platform"
+  backedUp          Boolean  @default(false)
+  transports        String?  // JSON array
+  name              String?  // User-friendly name for the credential
+  createdAt         DateTime @default(now())
+  lastUsedAt        DateTime @default(now())
+
+  @@index([userId])
+  @@index([credentialID])
+}
+
+// WebAuthnチャレンジ（一時的な認証チャレンジ）
+model WebAuthnChallenge {
+  id         String   @id @default(cuid())
+  userId     String?  // nullの場合は登録前
+  challenge  String   @unique
+  type       String   // "registration" or "authentication"
+  expiresAt  DateTime
+  createdAt  DateTime @default(now())
+
+  @@index([challenge])
+  @@index([expiresAt])
 }

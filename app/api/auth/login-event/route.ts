@@ -2,6 +2,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/auth';
 import { recordLoginEvent } from '@/lib/auth/login-notification';
+import { checkIpAddress } from '@/lib/auth/ip-restriction';
 
 /**
  * ログインイベントを記録し、メール通知を送信
@@ -22,6 +23,18 @@ export async function POST(request: NextRequest) {
 
     // User-Agentを取得
     const userAgent = request.headers.get('user-agent') || undefined;
+
+    // IPアドレスチェック（ログイン後なので警告のみ、次回ログイン時にブロック）
+    if (ipAddress) {
+      const ipCheck = await checkIpAddress(ipAddress);
+      if (!ipCheck.allowed) {
+        console.warn('[POST /api/auth/login-event] Suspicious IP detected:', {
+          userId: session.user.id,
+          ipAddress,
+          reason: ipCheck.reason,
+        });
+      }
+    }
 
     // ログインイベントを記録（非同期、エラーがあっても無視）
     recordLoginEvent({

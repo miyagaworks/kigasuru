@@ -7,6 +7,7 @@ import bcrypt from 'bcryptjs';
 import { prisma } from '@/lib/prisma';
 import { checkLoginAttempts, recordLoginAttempt } from '@/lib/auth/login-attempt';
 import { recordLoginEvent } from '@/lib/auth/login-notification';
+import { checkIpAddress } from '@/lib/auth/ip-restriction';
 
 export default {
   providers: [
@@ -61,6 +62,7 @@ export default {
               email: true,
               password: true,
               emailVerified: true,
+              twoFactorEnabled: true,
             },
           });
 
@@ -91,6 +93,7 @@ export default {
             id: user.id,
             name: user.name || '',
             email: user.email,
+            twoFactorEnabled: user.twoFactorEnabled,
           };
         } catch (error) {
           console.error('認証エラー:', error);

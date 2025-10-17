@@ -190,10 +190,9 @@ ${deviceInfo ? `デバイス: ${deviceInfo}` : ''}
   `;
 
   await sendEmail({
-    to: email,
+    to: [email],
     subject,
     html,
-    text,
   });
 }
 
