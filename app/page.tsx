@@ -1833,7 +1833,7 @@ export default function LandingPage() {
       </section>
 
       {/* お問い合わせ */}
-      <section className="py-24 bg-gradient-to-br from-rose-50 via-white to-pink-50">
+      <section id="contact" className="py-24 bg-gradient-to-br from-rose-50 via-white to-pink-50">
         <div className="max-w-2xl mx-auto px-6">
           <div className="text-center mb-20">
             <div className="inline-block mb-4 px-6 py-2 bg-rose-100 rounded-full">
