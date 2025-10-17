@@ -2040,7 +2040,6 @@ export default function LandingPage() {
                 width={220}
                 height={55}
                 className="mb-4"
-                style={{ width: '220px', height: 'auto' }}
               />
               <p className="text-gray-400 leading-relaxed mb-6">
                 ショットの本当の結果を記録し、感覚のズレを可視化する実践型ゴルフアプリ
