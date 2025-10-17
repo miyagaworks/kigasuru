@@ -126,22 +126,21 @@ export default function LandingPage() {
           </div>
 
           <h1 className="text-3xl sm:text-4xl md:text-6xl lg:text-7xl font-extrabold text-gray-900 mb-4 lg:mb-8 leading-tight">
-            なぜ、練習しても
+            スコアを5打、
             <br />
-            上手くならないのか？
+            10打縮めたい
           </h1>
 
           <p className="text-base sm:text-lg md:text-xl lg:text-2xl text-gray-800 mb-3 lg:mb-6 font-medium">
-            答えは、
             <span className="highlight-text">
-              「曖昧な記憶」に頼っているから。
+              データで弱点を見つければ、スコアは必ず縮まる。
             </span>
           </p>
 
           <p className="text-sm sm:text-base md:text-lg text-gray-800 mb-6 lg:mb-12 max-w-3xl mx-auto leading-relaxed px-2 sm:px-0">
-            練習場で何百球打っても、ラウンドで同じミスを繰り返す。
+            傾斜が苦手、距離感が合わない、クラブ選択で迷う...
             <br className="hidden md:block" />
-            それは、あなたの「思い込み」と「実際の結果」のギャップに気づいていないから。
+            練習場では打てるのに、コースでは結果が出ない。それは「曖昧な記憶」に頼っているから。
           </p>
 
           <div className="flex flex-col sm:flex-row gap-4 justify-center mb-8 mx-4 sm:mx-0">
