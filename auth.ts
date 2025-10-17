@@ -30,14 +30,6 @@ declare module 'next-auth' {
   }
 }
 
-declare module '@auth/core/jwt' {
-  interface JWT {
-    subscriptionStatus?: string;
-    picture?: string | null;
-    isAdmin?: boolean;
-  }
-}
-
 export const { handlers, auth, signIn, signOut } = NextAuth({
   secret: process.env.NEXTAUTH_SECRET,
   trustHost: true,
