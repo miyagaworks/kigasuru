@@ -95,6 +95,8 @@ function SignInForm() {
           setError('ログインに失敗しました');
         }
       } else if (result?.ok) {
+        // ログインイベントを記録（非同期、エラーは無視）
+        fetch('/api/auth/login-event', { method: 'POST' }).catch(() => {});
         window.location.href = searchParams?.get('callbackUrl') || '/dashboard';
       }
     } catch (err) {

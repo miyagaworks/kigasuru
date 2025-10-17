@@ -6,6 +6,7 @@ import { LoginSchema } from '@/lib/auth/schemas';
 import bcrypt from 'bcryptjs';
 import { prisma } from '@/lib/prisma';
 import { checkLoginAttempts, recordLoginAttempt } from '@/lib/auth/login-attempt';
+import { recordLoginEvent } from '@/lib/auth/login-notification';
 
 export default {
   providers: [

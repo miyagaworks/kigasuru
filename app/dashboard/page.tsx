@@ -78,6 +78,9 @@ export default function DashboardPage() {
     loadData();
     checkAuthStatus();
     prefetchMainPages();
+
+    // ログインイベントを記録（初回レンダリング時のみ）
+    fetch('/api/auth/login-event', { method: 'POST' }).catch(() => {});
   }, [prefetchMainPages]);
 
   // Check settings status only after session is ready

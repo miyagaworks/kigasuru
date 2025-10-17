@@ -319,3 +319,18 @@ model LoginAttempt {
   @@index([email, createdAt])
   @@index([ipAddress, createdAt])
 }
+
+// ログインイベント記録（メール通知用）
+model LoginEvent {
+  id            String   @id @default(cuid())
+  userId        String
+  ipAddress     String?
+  userAgent     String?
+  location      String?  // 国・都市情報
+  deviceInfo    String?  // デバイス情報
+  notified      Boolean  @default(false)
+  createdAt     DateTime @default(now())
+
+  @@index([userId, createdAt])
+  @@index([notified])
+}
