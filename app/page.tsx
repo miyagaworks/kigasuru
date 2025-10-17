@@ -125,13 +125,13 @@ export default function LandingPage() {
             </span>
           </div>
 
-          <h1 className="text-3xl sm:text-4xl md:text-6xl lg:text-7xl font-extrabold text-gray-900 mb-4 lg:mb-8 leading-tight">
+          <h1 className="text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-extrabold text-gray-900 mb-4 lg:mb-8 leading-tight">
             スコアを5打、
             <br />
             10打縮めたい
           </h1>
 
-          <p className="text-base sm:text-lg md:text-xl lg:text-2xl text-gray-800 mb-3 lg:mb-6 font-medium">
+          <p className="text-sm sm:text-base md:text-xl lg:text-2xl text-gray-800 mb-3 lg:mb-6 font-medium">
             <span className="highlight-text">
               データで弱点を見つければ、スコアは必ず縮まる。
             </span>
