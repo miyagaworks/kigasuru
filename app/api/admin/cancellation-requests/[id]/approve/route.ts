@@ -97,35 +97,27 @@ export async function POST(
         });
 
         if (invoices.data.length > 0) {
-          const invoice = invoices.data[0];
-          const paymentIntentId = typeof invoice.payment_intent === 'string'
-            ? invoice.payment_intent
-            : invoice.payment_intent?.id;
+          const invoice = invoices.data[0] as any; // 型アサーションを使用
+          const chargeId = typeof invoice.charge === 'string'
+            ? invoice.charge
+            : invoice.charge?.id;
 
-          if (paymentIntentId) {
-            // PaymentIntentから支払い情報を取得
-            const paymentIntent = await stripe.paymentIntents.retrieve(paymentIntentId);
-            const chargeId = typeof paymentIntent.latest_charge === 'string'
-              ? paymentIntent.latest_charge
-              : paymentIntent.latest_charge?.id;
+          if (chargeId) {
+            // 返金を実行（円単位を銭単位に変換）
+            const refund = await stripe.refunds.create({
+              charge: chargeId,
+              amount: Math.round(refundCalc.refundAmount * 100), // 円→銭に変換
+              reason: 'requested_by_customer',
+              metadata: {
+                userId: user.id,
+                cancellationRequestId: id,
+                usedMonths: refundCalc.usedMonths.toString(),
+                serviceEndDate: serviceEndDate.toISOString(),
+              },
+            });
 
-            if (chargeId) {
-              // 返金を実行（円単位を銭単位に変換）
-              const refund = await stripe.refunds.create({
-                charge: chargeId,
-                amount: Math.round(refundCalc.refundAmount * 100), // 円→銭に変換
-                reason: 'requested_by_customer',
-                metadata: {
-                  userId: user.id,
-                  cancellationRequestId: id,
-                  usedMonths: refundCalc.usedMonths.toString(),
-                  serviceEndDate: serviceEndDate.toISOString(),
-                },
-              });
-
-              refundId = refund.id;
-              console.log('[Refund] Successfully processed:', refund.id, refundCalc.refundAmount);
-            }
+            refundId = refund.id;
+            console.log('[Refund] Successfully processed:', refund.id, refundCalc.refundAmount);
           }
         }
       } catch (stripeError) {
