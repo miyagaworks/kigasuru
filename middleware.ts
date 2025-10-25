@@ -9,7 +9,9 @@ export default auth((req) => {
   const isAuthRoute = nextUrl.pathname.startsWith('/auth');
   const isApiAuthRoute = nextUrl.pathname.startsWith('/api/auth');
   const isAdminRoute = nextUrl.pathname.startsWith('/admin');
-  const isPublicApiRoute = nextUrl.pathname === '/api/contact'; // Public contact form API
+  const isPublicApiRoute =
+    nextUrl.pathname === '/api/contact' || // Public contact form API
+    nextUrl.pathname === '/api/webhooks/stripe'; // Stripe webhook endpoint
 
   // PWA and static files that should be publicly accessible
   const isStaticAsset =

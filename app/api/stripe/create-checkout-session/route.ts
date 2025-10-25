@@ -72,18 +72,6 @@ export async function POST(req: NextRequest) {
         priceId = process.env.STRIPE_PRICE_YEARLY!;
         mode = 'subscription';
         break;
-      case 'permanent_personal':
-        priceId = process.env.STRIPE_PRICE_PERMANENT_PERSONAL!;
-        mode = 'payment';
-        metadata.type = 'permanent';
-        metadata.plan = 'permanent_personal';
-        break;
-      case 'permanent_premium':
-        priceId = process.env.STRIPE_PRICE_PERMANENT_PREMIUM!;
-        mode = 'payment';
-        metadata.type = 'permanent';
-        metadata.plan = 'permanent_premium';
-        break;
       default:
         return NextResponse.json(
           { error: '無効なプランタイプです' },
@@ -112,6 +100,12 @@ export async function POST(req: NextRequest) {
       success_url: `${process.env.NEXTAUTH_URL}/subscription/success?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${process.env.NEXTAUTH_URL}/subscription`,
       metadata,
+      automatic_tax: {
+        enabled: true,
+      },
+      customer_update: {
+        address: 'auto',
+      },
     });
 
     return NextResponse.json({

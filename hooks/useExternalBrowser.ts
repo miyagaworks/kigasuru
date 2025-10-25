@@ -34,13 +34,16 @@ export function useExternalBrowser() {
 
   // app.kigasuru.comを外部ブラウザで開く
   const openInExternalBrowser = (path = '/auth/signup') => {
+    // 環境変数からベースURLを取得（デフォルトは本番環境）
+    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://app.kigasuru.com';
+
     if (!deviceInfo) {
       // デバイス情報がまだ準備できていない場合は通常のリダイレクト
-      window.location.href = `https://app.kigasuru.com${path}`;
+      window.location.href = `${baseUrl}${path}`;
       return;
     }
 
-    const appUrl = `https://app.kigasuru.com${path}`;
+    const appUrl = `${baseUrl}${path}`;
 
     if (deviceInfo.isLine) {
       // LINEブラウザの場合、外部ブラウザで開く

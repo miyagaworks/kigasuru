@@ -189,6 +189,11 @@ model Subscription {
   startDate DateTime
   endDate   DateTime?
 
+  currentPeriodStart DateTime?
+  currentPeriodEnd   DateTime?
+  canceledAt         DateTime?
+  serviceEndDate     DateTime? // 解約後もサービスが利用できる期限
+
   stripeSubscriptionId String? @unique
   stripePriceId        String?
 

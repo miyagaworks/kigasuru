@@ -10,6 +10,7 @@ import { isAdmin } from '@/lib/admin';
  * 全ての解約申請を取得（管理者のみ）
  */
 export async function GET() {
+  // Get pending cancellation requests
   try {
     const session = await auth();
 
@@ -21,8 +22,24 @@ export async function GET() {
     }
 
     const requests = await prisma.cancellationRequest.findMany({
+      where: {
+        status: 'pending', // pending状態のみ取得
+      },
+      include: {
+        user: {
+          select: {
+            name: true,
+            email: true,
+            subscriptions: {
+              where: {
+                status: 'active',
+              },
+            },
+          },
+        },
+      },
       orderBy: {
-        createdAt: 'desc',
+        createdAt: 'asc', // 古い順に処理
       },
     });
 

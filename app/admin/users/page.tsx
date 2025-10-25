@@ -239,7 +239,8 @@ export default function AdminUsersPage() {
             >
               <Icon category="ui" name="back" size={24} />
             </button>
-            <h1 className="text-xl sm:text-2xl font-bold text-[var(--color-neutral-900)]">
+            <h1 className="text-xl sm:text-2xl font-bold text-[var(--color-neutral-900)] flex items-center gap-2">
+              <Icon category="ui" name="user" size={28} />
               ユーザー管理
             </h1>
           </div>

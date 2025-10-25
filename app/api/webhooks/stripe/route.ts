@@ -93,12 +93,10 @@ export async function POST(req: NextRequest) {
 /**
  * チェックアウトセッション完了時の処理
  * - サブスクリプション開始
- * - 永久利用権購入
  */
 async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session) {
   const customerId = session.customer as string;
   const subscriptionId = session.subscription as string | null;
-  const metadata = session.metadata || {};
 
   // ユーザーをStripe Customer IDで検索
   const user = await prisma.user.findFirst({
@@ -107,31 +105,6 @@ async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session) 
 
   if (!user) {
     console.error('[Stripe Webhook] User not found for customer:', customerId);
-    return;
-  }
-
-  // 永久利用権の購入の場合
-  if (metadata.type === 'permanent') {
-    await prisma.user.update({
-      where: { id: user.id },
-      data: {
-        subscriptionStatus: 'permanent',
-        subscriptionEndsAt: null, // 永久利用権には終了日なし
-      },
-    });
-
-    // Payment記録を作成
-    await prisma.payment.create({
-      data: {
-        userId: user.id,
-        stripePaymentIntentId: session.payment_intent as string,
-        amount: session.amount_total || 0,
-        currency: session.currency || 'jpy',
-        status: 'succeeded',
-        plan: metadata.plan || 'permanent_personal',
-      },
-    });
-
     return;
   }
 
@@ -170,14 +143,21 @@ async function handleSubscriptionCreated(subscription: Stripe.Subscription) {
   }
 
   // Subscriptionレコードを作成
+  // current_period_start/end は subscription.items.data[0] にある
+  const subscriptionItem = subscription.items.data[0];
+  const currentPeriodStart = subscriptionItem.current_period_start;
+  const currentPeriodEnd = subscriptionItem.current_period_end;
+
   await prisma.subscription.create({
     data: {
       userId: user.id,
       stripeSubscriptionId: subscription.id,
       status: subscription.status,
       plan,
-      startDate: new Date((subscription as StripeSubscriptionWithPeriod).current_period_start * 1000),
-      endDate: new Date((subscription as StripeSubscriptionWithPeriod).current_period_end * 1000),
+      startDate: new Date(currentPeriodStart * 1000), // 最初の契約開始日
+      endDate: new Date(currentPeriodEnd * 1000),
+      currentPeriodStart: new Date(currentPeriodStart * 1000),
+      currentPeriodEnd: new Date(currentPeriodEnd * 1000),
     },
   });
 
@@ -187,7 +167,7 @@ async function handleSubscriptionCreated(subscription: Stripe.Subscription) {
     data: {
       stripeSubscriptionId: subscription.id,
       subscriptionStatus: 'active',
-      subscriptionEndsAt: new Date((subscription as StripeSubscriptionWithPeriod).current_period_end * 1000),
+      subscriptionEndsAt: new Date(currentPeriodEnd * 1000),
     },
   });
 }
@@ -213,6 +193,10 @@ async function handleSubscriptionUpdated(subscription: Stripe.Subscription) {
   }
 
   // Subscriptionレコードを更新
+  const subscriptionItem = subscription.items.data[0];
+  const currentPeriodStart = subscriptionItem.current_period_start;
+  const currentPeriodEnd = subscriptionItem.current_period_end;
+
   await prisma.subscription.updateMany({
     where: {
       userId: user.id,
@@ -221,8 +205,10 @@ async function handleSubscriptionUpdated(subscription: Stripe.Subscription) {
     data: {
       status: subscription.status,
       plan,
-      startDate: new Date((subscription as StripeSubscriptionWithPeriod).current_period_start * 1000),
-      endDate: new Date((subscription as StripeSubscriptionWithPeriod).current_period_end * 1000),
+      // startDateは最初の契約開始日なので更新しない
+      endDate: new Date(currentPeriodEnd * 1000),
+      currentPeriodStart: new Date(currentPeriodStart * 1000),
+      currentPeriodEnd: new Date(currentPeriodEnd * 1000),
     },
   });
 
@@ -230,7 +216,7 @@ async function handleSubscriptionUpdated(subscription: Stripe.Subscription) {
   let subscriptionStatus = 'active';
   if (subscription.status === 'canceled' || subscription.status === 'unpaid') {
     subscriptionStatus = 'expired';
-  } else if ((subscription as StripeSubscriptionWithPeriod).cancel_at_period_end) {
+  } else if (subscription.cancel_at_period_end) {
     subscriptionStatus = 'canceling';
   }
 
@@ -238,7 +224,7 @@ async function handleSubscriptionUpdated(subscription: Stripe.Subscription) {
     where: { id: user.id },
     data: {
       subscriptionStatus,
-      subscriptionEndsAt: new Date((subscription as StripeSubscriptionWithPeriod).current_period_end * 1000),
+      subscriptionEndsAt: new Date(currentPeriodEnd * 1000),
     },
   });
 }
@@ -268,11 +254,14 @@ async function handleSubscriptionDeleted(subscription: Stripe.Subscription) {
   });
 
   // ユーザー情報を更新
+  const subscriptionItem = subscription.items.data[0];
+  const currentPeriodEnd = subscriptionItem.current_period_end;
+
   await prisma.user.update({
     where: { id: user.id },
     data: {
       subscriptionStatus: 'expired',
-      subscriptionEndsAt: new Date((subscription as StripeSubscriptionWithPeriod).current_period_end * 1000),
+      subscriptionEndsAt: new Date(currentPeriodEnd * 1000),
     },
   });
 }

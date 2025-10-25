@@ -114,12 +114,12 @@ async function sendLoginNotificationEmail(data: {
   <style>
     body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; line-height: 1.6; color: #333; }
     .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-    .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0; }
+    .header { background: linear-gradient(135deg, #2d5a3d 0%, #4a7c59 100%); color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0; }
     .content { background: #f9fafb; padding: 30px; border-radius: 0 0 10px 10px; }
-    .info-box { background: white; border-left: 4px solid #667eea; padding: 15px; margin: 15px 0; border-radius: 5px; }
-    .info-label { font-weight: bold; color: #667eea; margin-bottom: 5px; }
+    .info-box { background: white; border-left: 4px solid #2d5a3d; padding: 15px; margin: 15px 0; border-radius: 5px; }
+    .info-label { font-weight: bold; color: #2d5a3d; margin-bottom: 5px; }
     .info-value { color: #555; }
-    .warning { background: #fef3c7; border-left-color: #f59e0b; padding: 15px; margin: 20px 0; border-radius: 5px; }
+    .warning { background: #fef3c7; border-left: 4px solid #f59e0b; padding: 15px; margin: 20px 0; border-radius: 5px; }
     .footer { text-align: center; margin-top: 30px; color: #999; font-size: 12px; }
   </style>
 </head>

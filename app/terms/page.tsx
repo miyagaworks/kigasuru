@@ -154,6 +154,87 @@ export default function Terms() {
             </p>
           </section>
 
+          {/* 第7条の2 */}
+          <section className="mb-8">
+            <h2 className="text-2xl font-bold text-gray-900 mb-4">
+              第7条の2（サブスクリプションの解約および返金）
+            </h2>
+
+            <h3 className="text-xl font-bold text-gray-800 mb-3 mt-6">1. 解約申請</h3>
+            <p className="text-gray-700 leading-relaxed mb-2 text-justify">
+              ユーザーは、本サービスの管理画面から、いつでもサブスクリプションの解約を申請することができます。解約申請後、運営者が内容を確認し、承認をもって解約が確定します。
+            </p>
+            <p className="text-gray-700 leading-relaxed mb-4 text-justify bg-yellow-50 p-4 rounded-lg border-l-4 border-yellow-400">
+              <strong>重要：</strong>解約処理には通常4〜5営業日かかります。次回更新日の直前（5日以内）に解約申請された場合、処理が間に合わず自動更新される可能性がございます。自動更新を確実に停止するには、次回更新日の少なくとも7日前までに解約申請を行ってください。
+            </p>
+
+            <h3 className="text-xl font-bold text-gray-800 mb-3 mt-6">2. 月額プランの解約</h3>
+            <p className="text-gray-700 leading-relaxed mb-2 text-justify">
+              月額プラン（550円/月・税込）を解約する場合：
+            </p>
+            <ul className="list-disc list-inside text-gray-700 space-y-2 ml-4 mb-4">
+              <li>解約確定後も、次回更新日までは本サービスを引き続きご利用いただけます</li>
+              <li>次回更新日の翌日から本サービスのご利用ができなくなります</li>
+              <li>返金は行いません</li>
+            </ul>
+            <p className="text-gray-700 leading-relaxed mb-4 text-justify bg-gray-50 p-4 rounded-lg">
+              <strong>例：</strong>21日に契約した場合、次回更新日は翌月の21日となります。契約月中に解約申請し承認された場合でも、翌月の21日まではサービスをご利用いただけます。翌月の22日からサービスのご利用ができなくなります。
+            </p>
+
+            <h3 className="text-xl font-bold text-gray-800 mb-3 mt-6">3. 年額プランの解約</h3>
+            <p className="text-gray-700 leading-relaxed mb-2 text-justify">
+              年額プラン（5,500円/年・税込）を解約する場合：
+            </p>
+            <ul className="list-disc list-inside text-gray-700 space-y-2 ml-4 mb-4">
+              <li>解約確定後、使用済み月数分（月額458円として計算）を差し引いた金額を返金いたします</li>
+              <li>解約確定後も、サービス利用終了日までは本サービスを引き続きご利用いただけます</li>
+              <li>サービス利用終了日は、契約日を基準日として、翌月または翌々月の基準日となります</li>
+              <li>基準日の5日前までに解約申請された場合：翌月の基準日がサービス利用終了日</li>
+              <li>基準日の4日前以降に解約申請された場合：翌々月の基準日がサービス利用終了日</li>
+              <li>サービス利用終了日の翌日から本サービスのご利用ができなくなります</li>
+              <li>返金はご登録のお支払い方法に対して行います（処理完了まで5〜10営業日程度かかる場合があります）</li>
+            </ul>
+            <p className="text-gray-700 leading-relaxed mb-4 text-justify bg-gray-50 p-4 rounded-lg">
+              <strong>返金計算例1：</strong>
+              <br />
+              ・9月1日に契約（5,500円支払い、次回更新日：翌年の9月1日、基準日：毎月1日）
+              <br />
+              ・10月25日に解約申請・承認（11月1日の5日前=10月27日より前なので、翌月の基準日が利用終了日）
+              <br />
+              ・使用期間：2ヶ月分（9月1日〜11月1日）= 916円
+              <br />
+              ・返金額：5,500円 - 916円 = 4,584円
+              <br />
+              ・サービス利用終了日：11月1日
+              <br />
+              ・サービス利用停止：11月2日から
+              <br /><br />
+              <strong>返金計算例2：</strong>
+              <br />
+              ・9月1日に契約（5,500円支払い、次回更新日：翌年の9月1日、基準日：毎月1日）
+              <br />
+              ・10月30日に解約申請・承認（11月1日の5日前=10月27日より後なので、翌々月の基準日が利用終了日）
+              <br />
+              ・使用期間：3ヶ月分（9月1日〜12月1日）= 1,374円
+              <br />
+              ・返金額：5,500円 - 1,374円 = 4,126円
+              <br />
+              ・サービス利用終了日：12月1日
+              <br />
+              ・サービス利用停止：12月2日から
+            </p>
+
+            <h3 className="text-xl font-bold text-gray-800 mb-3 mt-6">4. 解約の効力</h3>
+            <p className="text-gray-700 leading-relaxed mb-4 text-justify">
+              解約が確定した時点で、次回の自動更新は停止されます。ただし、上記の通り、お支払い済みの期間内は引き続き本サービスをご利用いただけます。
+            </p>
+
+            <h3 className="text-xl font-bold text-gray-800 mb-3 mt-6">5. データの取り扱い</h3>
+            <p className="text-gray-700 leading-relaxed text-justify">
+              サービス利用停止後、ユーザーのデータは一定期間保管されますが、その後削除される場合があります。データのバックアップが必要な場合は、サービス利用停止前にエクスポート機能をご利用ください。
+            </p>
+          </section>
+
           {/* 第8条 */}
           <section className="mb-8">
             <h2 className="text-2xl font-bold text-gray-900 mb-4">

@@ -14,6 +14,10 @@ interface SubscriptionData {
   status: string;
   startDate: Date;
   endDate: Date | null;
+  currentPeriodStart: Date | null;
+  currentPeriodEnd: Date | null;
+  canceledAt: Date | null;
+  serviceEndDate: Date | null;
   stripeSubscriptionId: string | null;
   stripePriceId: string | null;
   interval?: string;
@@ -54,10 +58,35 @@ export async function GET() {
       );
     }
 
-    // サブスクリプション情報を取得
+    // サブスクリプション情報を取得（serviceEndDateも含む）
     const subscription = await prisma.subscription.findFirst({
       where: { userId: session.user.id },
       orderBy: { createdAt: 'desc' },
+      select: {
+        id: true,
+        userId: true,
+        plan: true,
+        status: true,
+        startDate: true,
+        endDate: true,
+        currentPeriodStart: true,
+        currentPeriodEnd: true,
+        canceledAt: true,
+        serviceEndDate: true,
+        stripeSubscriptionId: true,
+        stripePriceId: true,
+      },
+    });
+
+    // 解約申請の状態を取得
+    const cancellationRequest = await prisma.cancellationRequest.findFirst({
+      where: {
+        userId: session.user.id,
+        status: 'pending',
+      },
+      orderBy: {
+        createdAt: 'desc',
+      },
     });
 
     // トライアル期間の計算
@@ -101,6 +130,10 @@ export async function GET() {
         status: 'active',
         startDate: new Date(),
         endDate: new Date(9999, 11, 31),
+        currentPeriodStart: null,
+        currentPeriodEnd: null,
+        canceledAt: null,
+        serviceEndDate: null,
         stripeSubscriptionId: null,
         stripePriceId: null,
         interval: 'permanent',
@@ -126,6 +159,11 @@ export async function GET() {
         isPermanentUser,
       },
       payments,
+      cancellationRequest: cancellationRequest ? {
+        id: cancellationRequest.id,
+        status: cancellationRequest.status,
+        createdAt: cancellationRequest.createdAt,
+      } : null,
     });
   } catch (error) {
     console.error('[Subscription API] Error:', error);

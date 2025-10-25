@@ -76,7 +76,6 @@ export default function LandingPage() {
 
   return (
     <div className="min-h-screen bg-white">
-
       {/* ヒーローセクション */}
       <section className="relative h-screen flex items-center justify-center text-center overflow-hidden bg-gradient-to-b from-green-50 to-white">
         {/* 背景画像 */}
@@ -118,7 +117,7 @@ export default function LandingPage() {
         {/* コンテンツ */}
         <div className="relative z-20 max-w-5xl mx-auto px-6 py-8 lg:py-20">
           {/* 白いぼかし背景 */}
-          <div className="absolute inset-x-4 inset-y-0 lg:inset-0 bg-white/60 backdrop-blur-sm rounded-3xl -z-10"></div>
+          <div className="absolute inset-x-4 inset-y-0 lg:inset-0 bg-white/60 backdrop-blur-sm rounded-xl md:rounded-3xl -z-10"></div>
           <div className="inline-block mb-4 lg:mb-6 px-4 lg:px-6 py-1.5 lg:py-2 bg-green-100 border border-green-200 rounded-full">
             <span className="text-[var(--color-primary-green)] text-xs lg:text-sm font-medium tracking-wide">
               データ主導型ゴルフ上達アプリ
@@ -183,7 +182,7 @@ export default function LandingPage() {
           </p>
 
           <button
-            onClick={() => openInExternalBrowser('/auth/signup')}
+            onClick={() => openInExternalBrowser("/auth/signup")}
             className="group px-12 py-5 bg-white text-[var(--color-primary-green)] text-lg font-bold rounded-xl hover:bg-gray-50 transition-all shadow-2xl hover:scale-105"
           >
             <span className="flex items-center justify-center gap-2">
@@ -1142,7 +1141,7 @@ export default function LandingPage() {
           </p>
 
           <button
-            onClick={() => openInExternalBrowser('/auth/signup')}
+            onClick={() => openInExternalBrowser("/auth/signup")}
             className="group px-12 py-5 bg-white text-[var(--color-primary-green)] text-lg font-bold rounded-xl hover:bg-gray-50 transition-all shadow-2xl hover:scale-105"
           >
             <span className="flex items-center justify-center gap-2">
@@ -1500,7 +1499,7 @@ export default function LandingPage() {
           </p>
 
           <button
-            onClick={() => openInExternalBrowser('/auth/signup')}
+            onClick={() => openInExternalBrowser("/auth/signup")}
             className="group px-12 py-5 bg-white text-[var(--color-primary-green)] text-lg font-bold rounded-xl hover:bg-gray-50 transition-all shadow-2xl hover:scale-105"
           >
             <span className="flex items-center justify-center gap-2">
@@ -1630,7 +1629,7 @@ export default function LandingPage() {
               </ul>
 
               <button
-                onClick={() => openInExternalBrowser('/auth/signup')}
+                onClick={() => openInExternalBrowser("/auth/signup")}
                 className="w-full py-4 bg-[var(--color-primary-green)] text-white font-bold rounded-xl hover:bg-[var(--color-primary-dark)] transition-all shadow-lg hover:shadow-xl"
               >
                 月額プランを始める
@@ -1722,7 +1721,7 @@ export default function LandingPage() {
               </ul>
 
               <button
-                onClick={() => openInExternalBrowser('/auth/signup')}
+                onClick={() => openInExternalBrowser("/auth/signup")}
                 className="w-full py-4 bg-gradient-to-r from-[var(--color-primary-green)] to-[var(--color-primary-dark)] text-white font-bold rounded-xl hover:shadow-2xl transition-all shadow-lg"
               >
                 年額プランを始める（お得）
@@ -1832,7 +1831,10 @@ export default function LandingPage() {
       </section>
 
       {/* お問い合わせ */}
-      <section id="contact" className="py-24 bg-gradient-to-br from-rose-50 via-white to-pink-50">
+      <section
+        id="contact"
+        className="py-24 bg-gradient-to-br from-rose-50 via-white to-pink-50"
+      >
         <div className="max-w-2xl mx-auto px-6">
           <div className="text-center mb-20">
             <div className="inline-block mb-4 px-6 py-2 bg-rose-100 rounded-full">
@@ -1917,7 +1919,10 @@ export default function LandingPage() {
                   value={contactForm.email}
                   onChange={(e) => {
                     // 半角英数字以外を除外
-                    const value = e.target.value.replace(/[^a-zA-Z0-9._%+\-@]/g, '');
+                    const value = e.target.value.replace(
+                      /[^a-zA-Z0-9._%+\-@]/g,
+                      ""
+                    );
                     setContactForm({ ...contactForm, email: value });
                   }}
                   className="w-full px-5 py-4 border-2 border-gray-200 rounded-xl focus:border-[var(--color-primary-green)] focus:outline-none transition-colors"
@@ -2001,7 +2006,7 @@ export default function LandingPage() {
           </p>
 
           <button
-            onClick={() => openInExternalBrowser('/auth/signup')}
+            onClick={() => openInExternalBrowser("/auth/signup")}
             className="group px-14 py-6 bg-white text-[var(--color-primary-green)] text-xl font-bold rounded-2xl hover:bg-gray-50 transition-all shadow-2xl hover:scale-105"
           >
             <span className="flex items-center justify-center gap-3">

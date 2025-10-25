@@ -33,9 +33,8 @@ export async function sendEmail({
     throw new Error('RESEND_API_KEY is not configured');
   }
 
-  // 開発環境ではResendのデフォルトアドレスを使用（ドメイン認証不要）
-  const isProduction = process.env.NODE_ENV === 'production';
-  const actualFrom = isProduction ? from : 'onboarding@resend.dev';
+  // ドメイン認証済みなので、開発環境でも @kigasuru.com を使用
+  const actualFrom = from;
 
   try {
     console.log('[Send Email] Attempting to send email:', {
