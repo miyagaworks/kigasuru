@@ -124,6 +124,8 @@ async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session) 
  * サブスクリプション作成時の処理
  */
 async function handleSubscriptionCreated(subscription: Stripe.Subscription) {
+  console.log('[Stripe Webhook] Processing customer.subscription.created:', subscription.id);
+
   const customerId = subscription.customer as string;
 
   const user = await prisma.user.findFirst({
@@ -135,6 +137,8 @@ async function handleSubscriptionCreated(subscription: Stripe.Subscription) {
     return;
   }
 
+  console.log('[Stripe Webhook] Found user:', user.email);
+
   // プラン名を取得
   const priceId = subscription.items.data[0]?.price.id;
   let plan = 'monthly';
@@ -142,16 +146,19 @@ async function handleSubscriptionCreated(subscription: Stripe.Subscription) {
     plan = 'yearly';
   }
 
+  console.log('[Stripe Webhook] Price ID:', priceId, '-> Plan:', plan);
+
   // Subscriptionレコードを作成
   // current_period_start/end は subscription.items.data[0] にある
   const subscriptionItem = subscription.items.data[0];
   const currentPeriodStart = subscriptionItem.current_period_start;
   const currentPeriodEnd = subscriptionItem.current_period_end;
 
-  await prisma.subscription.create({
+  const newSubscription = await prisma.subscription.create({
     data: {
       userId: user.id,
       stripeSubscriptionId: subscription.id,
+      stripePriceId: priceId,
       status: subscription.status,
       plan,
       startDate: new Date(currentPeriodStart * 1000), // 最初の契約開始日
@@ -160,6 +167,8 @@ async function handleSubscriptionCreated(subscription: Stripe.Subscription) {
       currentPeriodEnd: new Date(currentPeriodEnd * 1000),
     },
   });
+
+  console.log('[Stripe Webhook] Created subscription record:', newSubscription.id);
 
   // ユーザー情報を更新
   await prisma.user.update({
@@ -170,12 +179,16 @@ async function handleSubscriptionCreated(subscription: Stripe.Subscription) {
       subscriptionEndsAt: new Date(currentPeriodEnd * 1000),
     },
   });
+
+  console.log('[Stripe Webhook] Updated user status to active');
 }
 
 /**
  * サブスクリプション更新時の処理
  */
 async function handleSubscriptionUpdated(subscription: Stripe.Subscription) {
+  console.log('[Stripe Webhook] Processing customer.subscription.updated:', subscription.id);
+
   const user = await prisma.user.findFirst({
     where: { stripeSubscriptionId: subscription.id },
   });
@@ -184,6 +197,8 @@ async function handleSubscriptionUpdated(subscription: Stripe.Subscription) {
     console.error('[Stripe Webhook] User not found for subscription:', subscription.id);
     return;
   }
+
+  console.log('[Stripe Webhook] Found user:', user.email);
 
   // プラン名を取得
   const priceId = subscription.items.data[0]?.price.id;
@@ -204,6 +219,7 @@ async function handleSubscriptionUpdated(subscription: Stripe.Subscription) {
     },
     data: {
       status: subscription.status,
+      stripePriceId: priceId,
       plan,
       // startDateは最初の契約開始日なので更新しない
       endDate: new Date(currentPeriodEnd * 1000),
@@ -211,6 +227,8 @@ async function handleSubscriptionUpdated(subscription: Stripe.Subscription) {
       currentPeriodEnd: new Date(currentPeriodEnd * 1000),
     },
   });
+
+  console.log('[Stripe Webhook] Updated subscription record');
 
   // ユーザー情報を更新
   let subscriptionStatus = 'active';
@@ -227,6 +245,8 @@ async function handleSubscriptionUpdated(subscription: Stripe.Subscription) {
       subscriptionEndsAt: new Date(currentPeriodEnd * 1000),
     },
   });
+
+  console.log('[Stripe Webhook] Updated user status to:', subscriptionStatus);
 }
 
 /**
