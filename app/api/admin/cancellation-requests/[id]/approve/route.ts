@@ -88,7 +88,7 @@ export async function POST(
     let refundId: string | null = null;
 
     // Stripeでの返金処理（年額プランの場合のみ）
-    if (refundCalc.shouldRefund && refundCalc.refundAmount > 0) {
+    if (refundCalc.shouldRefund && refundCalc.refundAmount > 0 && subscription.stripeSubscriptionId) {
       try {
         // 最新の支払いを取得
         const invoices = await stripe.invoices.list({
@@ -123,11 +123,13 @@ export async function POST(
     }
 
     // Stripeのサブスクリプションをキャンセル
-    try {
-      await stripe.subscriptions.cancel(subscription.stripeSubscriptionId);
-    } catch (stripeError) {
-      console.error('[Cancel Subscription] Stripe Error:', stripeError);
-      // エラーでも処理を続行
+    if (subscription.stripeSubscriptionId) {
+      try {
+        await stripe.subscriptions.cancel(subscription.stripeSubscriptionId);
+      } catch (stripeError) {
+        console.error('[Cancel Subscription] Stripe Error:', stripeError);
+        // エラーでも処理を続行
+      }
     }
 
     // DBのサブスクリプションステータスを更新
