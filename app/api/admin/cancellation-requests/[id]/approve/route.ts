@@ -3,7 +3,7 @@ import Stripe from 'stripe';
 import { auth } from '@/auth';
 import { prisma } from '@/lib/prisma';
 import { isAdmin } from '@/lib/admin';
-import { calculateRefund, calculateServiceEndDate } from '@/lib/refund-calculator';
+import { calculateRefund } from '@/lib/refund-calculator';
 import { sendEmail } from '@/lib/email';
 
 // ビルド時に環境変数がない場合はダミー値を使用
@@ -97,10 +97,13 @@ export async function POST(
         });
 
         if (invoices.data.length > 0) {
-          const invoice = invoices.data[0] as any; // 型アサーションを使用
-          const chargeId = typeof invoice.charge === 'string'
-            ? invoice.charge
-            : invoice.charge?.id;
+          const invoice = invoices.data[0];
+
+          // Invoiceのchargeプロパティを取得（存在する場合）
+          const invoiceCharge = (invoice as { charge?: string | Stripe.Charge }).charge;
+          const chargeId = typeof invoiceCharge === 'string'
+            ? invoiceCharge
+            : invoiceCharge?.id;
 
           if (chargeId) {
             // 返金を実行（円単位を銭単位に変換）
