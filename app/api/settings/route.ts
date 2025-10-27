@@ -27,7 +27,7 @@ export async function GET() {
       return NextResponse.json({
         success: true,
         settings: {
-          clubs: ['DR', '3W', '5W', '7W', 'U4', 'U5', '5I', '6I', '7I', '8I', '9I', 'PW', '50', '52', '54', '56', '58'],
+          clubs: ['DR', '3W', '5W', '7W', '4U', '5U', '5I', '6I', '7I', '8I', '9I', 'PW', '50', '52', '54', '56', '58'],
           enabledFields: {
             slope: true,
             lie: true,
@@ -87,7 +87,7 @@ export async function POST(req: NextRequest) {
       },
       create: {
         userId: session.user.id,
-        clubs: clubs || ['DR', '3W', '5W', '7W', 'U4', 'U5', '5I', '6I', '7I', '8I', '9I', 'PW', '50', '52', '54', '56', '58'],
+        clubs: clubs || ['DR', '3W', '5W', '7W', '4U', '5U', '5I', '6I', '7I', '8I', '9I', 'PW', '50', '52', '54', '56', '58'],
         enabledFields: enabledFields || {
           slope: true,
           lie: true,

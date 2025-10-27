@@ -13,7 +13,7 @@ import { getSlopeDisplayName } from '@/lib/sensors/gyro';
 import { getWeather, getLocationName } from '@/lib/utils/weather';
 import { toast } from 'react-hot-toast';
 
-const DEFAULT_CLUBS = ['DR', '3W', '5W', '7W', 'U4', 'U5', '5I', '6I', '7I', '8I', '9I', 'PW', '50', '52', '54', '56', '58'];
+const DEFAULT_CLUBS = ['DR', '3W', '5W', '7W', '4U', '5U', '5I', '6I', '7I', '8I', '9I', 'PW', '50', '52', '54', '56', '58'];
 
 // 傾斜選択セグメントの計算を事前に行う
 const SLOPE_SEGMENTS = [

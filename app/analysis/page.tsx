@@ -9,7 +9,7 @@ import { Button } from '@/components/Button';
 import { Icon } from '@/components/Icon';
 import { getAllShots, getSetting, type Shot } from '@/lib/db';
 
-const DEFAULT_CLUBS = ['DR', '3W', '5W', '7W', 'U4', 'U5', '5I', '6I', '7I', '8I', '9I', 'PW', '50', '52', '54', '56', '58'];
+const DEFAULT_CLUBS = ['DR', '3W', '5W', '7W', '4U', '5U', '5I', '6I', '7I', '8I', '9I', 'PW', '50', '52', '54', '56', '58'];
 
 interface Statistics {
   shots: Shot[];
