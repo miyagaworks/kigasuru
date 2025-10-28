@@ -90,43 +90,70 @@ export async function POST(
     // Stripeでの返金処理（年額プランの場合のみ）
     if (refundCalc.shouldRefund && refundCalc.refundAmount > 0 && subscription.stripeSubscriptionId) {
       try {
-        // 最新の支払いを取得
-        const invoices = await stripe.invoices.list({
-          subscription: subscription.stripeSubscriptionId,
-          limit: 1,
+        console.log('[Refund] Starting refund process for subscription:', subscription.stripeSubscriptionId);
+        console.log('[Refund] Refund amount:', refundCalc.refundAmount, '円');
+
+        // サブスクリプションから最新のPayment Intentを取得
+        const stripeSubscription = await stripe.subscriptions.retrieve(subscription.stripeSubscriptionId, {
+          expand: ['latest_invoice.payment_intent']
         });
 
-        if (invoices.data.length > 0) {
-          const invoice = invoices.data[0];
+        console.log('[Refund] Retrieved subscription:', stripeSubscription.id);
 
-          // Invoiceのchargeプロパティを取得（存在する場合）
-          const invoiceCharge = (invoice as { charge?: string | Stripe.Charge }).charge;
-          const chargeId = typeof invoiceCharge === 'string'
-            ? invoiceCharge
-            : invoiceCharge?.id;
+        // latest_invoiceを展開して取得
+        const latestInvoice = stripeSubscription.latest_invoice as Stripe.Invoice | null;
 
-          if (chargeId) {
-            // 返金を実行（円単位を銭単位に変換）
-            const refund = await stripe.refunds.create({
-              charge: chargeId,
-              amount: Math.round(refundCalc.refundAmount * 100), // 円→銭に変換
-              reason: 'requested_by_customer',
-              metadata: {
-                userId: user.id,
-                cancellationRequestId: id,
-                usedMonths: refundCalc.usedMonths.toString(),
-                serviceEndDate: serviceEndDate.toISOString(),
-              },
-            });
+        if (latestInvoice) {
+          console.log('[Refund] Latest invoice found:', latestInvoice.id);
 
-            refundId = refund.id;
-            console.log('[Refund] Successfully processed:', refund.id, refundCalc.refundAmount);
+          // payment_intentを展開して取得
+          const paymentIntent = latestInvoice.payment_intent as Stripe.PaymentIntent | null;
+
+          if (paymentIntent) {
+            console.log('[Refund] Payment intent found:', paymentIntent.id);
+
+            // Payment IntentからChargeを取得
+            if (paymentIntent.charges && paymentIntent.charges.data.length > 0) {
+              const charge = paymentIntent.charges.data[0];
+              console.log('[Refund] Charge found:', charge.id);
+
+              // 返金を実行（円単位を銭単位に変換）
+              const refund = await stripe.refunds.create({
+                charge: charge.id,
+                amount: Math.round(refundCalc.refundAmount * 100), // 円→銭に変換
+                reason: 'requested_by_customer',
+                metadata: {
+                  userId: user.id,
+                  cancellationRequestId: id,
+                  usedMonths: refundCalc.usedMonths.toString(),
+                  serviceEndDate: serviceEndDate.toISOString(),
+                },
+              });
+
+              refundId = refund.id;
+              console.log('[Refund] Successfully processed:', refund.id, refundCalc.refundAmount, '円');
+            } else {
+              console.error('[Refund] No charges found in payment intent');
+            }
+          } else {
+            console.error('[Refund] Payment intent not found in invoice');
           }
+        } else {
+          console.error('[Refund] Latest invoice not found for subscription');
+        }
+
+        // Chargeが見つからなかった場合でもエラーにせず、警告ログのみ出力
+        if (!refundId) {
+          console.warn('[Refund] Could not find charge for refund, but continuing with cancellation');
         }
       } catch (stripeError) {
         console.error('[Refund] Stripe Error:', stripeError);
+        // 返金エラーの場合は処理を中断
         return NextResponse.json(
-          { error: 'Stripeでの返金処理に失敗しました' },
+          {
+            error: 'Stripeでの返金処理に失敗しました',
+            details: stripeError instanceof Error ? stripeError.message : String(stripeError)
+          },
           { status: 500 }
         );
       }
