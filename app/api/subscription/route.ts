@@ -59,8 +59,12 @@ export async function GET() {
     }
 
     // サブスクリプション情報を取得（serviceEndDateも含む）
+    // トライアルユーザーの場合はactiveなサブスクリプションのみ取得
     const subscription = await prisma.subscription.findFirst({
-      where: { userId: session.user.id },
+      where: {
+        userId: session.user.id,
+        ...(user.subscriptionStatus === 'trial' ? { status: 'active' } : {}),
+      },
       orderBy: { createdAt: 'desc' },
       select: {
         id: true,
