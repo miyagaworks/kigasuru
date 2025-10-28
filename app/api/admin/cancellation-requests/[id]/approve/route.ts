@@ -89,12 +89,13 @@ export async function POST(
 
     // Stripeでの返金処理（年額プランの場合のみ）
     if (refundCalc.shouldRefund && refundCalc.refundAmount > 0 && subscription.stripeSubscriptionId) {
+      const stripeSubId = subscription.stripeSubscriptionId; // 型ガード用に変数化
       try {
-        console.log('[Refund] Starting refund process for subscription:', subscription.stripeSubscriptionId);
+        console.log('[Refund] Starting refund process for subscription:', stripeSubId);
         console.log('[Refund] Refund amount:', refundCalc.refundAmount, '円');
 
         // サブスクリプションから最新のPayment Intentを取得
-        const stripeSubscription = await stripe.subscriptions.retrieve(subscription.stripeSubscriptionId, {
+        const stripeSubscription = await stripe.subscriptions.retrieve(stripeSubId, {
           expand: ['latest_invoice.payment_intent']
         });
 
@@ -106,20 +107,30 @@ export async function POST(
         if (latestInvoice) {
           console.log('[Refund] Latest invoice found:', latestInvoice.id);
 
-          // payment_intentを展開して取得
-          const paymentIntent = latestInvoice.payment_intent as Stripe.PaymentIntent | null;
+          // payment_intentを展開して取得（expandで展開されたプロパティにアクセス）
+          const invoiceWithPaymentIntent = latestInvoice as Stripe.Invoice & { payment_intent?: string | Stripe.PaymentIntent };
+          const paymentIntent = typeof invoiceWithPaymentIntent.payment_intent === 'object'
+            ? invoiceWithPaymentIntent.payment_intent
+            : null;
 
           if (paymentIntent) {
             console.log('[Refund] Payment intent found:', paymentIntent.id);
 
-            // Payment IntentからChargeを取得
-            if (paymentIntent.charges && paymentIntent.charges.data.length > 0) {
-              const charge = paymentIntent.charges.data[0];
-              console.log('[Refund] Charge found:', charge.id);
+            // Payment IntentのChargeIDを取得（latest_chargeまたはcharges経由）
+            const paymentIntentWithCharge = paymentIntent as Stripe.PaymentIntent & {
+              latest_charge?: string | Stripe.Charge;
+            };
+
+            const chargeId = typeof paymentIntentWithCharge.latest_charge === 'string'
+              ? paymentIntentWithCharge.latest_charge
+              : paymentIntentWithCharge.latest_charge?.id;
+
+            if (chargeId) {
+              console.log('[Refund] Charge found:', chargeId);
 
               // 返金を実行（円単位を銭単位に変換）
               const refund = await stripe.refunds.create({
-                charge: charge.id,
+                charge: chargeId,
                 amount: Math.round(refundCalc.refundAmount * 100), // 円→銭に変換
                 reason: 'requested_by_customer',
                 metadata: {
@@ -133,7 +144,7 @@ export async function POST(
               refundId = refund.id;
               console.log('[Refund] Successfully processed:', refund.id, refundCalc.refundAmount, '円');
             } else {
-              console.error('[Refund] No charges found in payment intent');
+              console.error('[Refund] No charge found in payment intent');
             }
           } else {
             console.error('[Refund] Payment intent not found in invoice');

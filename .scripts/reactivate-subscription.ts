@@ -38,15 +38,15 @@ async function main() {
   console.log(`  Stripe Subscription ID: ${latestSubscription.stripeSubscriptionId}`);
 
   // サブスクリプションをアクティブに戻す
-  // 契約開始日を2025/9/10に設定（テスト用）
-  const startDate = new Date('2025-09-10T00:00:00+09:00');
+  // 契約開始日を2025/10/27 12:04に設定（本番データに合わせる）
+  const startDate = new Date('2025-10-27T12:04:00+09:00');
 
-  // 年額プランなので次回更新日は1年後（2026/9/10）
-  const endDate = new Date('2026-09-10T00:00:00+09:00');
+  // 年額プランなので次回更新日は1年後（2026/10/27）
+  const endDate = new Date('2026-10-27T12:04:00+09:00');
 
   // 現在の課金期間は契約開始から1年間
-  const currentPeriodStart = new Date('2025-09-10T00:00:00+09:00');
-  const currentPeriodEnd = new Date('2026-09-10T00:00:00+09:00');
+  const currentPeriodStart = new Date('2025-10-27T12:04:00+09:00');
+  const currentPeriodEnd = new Date('2026-10-27T12:04:00+09:00');
 
   await prisma.subscription.update({
     where: { id: latestSubscription.id },
