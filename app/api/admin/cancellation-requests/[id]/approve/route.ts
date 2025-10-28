@@ -135,10 +135,30 @@ export async function POST(
     // Stripeのサブスクリプションをキャンセル
     if (subscription.stripeSubscriptionId) {
       try {
-        await stripe.subscriptions.cancel(subscription.stripeSubscriptionId);
+        console.log('[Cancel Subscription] Attempting to cancel subscription:', subscription.stripeSubscriptionId);
+        console.log('[Cancel Subscription] Plan type:', subscription.plan);
+
+        if (subscription.plan === 'yearly') {
+          // 年額プランは即座にキャンセル（返金があるため）
+          const canceledSubscription = await stripe.subscriptions.cancel(subscription.stripeSubscriptionId);
+          console.log('[Cancel Subscription] Yearly plan canceled immediately:', canceledSubscription.id, 'Status:', canceledSubscription.status);
+        } else {
+          // 月額プランは期間終了時にキャンセル
+          const updatedSubscription = await stripe.subscriptions.update(subscription.stripeSubscriptionId, {
+            cancel_at_period_end: true,
+          });
+          console.log('[Cancel Subscription] Monthly plan set to cancel at period end:', updatedSubscription.id);
+        }
       } catch (stripeError) {
         console.error('[Cancel Subscription] Stripe Error:', stripeError);
-        // エラーでも処理を続行
+        console.error('[Cancel Subscription] Error details:', JSON.stringify(stripeError, null, 2));
+        return NextResponse.json(
+          {
+            error: 'Stripeでのサブスクリプションキャンセルに失敗しました',
+            details: stripeError instanceof Error ? stripeError.message : String(stripeError)
+          },
+          { status: 500 }
+        );
       }
     }
 
