@@ -290,21 +290,39 @@ async function handleSubscriptionDeleted(subscription: Stripe.Subscription) {
  * 請求書支払い成功時の処理
  */
 async function handleInvoicePaymentSucceeded(invoice: StripeInvoiceWithSubscription) {
+  console.log('[Stripe Webhook] Processing invoice.payment_succeeded:', invoice.id);
+
   const subscriptionId = invoice.subscription as string;
-  if (!subscriptionId) return;
+  const customerId = invoice.customer as string;
 
-  const user = await prisma.user.findFirst({
-    where: { stripeSubscriptionId: subscriptionId },
-  });
-
-  if (!user) {
-    console.error('[Stripe Webhook] User not found for subscription:', subscriptionId);
+  if (!subscriptionId) {
+    console.log('[Stripe Webhook] No subscription ID in invoice, skipping');
     return;
   }
 
+  // まずstripeCustomerIdで検索（より確実）
+  let user = await prisma.user.findFirst({
+    where: { stripeCustomerId: customerId },
+  });
+
+  // 見つからなければstripeSubscriptionIdで検索（フォールバック）
+  if (!user) {
+    console.log('[Stripe Webhook] User not found by customerId, trying subscriptionId');
+    user = await prisma.user.findFirst({
+      where: { stripeSubscriptionId: subscriptionId },
+    });
+  }
+
+  if (!user) {
+    console.error('[Stripe Webhook] User not found for customer:', customerId, 'or subscription:', subscriptionId);
+    return;
+  }
+
+  console.log('[Stripe Webhook] Found user:', user.email);
+
   // Payment記録を作成
   const lineItem = invoice.lines.data[0] as { price?: { recurring?: { interval?: string } } };
-  await prisma.payment.create({
+  const payment = await prisma.payment.create({
     data: {
       userId: user.id,
       stripePaymentIntentId: invoice.payment_intent as string,
@@ -314,27 +332,47 @@ async function handleInvoicePaymentSucceeded(invoice: StripeInvoiceWithSubscript
       plan: lineItem?.price?.recurring?.interval === 'year' ? 'yearly' : 'monthly',
     },
   });
+
+  console.log('[Stripe Webhook] Created payment record:', payment.id, 'Amount:', invoice.amount_paid / 100, invoice.currency);
 }
 
 /**
  * 請求書支払い失敗時の処理
  */
 async function handleInvoicePaymentFailed(invoice: StripeInvoiceWithSubscription) {
+  console.log('[Stripe Webhook] Processing invoice.payment_failed:', invoice.id);
+
   const subscriptionId = invoice.subscription as string;
-  if (!subscriptionId) return;
+  const customerId = invoice.customer as string;
 
-  const user = await prisma.user.findFirst({
-    where: { stripeSubscriptionId: subscriptionId },
-  });
-
-  if (!user) {
-    console.error('[Stripe Webhook] User not found for subscription:', subscriptionId);
+  if (!subscriptionId) {
+    console.log('[Stripe Webhook] No subscription ID in invoice, skipping');
     return;
   }
 
+  // まずstripeCustomerIdで検索（より確実）
+  let user = await prisma.user.findFirst({
+    where: { stripeCustomerId: customerId },
+  });
+
+  // 見つからなければstripeSubscriptionIdで検索（フォールバック）
+  if (!user) {
+    console.log('[Stripe Webhook] User not found by customerId, trying subscriptionId');
+    user = await prisma.user.findFirst({
+      where: { stripeSubscriptionId: subscriptionId },
+    });
+  }
+
+  if (!user) {
+    console.error('[Stripe Webhook] User not found for customer:', customerId, 'or subscription:', subscriptionId);
+    return;
+  }
+
+  console.log('[Stripe Webhook] Found user:', user.email);
+
   // Payment記録を作成（失敗）
   const lineItem = invoice.lines.data[0] as { price?: { recurring?: { interval?: string } } };
-  await prisma.payment.create({
+  const payment = await prisma.payment.create({
     data: {
       userId: user.id,
       stripePaymentIntentId: invoice.payment_intent as string || '',
@@ -344,4 +382,6 @@ async function handleInvoicePaymentFailed(invoice: StripeInvoiceWithSubscription
       plan: lineItem?.price?.recurring?.interval === 'year' ? 'yearly' : 'monthly',
     },
   });
+
+  console.log('[Stripe Webhook] Created failed payment record:', payment.id, 'Amount:', invoice.amount_due / 100, invoice.currency);
 }
