@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
+import { useSession } from 'next-auth/react';
 import { Layout } from '@/components/Layout';
 import { Icon } from '@/components/Icon';
 import { getAllShots, deleteShot, getShot, type Shot } from '@/lib/db';
@@ -12,12 +13,16 @@ import { getSlopeDisplayName } from '@/lib/sensors/gyro';
  */
 export default function RoundHistoryPage() {
   const router = useRouter();
+  const { data: session } = useSession();
   const [shots, setShots] = useState<Shot[]>([]);
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [roundDates, setRoundDates] = useState<Set<string>>(new Set());
   const [selectedShots, setSelectedShots] = useState<Shot[]>([]);
   const [isDeleting, setIsDeleting] = useState(false);
+
+  // Check if user can delete shots (not trial users)
+  const canDeleteShots = session?.user?.subscriptionStatus !== 'trial';
 
   // Get shots for selected date
   const getShotsForDate = useCallback((dateStr: string) => {
@@ -305,14 +310,16 @@ export default function RoundHistoryPage() {
                           >
                             <Icon category="ui" name="edit" size={20} />
                           </button>
-                          <button
-                            onClick={() => handleDeleteShot(shot.id!)}
-                            className="p-2 hover:bg-[var(--color-error-bg)] rounded transition-colors disabled:opacity-50"
-                            aria-label="削除"
-                            disabled={isDeleting}
-                          >
-                            <Icon category="ui" name="delete" size={20} />
-                          </button>
+                          {canDeleteShots && (
+                            <button
+                              onClick={() => handleDeleteShot(shot.id!)}
+                              className="p-2 hover:bg-[var(--color-error-bg)] rounded transition-colors disabled:opacity-50"
+                              aria-label="削除"
+                              disabled={isDeleting}
+                            >
+                              <Icon category="ui" name="delete" size={20} />
+                            </button>
+                          )}
                         </div>
                       </div>
                     </div>
