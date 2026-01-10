@@ -1,5 +1,5 @@
 // lib/auth/ip-restriction.ts
-import { prisma } from '@/lib/prisma';
+import { prisma } from '@/lib/db/prisma';
 
 interface IpCheckResult {
   allowed: boolean;

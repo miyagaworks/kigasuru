@@ -4,7 +4,7 @@ import Credentials from 'next-auth/providers/credentials';
 import Google from 'next-auth/providers/google';
 import { LoginSchema } from '@/lib/auth/schemas';
 import bcrypt from 'bcryptjs';
-import { prisma } from '@/lib/prisma';
+import { prisma } from '@/lib/db/prisma';
 import { checkLoginAttempts, recordLoginAttempt } from '@/lib/auth/login-attempt';
 import { recordLoginEvent } from '@/lib/auth/login-notification';
 import { checkIpAddress } from '@/lib/auth/ip-restriction';

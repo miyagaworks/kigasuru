@@ -1,5 +1,5 @@
 // lib/auth/login-attempt.ts
-import { prisma } from '@/lib/prisma';
+import { prisma } from '@/lib/db/prisma';
 
 // ログイン試行回数制限の設定
 const MAX_ATTEMPTS = 5; // 最大試行回数

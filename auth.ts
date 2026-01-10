@@ -1,7 +1,7 @@
 // auth.ts
 import NextAuth from 'next-auth';
 import authConfig from './auth.config';
-import { prisma } from '@/lib/prisma';
+import { prisma } from '@/lib/db/prisma';
 import type { DefaultSession } from 'next-auth';
 import { cookies } from 'next/headers';
 

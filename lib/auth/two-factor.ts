@@ -2,7 +2,7 @@
 import speakeasy from 'speakeasy';
 import QRCode from 'qrcode';
 import crypto from 'crypto';
-import { prisma } from '@/lib/prisma';
+import { prisma } from '@/lib/db/prisma';
 
 // 暗号化のための秘密鍵（環境変数から取得）
 const ENCRYPTION_KEY = process.env.TOTP_ENCRYPTION_KEY || 'default-encryption-key-change-this-in-production';

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import Stripe from 'stripe';
 import { auth } from '@/auth';
-import { prisma } from '@/lib/prisma';
+import { prisma } from '@/lib/db/prisma';
 import { isAdmin } from '@/lib/admin';
 import { calculateRefund } from '@/lib/refund-calculator';
 import { sendEmail } from '@/lib/email';

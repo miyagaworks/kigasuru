@@ -1,5 +1,5 @@
 // lib/auth/login-notification.ts
-import { prisma } from '@/lib/prisma';
+import { prisma } from '@/lib/db/prisma';
 import { sendEmail } from '@/lib/email';
 
 interface LoginEventData {
