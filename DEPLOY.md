@@ -5,7 +5,7 @@
 ## 前提条件
 
 - Vercelアカウント
-- Supabase PostgreSQLデータベース
+- Neon PostgreSQLデータベース
 - Google Cloud Console（Google OAuth用）
 - LINE Developers（LINE Login用）
 - Stripeアカウント
@@ -18,8 +18,8 @@ Vercelプロジェクトの設定画面から以下の環境変数を設定し�
 ### データベース
 
 ```
-DATABASE_URL=postgresql://USER:PASSWORD@HOST:PORT/DATABASE?pgbouncer=true
-DIRECT_URL=postgresql://USER:PASSWORD@HOST:PORT/DATABASE
+DATABASE_URL=postgresql://USER:PASSWORD@HOST/DATABASE?sslmode=require
+DIRECT_URL=postgresql://USER:PASSWORD@HOST/DATABASE?sslmode=require
 ```
 
 ### NextAuth
@@ -143,7 +143,7 @@ npx prisma db push
 ### データベース接続エラー
 
 - `DATABASE_URL`と`DIRECT_URL`が正しいか確認
-- Supabaseの接続プールが有効か確認
+- Neonの接続プールが有効か確認
 
 ### Stripe Webhookエラー
 
