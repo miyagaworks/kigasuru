@@ -3,6 +3,20 @@ import Stripe from 'stripe';
 import { auth } from '@/auth';
 import { prisma } from '@/lib/db/prisma';
 
+// Get base URL for Stripe redirects
+function getBaseUrl(): string {
+  // Prefer NEXTAUTH_URL if set with proper scheme
+  if (process.env.NEXTAUTH_URL && process.env.NEXTAUTH_URL.startsWith('http')) {
+    return process.env.NEXTAUTH_URL;
+  }
+  // Fallback to VERCEL_URL (used on Vercel deployments)
+  if (process.env.VERCEL_URL) {
+    return `https://${process.env.VERCEL_URL}`;
+  }
+  // Development fallback
+  return 'http://localhost:3000';
+}
+
 // ビルド時に環境変数がない場合はダミー値を使用
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || 'sk_test_dummy-key-for-build', {
   apiVersion: '2025-09-30.clover',
@@ -87,6 +101,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Checkout Sessionを作成
+    const baseUrl = getBaseUrl();
     const checkoutSession = await stripe.checkout.sessions.create({
       customer: customerId,
       mode,
@@ -97,8 +112,8 @@ export async function POST(req: NextRequest) {
           quantity: 1,
         },
       ],
-      success_url: `${process.env.NEXTAUTH_URL}/subscription/success?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${process.env.NEXTAUTH_URL}/subscription`,
+      success_url: `${baseUrl}/subscription/success?session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${baseUrl}/subscription`,
       metadata,
       automatic_tax: {
         enabled: true,
