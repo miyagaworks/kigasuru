@@ -9,7 +9,11 @@ function getBaseUrl(): string {
   if (process.env.NEXTAUTH_URL && process.env.NEXTAUTH_URL.startsWith('http')) {
     return process.env.NEXTAUTH_URL;
   }
-  // Fallback to VERCEL_URL (used on Vercel deployments)
+  // Production environment on Vercel - always use production domain
+  if (process.env.VERCEL_ENV === 'production') {
+    return 'https://app.kigasuru.com';
+  }
+  // Preview deployments - use the preview URL
   if (process.env.VERCEL_URL) {
     return `https://${process.env.VERCEL_URL}`;
   }
