@@ -197,7 +197,7 @@ export default function TransactionsPage() {
           </div>
 
           <p className="text-gray-500 text-sm mt-6">
-            &copy; 2025 Senrigan Inc. All rights reserved.
+            &copy; {new Date().getFullYear()} Senrigan Inc. All rights reserved.
           </p>
         </div>
       </footer>
