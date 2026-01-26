@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { Layout } from '@/components/Layout';
@@ -28,6 +28,17 @@ interface User {
   };
 }
 
+interface Pagination {
+  page: number;
+  limit: number;
+  total: number;
+  totalPages: number;
+  hasNext: boolean;
+  hasPrev: boolean;
+}
+
+const USERS_PER_PAGE = 20;
+
 /**
  * ユーザー管理ページ
  */
@@ -43,24 +54,28 @@ export default function AdminUsersPage() {
   const [deleteConfirmUser, setDeleteConfirmUser] = useState<User | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const [revokeUser, setRevokeUser] = useState<User | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pagination, setPagination] = useState<Pagination | null>(null);
+  const [debouncedSearch, setDebouncedSearch] = useState('');
 
+  // 検索クエリのデバウンス
   useEffect(() => {
-    if (!session) {
-      router.push('/auth/signin');
-      return;
-    }
+    const timer = setTimeout(() => {
+      setDebouncedSearch(searchQuery);
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
 
-    if (!isAdmin(session.user?.email)) {
-      router.push('/dashboard');
-      return;
-    }
-
-    loadUsers();
-  }, [session, router]);
-
-  const loadUsers = async () => {
+  const loadUsers = useCallback(async (page: number, status: string, search: string) => {
+    setIsLoading(true);
     try {
-      const response = await fetch('/api/admin/users');
+      const params = new URLSearchParams({
+        page: page.toString(),
+        limit: USERS_PER_PAGE.toString(),
+        status,
+        search,
+      });
+      const response = await fetch(`/api/admin/users?${params}`);
       if (!response.ok) {
         console.error('Failed to load users: HTTP', response.status);
         return;
@@ -76,12 +91,32 @@ export default function AdminUsersPage() {
 
       const data = await response.json();
       setUsers(data.users);
+      setPagination(data.pagination);
     } catch (error) {
       console.error('Failed to load users:', error);
     } finally {
       setIsLoading(false);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    if (!session) {
+      router.push('/auth/signin');
+      return;
+    }
+
+    if (!isAdmin(session.user?.email)) {
+      router.push('/dashboard');
+      return;
+    }
+
+    loadUsers(currentPage, filterStatus, debouncedSearch);
+  }, [session, router, currentPage, filterStatus, debouncedSearch, loadUsers]);
+
+  // フィルターや検索が変わったらページを1に戻す
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [filterStatus, debouncedSearch]);
 
   const handleGrantPermanent = async () => {
     if (!selectedUser) return;
@@ -102,16 +137,10 @@ export default function AdminUsersPage() {
 
       if (response.ok) {
         alert('永久利用権を付与しました');
-
-        // UIを即座に更新
-        setUsers(users.map(u =>
-          u.id === selectedUser.id
-            ? { ...u, subscriptionStatus: 'permanent' }
-            : u
-        ));
-
         setSelectedUser(null);
         setGrantReason('');
+        // リストを再読み込み
+        loadUsers(currentPage, filterStatus, debouncedSearch);
       } else {
         alert('永久利用権の付与に失敗しました');
       }
@@ -135,15 +164,9 @@ export default function AdminUsersPage() {
 
       if (response.ok) {
         alert('永久利用権を解除しました');
-
-        // UIを即座に更新
-        setUsers(users.map(u =>
-          u.id === revokeUser.id
-            ? { ...u, subscriptionStatus: 'expired' }
-            : u
-        ));
-
         setRevokeUser(null);
+        // リストを再読み込み
+        loadUsers(currentPage, filterStatus, debouncedSearch);
       } else {
         const data = await response.json();
         alert(data.error || '永久利用権の解除に失敗しました');
@@ -171,17 +194,15 @@ export default function AdminUsersPage() {
 
       if (response.ok) {
         alert(data.message || 'ユーザーを削除しました');
-
-        // UIを即座に更新（削除されたユーザーをリストから除去）
-        setUsers(users.filter(u => u.id !== deleteConfirmUser.id));
         setDeleteConfirmUser(null);
 
         // 削除されたユーザーが現在ログイン中の場合、強制サインアウト
         if (data.shouldSignOut && session?.user?.id === deleteConfirmUser.id) {
-          // 自分自身を削除した場合（通常は防止されているが念のため）
           window.location.href = '/auth/signin';
           return;
         }
+        // リストを再読み込み
+        loadUsers(currentPage, filterStatus, debouncedSearch);
       } else {
         alert(data.error || 'ユーザー削除に失敗しました');
       }
@@ -193,24 +214,11 @@ export default function AdminUsersPage() {
     }
   };
 
-  // フィルタリングされたユーザー一覧
-  const filteredUsers = users.filter((user) => {
-    const matchesSearch =
-      user.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      user.email.toLowerCase().includes(searchQuery.toLowerCase());
-
-    const matchesFilter =
-      filterStatus === 'all' || user.subscriptionStatus === filterStatus;
-
-    return matchesSearch && matchesFilter;
-  });
-
-  // 検索・フィルターが適用されていない場合は最新10人のみ表示
-  const displayUsers = searchQuery || filterStatus !== 'all'
-    ? filteredUsers
-    : filteredUsers.slice(0, 10);
-
-  const isLimitedView = !searchQuery && filterStatus === 'all' && filteredUsers.length > 10;
+  const handlePageChange = (newPage: number) => {
+    setCurrentPage(newPage);
+    // ページ変更時にスクロールをトップに
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
 
   if (isLoading) {
     return (
@@ -245,7 +253,7 @@ export default function AdminUsersPage() {
             </h1>
           </div>
           <div className="text-sm text-[var(--color-neutral-600)]">
-            総ユーザー数: {users.length}
+            総ユーザー数: {pagination?.total ?? 0}
           </div>
         </div>
 
@@ -286,19 +294,10 @@ export default function AdminUsersPage() {
         {/* ユーザー一覧 */}
         <div className="bg-[var(--color-card-bg)] rounded-lg shadow-md p-6">
           <h2 className="text-lg font-bold text-[var(--color-neutral-900)] mb-4">
-            ユーザー一覧 ({displayUsers.length}{isLimitedView && ` / ${filteredUsers.length}`})
+            ユーザー一覧 ({users.length}件{pagination && ` / 全${pagination.total}件`})
           </h2>
 
-          {isLimitedView && (
-            <div className="mb-4 bg-[var(--color-info-border)] border border-[var(--color-secondary-blue)] rounded-lg p-3">
-              <p className="text-sm text-[var(--color-info-text)]">
-                <Icon category="ui" name="info" size={16} className="inline mr-1" style={{ filter: 'invert(23%) sepia(29%) saturate(1825%) hue-rotate(185deg) brightness(95%) contrast(96%)' }} />
-                最新の10人を表示しています。他のユーザーを表示するには、検索またはステータスフィルターを使用してください。
-              </p>
-            </div>
-          )}
-
-          {displayUsers.length === 0 ? (
+          {users.length === 0 ? (
             <div className="text-center py-12">
               <Icon
                 category="ui"
@@ -307,14 +306,14 @@ export default function AdminUsersPage() {
                 className="mx-auto mb-4 opacity-30"
               />
               <p className="text-[var(--color-neutral-600)]">
-                {searchQuery || filterStatus !== "all"
+                {debouncedSearch || filterStatus !== "all"
                   ? "条件に一致するユーザーが見つかりません"
                   : "ユーザーがいません"}
               </p>
             </div>
           ) : (
-            <div className="space-y-3 max-h-[600px] overflow-y-auto">
-              {displayUsers.map((user) => (
+            <div className="space-y-3">
+              {users.map((user) => (
                 <div
                   key={user.id}
                   className="bg-[var(--color-neutral-100)] rounded-lg p-4"
@@ -481,6 +480,90 @@ export default function AdminUsersPage() {
                   )}
                 </div>
               ))}
+            </div>
+          )}
+
+          {/* ページネーション */}
+          {pagination && pagination.totalPages > 1 && (
+            <div className="mt-6 flex flex-col sm:flex-row items-center justify-between gap-4">
+              <div className="text-sm text-[var(--color-neutral-600)]">
+                ページ {pagination.page} / {pagination.totalPages}
+              </div>
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="md"
+                  onClick={() => handlePageChange(1)}
+                  disabled={!pagination.hasPrev || isLoading}
+                  className="px-3"
+                >
+                  最初
+                </Button>
+                <Button
+                  variant="outline"
+                  size="md"
+                  onClick={() => handlePageChange(pagination.page - 1)}
+                  disabled={!pagination.hasPrev || isLoading}
+                  className="px-3"
+                >
+                  <Icon category="ui" name="back" size={18} />
+                  前へ
+                </Button>
+                <div className="flex items-center gap-1">
+                  {/* ページ番号ボタン */}
+                  {Array.from({ length: pagination.totalPages }, (_, i) => i + 1)
+                    .filter((pageNum) => {
+                      // 現在のページの前後2ページ + 最初と最後のページを表示
+                      const current = pagination.page;
+                      return (
+                        pageNum === 1 ||
+                        pageNum === pagination.totalPages ||
+                        (pageNum >= current - 2 && pageNum <= current + 2)
+                      );
+                    })
+                    .map((pageNum, index, arr) => {
+                      // 省略記号を表示するか
+                      const showEllipsisBefore = index > 0 && pageNum - arr[index - 1] > 1;
+                      return (
+                        <div key={pageNum} className="flex items-center">
+                          {showEllipsisBefore && (
+                            <span className="px-2 text-[var(--color-neutral-500)]">...</span>
+                          )}
+                          <button
+                            onClick={() => handlePageChange(pageNum)}
+                            disabled={isLoading}
+                            className={`w-10 h-10 rounded-lg text-sm font-medium transition-colors ${
+                              pageNum === pagination.page
+                                ? 'bg-[var(--color-primary-green)] text-white'
+                                : 'hover:bg-[var(--color-neutral-200)] text-[var(--color-neutral-700)]'
+                            }`}
+                          >
+                            {pageNum}
+                          </button>
+                        </div>
+                      );
+                    })}
+                </div>
+                <Button
+                  variant="outline"
+                  size="md"
+                  onClick={() => handlePageChange(pagination.page + 1)}
+                  disabled={!pagination.hasNext || isLoading}
+                  className="px-3"
+                >
+                  次へ
+                  <Icon category="ui" name="forward" size={18} />
+                </Button>
+                <Button
+                  variant="outline"
+                  size="md"
+                  onClick={() => handlePageChange(pagination.totalPages)}
+                  disabled={!pagination.hasNext || isLoading}
+                  className="px-3"
+                >
+                  最後
+                </Button>
+              </div>
             </div>
           )}
         </div>

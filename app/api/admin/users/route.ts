@@ -1,15 +1,20 @@
 export const dynamic = 'force-dynamic';
 
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/auth';
 import { prisma } from '@/lib/db/prisma';
 import { isAdmin } from '@/lib/admin';
 
 /**
  * GET /api/admin/users
- * 全ユーザー一覧を取得（管理者のみ）
+ * ユーザー一覧を取得（管理者のみ）
+ * クエリパラメータ:
+ * - page: ページ番号（1から開始、デフォルト1）
+ * - limit: 1ページあたりの件数（デフォルト20）
+ * - status: ステータスフィルター（all, trial, active, permanent, expired）
+ * - search: 検索クエリ（名前またはメールアドレス）
  */
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
     const session = await auth();
 
@@ -20,8 +25,33 @@ export async function GET() {
       );
     }
 
-    // ユーザー一覧を取得
+    const { searchParams } = new URL(request.url);
+    const page = Math.max(1, parseInt(searchParams.get('page') || '1', 10));
+    const limit = Math.min(100, Math.max(1, parseInt(searchParams.get('limit') || '20', 10)));
+    const status = searchParams.get('status') || 'all';
+    const search = searchParams.get('search') || '';
+
+    // フィルター条件を構築
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const where: any = {};
+
+    if (status !== 'all') {
+      where.subscriptionStatus = status;
+    }
+
+    if (search) {
+      where.OR = [
+        { name: { contains: search, mode: 'insensitive' } },
+        { email: { contains: search, mode: 'insensitive' } },
+      ];
+    }
+
+    // 総件数を取得
+    const total = await prisma.user.count({ where });
+
+    // ページネーションでユーザー一覧を取得
     const users = await prisma.user.findMany({
+      where,
       select: {
         id: true,
         name: true,
@@ -50,6 +80,8 @@ export async function GET() {
       orderBy: {
         createdAt: 'desc',
       },
+      skip: (page - 1) * limit,
+      take: limit,
     });
 
     // 各ユーザーのトライアル使用日数を計算
@@ -78,10 +110,19 @@ export async function GET() {
       };
     });
 
+    const totalPages = Math.ceil(total / limit);
+
     return NextResponse.json({
       success: true,
       users: usersWithTrialUsage,
-      total: usersWithTrialUsage.length,
+      pagination: {
+        page,
+        limit,
+        total,
+        totalPages,
+        hasNext: page < totalPages,
+        hasPrev: page > 1,
+      },
     });
   } catch (error) {
     console.error('[Admin Users API] Error:', error);
