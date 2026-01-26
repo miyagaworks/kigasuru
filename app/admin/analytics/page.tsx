@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { Layout } from '@/components/Layout';
@@ -25,14 +25,6 @@ interface Subscription {
   endDate: Date | null;
 }
 
-interface Payment {
-  id: string;
-  amount: number;
-  status: string;
-  plan: string | null;
-  createdAt: Date;
-}
-
 interface UserAnalytics {
   id: string;
   name: string | null;
@@ -50,8 +42,21 @@ interface UserAnalytics {
   };
   shots: Shot[];
   subscriptions: Subscription[];
-  payments?: Payment[];
 }
+
+interface Pagination {
+  page: number;
+  limit: number;
+  total: number;
+  totalPages: number;
+  hasNext: boolean;
+  hasPrev: boolean;
+}
+
+const USERS_PER_PAGE = 20;
+
+type SortField = 'shots' | 'subscriptions' | 'payments' | 'createdAt';
+type SortOrder = 'asc' | 'desc';
 
 /**
  * 使用状況分析ページ
@@ -59,12 +64,47 @@ interface UserAnalytics {
 export default function AdminAnalyticsPage() {
   const { data: session } = useSession();
   const router = useRouter();
-  const [recentUsers, setRecentUsers] = useState<UserAnalytics[]>([]);
-  const [searchedUser, setSearchedUser] = useState<UserAnalytics | null>(null);
+  const [users, setUsers] = useState<UserAnalytics[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState<{ id: string; name: string | null; email: string } | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pagination, setPagination] = useState<Pagination | null>(null);
+  const [sortBy, setSortBy] = useState<SortField>('createdAt');
+  const [sortOrder, setSortOrder] = useState<SortOrder>('desc');
+
+  // 検索クエリのデバウンス
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(searchQuery);
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
+
+  const loadData = useCallback(async (page: number, search: string, sort: SortField, order: SortOrder) => {
+    setIsLoading(true);
+    try {
+      const params = new URLSearchParams({
+        page: page.toString(),
+        limit: USERS_PER_PAGE.toString(),
+        search,
+        sortBy: sort,
+        sortOrder: order,
+      });
+      const response = await fetch(`/api/admin/analytics?${params}`);
+      if (response.ok) {
+        const data = await response.json();
+        setUsers(data.users);
+        setPagination(data.pagination);
+      }
+    } catch (error) {
+      console.error('Failed to load analytics:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
 
   useEffect(() => {
     if (!session) {
@@ -77,53 +117,28 @@ export default function AdminAnalyticsPage() {
       return;
     }
 
-    loadData();
-  }, [session, router]);
+    loadData(currentPage, debouncedSearch, sortBy, sortOrder);
+  }, [session, router, currentPage, debouncedSearch, sortBy, sortOrder, loadData]);
 
-  const loadData = async () => {
-    try {
-      const response = await fetch('/api/admin/analytics');
-      if (response.ok) {
-        const data = await response.json();
-        setRecentUsers(data.recentUsers);
-      }
-    } catch (error) {
-      console.error('Failed to load analytics:', error);
-    } finally {
-      setIsLoading(false);
-    }
+  // フィルターや検索が変わったらページを1に戻す
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [debouncedSearch, sortBy, sortOrder]);
+
+  const handlePageChange = (newPage: number) => {
+    setCurrentPage(newPage);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  // 検索処理（リアルタイム検索）
-  useEffect(() => {
-    const searchUser = async () => {
-      if (!searchQuery.trim()) {
-        setSearchedUser(null);
-        return;
-      }
-
-      try {
-        const response = await fetch(`/api/admin/analytics?email=${encodeURIComponent(searchQuery)}`);
-        if (response.ok) {
-          const data = await response.json();
-          setSearchedUser(data.searchedUser);
-        } else {
-          console.error('Search error');
-          setSearchedUser(null);
-        }
-      } catch (error) {
-        console.error('Failed to search user:', error);
-        setSearchedUser(null);
-      }
-    };
-
-    // デバウンス処理
-    const timeoutId = setTimeout(() => {
-      searchUser();
-    }, 300);
-
-    return () => clearTimeout(timeoutId);
-  }, [searchQuery]);
+  const handleSortChange = (field: SortField) => {
+    if (sortBy === field) {
+      // 同じフィールドの場合は順序を反転
+      setSortOrder(sortOrder === 'desc' ? 'asc' : 'desc');
+    } else {
+      setSortBy(field);
+      setSortOrder('desc');
+    }
+  };
 
   const handleOpenDetailModal = (user: UserAnalytics) => {
     setSelectedUser({
@@ -139,10 +154,10 @@ export default function AdminAnalyticsPage() {
     setSelectedUser(null);
   };
 
-  const renderUserCard = (user: UserAnalytics, isSearchResult = false) => (
+  const renderUserCard = (user: UserAnalytics) => (
     <div
       key={user.id}
-      className={`bg-[var(--color-card-bg)] rounded-lg shadow-md p-6 ${isSearchResult ? 'border-2 border-[var(--color-primary-green)]' : ''}`}
+      className="bg-[var(--color-card-bg)] rounded-lg shadow-md p-6"
     >
       {/* ユーザー情報 */}
       <div className="flex items-start justify-between mb-4">
@@ -255,48 +270,6 @@ export default function AdminAnalyticsPage() {
         </div>
       )}
 
-      {/* 支払い履歴（検索結果の場合のみ表示） */}
-      {isSearchResult && user.payments && user.payments.length > 0 && (
-        <div className="mb-4">
-          <h4 className="text-sm font-bold text-[var(--color-neutral-900)] mb-2 flex items-center gap-1">
-            <svg
-              className="w-4 h-4 text-[var(--color-secondary-orange)]"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"
-              />
-            </svg>
-            支払い履歴
-          </h4>
-          <div className="space-y-2">
-            {user.payments.map((payment) => (
-              <div
-                key={payment.id}
-                className="bg-[var(--color-neutral-100)] rounded-lg p-3 flex justify-between items-center"
-              >
-                <div className="flex items-center gap-2">
-                  <span className="text-base font-bold text-[var(--color-secondary-orange)]">
-                    ¥{payment.amount.toLocaleString()}
-                  </span>
-                  <span className="text-sm text-[var(--color-neutral-600)]">
-                    {payment.plan || '不明'}
-                  </span>
-                </div>
-                <span className="text-xs text-[var(--color-neutral-500)]">
-                  {new Date(payment.createdAt).toLocaleDateString('ja-JP')}
-                </span>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
       {/* 詳細ボタン */}
       <Button
         variant="outline"
@@ -348,38 +321,62 @@ export default function AdminAnalyticsPage() {
           </h1>
         </div>
 
-        {/* 検索フォーム */}
+        {/* 検索・ソートフォーム */}
         <div className="bg-[var(--color-card-bg)] rounded-lg shadow-md p-4 mb-6">
-          <div>
-            <label className="block text-sm font-medium text-[var(--color-neutral-700)] mb-2">
-              検索
-            </label>
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="名前またはメールアドレスで検索"
-              className="w-full px-4 py-3 border-2 border-[var(--color-neutral-300)] rounded-lg focus:border-[var(--color-primary-green)] focus:outline-none"
-            />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-[var(--color-neutral-700)] mb-2">
+                検索
+              </label>
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="名前またはメールアドレスで検索"
+                className="w-full px-4 py-3 border-2 border-[var(--color-neutral-300)] rounded-lg focus:border-[var(--color-primary-green)] focus:outline-none"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-[var(--color-neutral-700)] mb-2">
+                並べ替え
+              </label>
+              <div className="flex gap-2 flex-wrap">
+                {[
+                  { field: 'shots' as SortField, label: 'ショット数' },
+                  { field: 'subscriptions' as SortField, label: 'サブスク' },
+                  { field: 'payments' as SortField, label: '支払い' },
+                  { field: 'createdAt' as SortField, label: '登録日' },
+                ].map(({ field, label }) => (
+                  <button
+                    key={field}
+                    onClick={() => handleSortChange(field)}
+                    className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-1 ${
+                      sortBy === field
+                        ? 'bg-[var(--color-primary-green)] text-white'
+                        : 'bg-[var(--color-neutral-200)] text-[var(--color-neutral-700)] hover:bg-[var(--color-neutral-300)]'
+                    }`}
+                  >
+                    {label}
+                    {sortBy === field && (
+                      <span className="text-xs">
+                        {sortOrder === 'desc' ? '↓' : '↑'}
+                      </span>
+                    )}
+                  </button>
+                ))}
+              </div>
+            </div>
           </div>
         </div>
 
-        {/* 検索結果 */}
-        {searchedUser && (
-          <div className="mb-6">
-            <h2 className="text-lg font-bold text-[var(--color-neutral-900)] mb-4">
-              検索結果
-            </h2>
-            {renderUserCard(searchedUser, true)}
-          </div>
-        )}
-
-        {/* 新規ユーザー10人 */}
+        {/* ユーザー一覧 */}
         <div>
-          <h2 className="text-lg font-bold text-[var(--color-neutral-900)] mb-4">
-            新規ユーザー（最新10人）
-          </h2>
-          {recentUsers.length === 0 ? (
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-4 gap-2">
+            <h2 className="text-lg font-bold text-[var(--color-neutral-900)]">
+              ユーザー一覧 ({users.length}件{pagination && ` / 全${pagination.total}件`})
+            </h2>
+          </div>
+          {users.length === 0 ? (
             <div className="bg-[var(--color-card-bg)] rounded-lg shadow-md p-12 text-center">
               <Icon
                 category="ui"
@@ -387,12 +384,99 @@ export default function AdminAnalyticsPage() {
                 size={48}
                 className="mx-auto mb-4 opacity-30"
               />
-              <p className="text-[var(--color-neutral-600)]">ユーザーがいません</p>
+              <p className="text-[var(--color-neutral-600)]">
+                {debouncedSearch
+                  ? '条件に一致するユーザーが見つかりません'
+                  : 'ユーザーがいません'}
+              </p>
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {recentUsers.map((user) => renderUserCard(user))}
-            </div>
+            <>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {users.map((user) => renderUserCard(user))}
+              </div>
+
+              {/* ページネーション */}
+              {pagination && pagination.totalPages > 1 && (
+                <div className="mt-6 flex flex-col sm:flex-row items-center justify-between gap-4">
+                  <div className="text-sm text-[var(--color-neutral-600)]">
+                    ページ {pagination.page} / {pagination.totalPages}
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      variant="outline"
+                      size="md"
+                      onClick={() => handlePageChange(1)}
+                      disabled={!pagination.hasPrev || isLoading}
+                      className="px-3"
+                    >
+                      最初
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="md"
+                      onClick={() => handlePageChange(pagination.page - 1)}
+                      disabled={!pagination.hasPrev || isLoading}
+                      className="px-3"
+                    >
+                      <Icon category="ui" name="back" size={18} />
+                      前へ
+                    </Button>
+                    <div className="flex items-center gap-1">
+                      {Array.from({ length: pagination.totalPages }, (_, i) => i + 1)
+                        .filter((pageNum) => {
+                          const current = pagination.page;
+                          return (
+                            pageNum === 1 ||
+                            pageNum === pagination.totalPages ||
+                            (pageNum >= current - 2 && pageNum <= current + 2)
+                          );
+                        })
+                        .map((pageNum, index, arr) => {
+                          const showEllipsisBefore = index > 0 && pageNum - arr[index - 1] > 1;
+                          return (
+                            <div key={pageNum} className="flex items-center">
+                              {showEllipsisBefore && (
+                                <span className="px-2 text-[var(--color-neutral-500)]">...</span>
+                              )}
+                              <button
+                                onClick={() => handlePageChange(pageNum)}
+                                disabled={isLoading}
+                                className={`w-10 h-10 rounded-lg text-sm font-medium transition-colors ${
+                                  pageNum === pagination.page
+                                    ? 'bg-[var(--color-primary-green)] text-white'
+                                    : 'hover:bg-[var(--color-neutral-200)] text-[var(--color-neutral-700)]'
+                                }`}
+                              >
+                                {pageNum}
+                              </button>
+                            </div>
+                          );
+                        })}
+                    </div>
+                    <Button
+                      variant="outline"
+                      size="md"
+                      onClick={() => handlePageChange(pagination.page + 1)}
+                      disabled={!pagination.hasNext || isLoading}
+                      className="px-3"
+                    >
+                      次へ
+                      <Icon category="ui" name="forward" size={18} />
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="md"
+                      onClick={() => handlePageChange(pagination.totalPages)}
+                      disabled={!pagination.hasNext || isLoading}
+                      className="px-3"
+                    >
+                      最後
+                    </Button>
+                  </div>
+                </div>
+              )}
+            </>
           )}
         </div>
 

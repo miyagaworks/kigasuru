@@ -8,6 +8,13 @@ import { isAdmin } from '@/lib/admin';
 /**
  * GET /api/admin/analytics
  * ユーザーごとの使用状況を取得（管理者のみ）
+ * クエリパラメータ:
+ * - page: ページ番号（1から開始、デフォルト1）
+ * - limit: 1ページあたりの件数（デフォルト20）
+ * - search: 検索クエリ（名前またはメールアドレス）
+ * - sortBy: ソート対象（shots, subscriptions, payments, createdAt）
+ * - sortOrder: ソート順（asc, desc）
+ * - detailUserId: 詳細統計を取得するユーザーID
  */
 export async function GET(request: Request) {
   try {
@@ -21,16 +28,48 @@ export async function GET(request: Request) {
     }
 
     const { searchParams } = new URL(request.url);
-    const searchQuery = searchParams.get('email'); // 'email'パラメータだが、名前とメールの両方で検索
-    const userId = searchParams.get('userId');
-    const detailUserId = searchParams.get('detailUserId'); // 詳細統計を取得するユーザーID
+    const page = Math.max(1, parseInt(searchParams.get('page') || '1', 10));
+    const limit = Math.min(100, Math.max(1, parseInt(searchParams.get('limit') || '20', 10)));
+    const search = searchParams.get('search') || '';
+    const sortBy = searchParams.get('sortBy') || 'createdAt';
+    const sortOrder = searchParams.get('sortOrder') || 'desc';
+    const detailUserId = searchParams.get('detailUserId');
 
-    // 新規ユーザー10人を取得
-    const recentUsers = await prisma.user.findMany({
-      take: 10,
-      orderBy: {
-        createdAt: 'desc',
-      },
+    // フィルター条件を構築
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const where: any = {};
+
+    if (search) {
+      where.OR = [
+        { name: { contains: search, mode: 'insensitive' } },
+        { email: { contains: search, mode: 'insensitive' } },
+      ];
+    }
+
+    // 総件数を取得
+    const total = await prisma.user.count({ where });
+
+    // ソート条件を構築
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    let orderBy: any;
+    if (sortBy === 'shots' || sortBy === 'subscriptions' || sortBy === 'payments') {
+      orderBy = {
+        [sortBy]: {
+          _count: sortOrder,
+        },
+      };
+    } else {
+      orderBy = {
+        [sortBy]: sortOrder,
+      };
+    }
+
+    // ページネーションでユーザー一覧を取得
+    const users = await prisma.user.findMany({
+      where,
+      skip: (page - 1) * limit,
+      take: limit,
+      orderBy,
       include: {
         _count: {
           select: {
@@ -67,79 +106,7 @@ export async function GET(request: Request) {
       },
     });
 
-    // 検索されたユーザーを取得
-    let searchedUser = null;
-    if (searchQuery || userId) {
-      searchedUser = await prisma.user.findFirst({
-        where: searchQuery
-          ? {
-              OR: [
-                {
-                  email: {
-                    contains: searchQuery,
-                    mode: 'insensitive' as const,
-                  },
-                },
-                {
-                  name: {
-                    contains: searchQuery,
-                    mode: 'insensitive' as const,
-                  },
-                },
-              ],
-            }
-          : userId
-            ? { id: userId }
-            : undefined,
-        include: {
-          _count: {
-            select: {
-              shots: true,
-              subscriptions: true,
-              payments: true,
-            },
-          },
-          shots: {
-            select: {
-              id: true,
-              date: true,
-              club: true,
-              distance: true,
-              result: true,
-              createdAt: true,
-            },
-            orderBy: {
-              createdAt: 'desc',
-            },
-            take: 20,
-          },
-          subscriptions: {
-            select: {
-              id: true,
-              plan: true,
-              status: true,
-              startDate: true,
-              endDate: true,
-            },
-            orderBy: {
-              startDate: 'desc',
-            },
-          },
-          payments: {
-            select: {
-              id: true,
-              amount: true,
-              status: true,
-              plan: true,
-              createdAt: true,
-            },
-            orderBy: {
-              createdAt: 'desc',
-            },
-          },
-        },
-      });
-    }
+    const totalPages = Math.ceil(total / limit);
 
     // 詳細統計を取得
     let detailedStats = null;
@@ -245,8 +212,15 @@ export async function GET(request: Request) {
 
     return NextResponse.json({
       success: true,
-      recentUsers,
-      searchedUser,
+      users,
+      pagination: {
+        page,
+        limit,
+        total,
+        totalPages,
+        hasNext: page < totalPages,
+        hasPrev: page > 1,
+      },
       detailedStats,
     });
   } catch (error) {
