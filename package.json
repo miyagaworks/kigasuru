@@ -35,7 +35,7 @@
     "react": "^19.1.2",
     "react-dom": "^19.1.2",
     "react-hot-toast": "^2.6.0",
-    "resend": "^6.1.2",
+    "resend": "^6.3.0",
     "speakeasy": "^2.0.0",
     "stripe": "^19.1.0",
     "tailwind-merge": "^3.3.1",
