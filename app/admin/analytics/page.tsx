@@ -418,7 +418,7 @@ export default function AdminAnalyticsPage() {
                       size="md"
                       onClick={() => handlePageChange(pagination.page - 1)}
                       disabled={!pagination.hasPrev || isLoading}
-                      className="px-3"
+                      className="px-5 flex items-center justify-center gap-1"
                     >
                       <IoMdArrowRoundBack size={18} />
                       前へ
@@ -460,7 +460,7 @@ export default function AdminAnalyticsPage() {
                       size="md"
                       onClick={() => handlePageChange(pagination.page + 1)}
                       disabled={!pagination.hasNext || isLoading}
-                      className="px-3"
+                      className="px-5 flex items-center justify-center gap-1"
                     >
                       次へ
                       <IoMdArrowRoundForward size={18} />
