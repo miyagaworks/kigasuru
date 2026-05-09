@@ -7,6 +7,7 @@ import { Layout } from '@/components/Layout';
 import { Icon } from '@/components/Icon';
 import { isAdmin } from '@/lib/admin';
 import { calculateRefund } from '@/lib/refund-calculator';
+import { IoMdArrowRoundBack } from 'react-icons/io';
 
 interface CancellationRequest {
   id: string;
@@ -140,7 +141,7 @@ export default function CancellationsPage() {
               onClick={() => router.push('/admin')}
               className="p-2 hover:bg-[var(--color-neutral-200)] rounded-lg transition-colors"
             >
-              <Icon category="ui" name="back" size={24} />
+              <IoMdArrowRoundBack size={24} />
             </button>
             <h1 className="text-xl sm:text-2xl font-bold text-[var(--color-neutral-900)] flex items-center gap-2">
               <Icon category="ui" name="delete" size={28} />

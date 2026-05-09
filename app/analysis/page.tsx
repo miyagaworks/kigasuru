@@ -8,6 +8,7 @@ import { Layout } from '@/components/Layout';
 import { Button } from '@/components/Button';
 import { Icon } from '@/components/Icon';
 import { getAllShots, getSetting, type Shot } from '@/lib/db';
+import { IoMdArrowRoundBack } from 'react-icons/io';
 
 const DEFAULT_CLUBS = ['DR', '3W', '5W', '7W', '4U', '5U', '5I', '6I', '7I', '8I', '9I', 'PW', '50', '52', '54', '56', '58'];
 
@@ -351,7 +352,7 @@ function AnalysisContent() {
               }}
               className="w-full mb-4 px-4 py-3 bg-[var(--color-secondary-blue)] text-white font-bold rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center gap-2"
             >
-              <Icon category="ui" name="back" size={20} style={{ filter: "brightness(0) invert(1)" }} />
+              <IoMdArrowRoundBack size={20} color="white" />
               <span>全期間のデータを表示</span>
             </button>
 

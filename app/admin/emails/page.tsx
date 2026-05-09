@@ -6,6 +6,7 @@ import { useSession } from 'next-auth/react';
 import { Layout } from '@/components/Layout';
 import { Icon } from '@/components/Icon';
 import { isAdmin } from '@/lib/admin';
+import { IoMdArrowRoundBack } from 'react-icons/io';
 
 interface EmailCampaign {
   id: string;
@@ -197,7 +198,7 @@ export default function EmailsPage() {
               onClick={() => router.push('/admin')}
               className="p-2 hover:bg-[var(--color-neutral-200)] rounded-lg transition-colors"
             >
-              <Icon category="ui" name="back" size={24} />
+              <IoMdArrowRoundBack size={24} />
             </button>
             <h1 className="text-xl sm:text-2xl font-bold text-[var(--color-neutral-900)] flex items-center gap-2">
               <Icon category="ui" name="edit" size={28} />

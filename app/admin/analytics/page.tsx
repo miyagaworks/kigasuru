@@ -8,6 +8,7 @@ import { Button } from '@/components/Button';
 import { Icon } from '@/components/Icon';
 import { isAdmin } from '@/lib/admin';
 import { UserDetailModal } from '@/components/UserDetailModal';
+import { IoMdArrowRoundForward, IoMdArrowRoundBack } from 'react-icons/io';
 
 interface Shot {
   id: string;
@@ -313,7 +314,7 @@ export default function AdminAnalyticsPage() {
             onClick={() => router.push('/admin')}
             className="p-2 hover:bg-[var(--color-neutral-200)] rounded-lg transition-colors"
           >
-            <Icon category="ui" name="back" size={24} />
+            <IoMdArrowRoundBack size={24} />
           </button>
           <h1 className="text-xl sm:text-2xl font-bold text-[var(--color-neutral-900)] flex items-center gap-2">
             <Icon category="ui" name="analysis" size={28} />
@@ -419,7 +420,7 @@ export default function AdminAnalyticsPage() {
                       disabled={!pagination.hasPrev || isLoading}
                       className="px-3"
                     >
-                      <Icon category="ui" name="back" size={18} />
+                      <IoMdArrowRoundBack size={18} />
                       前へ
                     </Button>
                     <div className="flex items-center gap-1">
@@ -462,7 +463,7 @@ export default function AdminAnalyticsPage() {
                       className="px-3"
                     >
                       次へ
-                      <Icon category="ui" name="forward" size={18} />
+                      <IoMdArrowRoundForward size={18} />
                     </Button>
                     <Button
                       variant="outline"

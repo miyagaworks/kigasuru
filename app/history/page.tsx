@@ -7,6 +7,7 @@ import { Layout } from '@/components/Layout';
 import { Icon } from '@/components/Icon';
 import { getAllShots, deleteShot, getShot, type Shot } from '@/lib/db';
 import { getSlopeDisplayName } from '@/lib/sensors/gyro';
+import { IoMdArrowRoundForward, IoMdArrowRoundBack } from 'react-icons/io';
 
 /**
  * Round History page - Calendar-based shot history viewer
@@ -226,7 +227,7 @@ export default function RoundHistoryPage() {
               onClick={() => setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() - 1))}
               className="p-2 hover:bg-[var(--color-neutral-100)] rounded transition-colors"
             >
-              <Icon category="ui" name="back" size={20} />
+              <IoMdArrowRoundBack size={20} />
             </button>
             <h2 className="text-lg font-bold text-[var(--color-neutral-900)]">
               {currentMonth.getFullYear()}年 {currentMonth.getMonth() + 1}月
@@ -235,7 +236,7 @@ export default function RoundHistoryPage() {
               onClick={() => setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1))}
               className="p-2 hover:bg-[var(--color-neutral-100)] rounded transition-colors"
             >
-              <Icon category="ui" name="next" size={20} />
+              <IoMdArrowRoundForward size={20} />
             </button>
           </div>
 
