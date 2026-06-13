@@ -22,6 +22,20 @@ export function formatDate(date: Date | string): string {
 }
 
 /**
+ * 2つのタイムスタンプ（ミリ秒）がローカルタイムで同一カレンダー日かを判定する。
+ * 無効値（undefined/NaN）が渡された場合は false を返す（呼び出し側は再取得にフォールバックする）。
+ */
+export function isSameLocalDay(a: number, b: number): boolean {
+  const da = new Date(a);
+  const db = new Date(b);
+  return (
+    da.getFullYear() === db.getFullYear() &&
+    da.getMonth() === db.getMonth() &&
+    da.getDate() === db.getDate()
+  );
+}
+
+/**
  * Returns initials from a name
  */
 export function getInitials(name: string): string {

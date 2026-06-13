@@ -11,6 +11,7 @@ import { useLocation as useGeoLocation } from '@/hooks/useLocation';
 import { addShot, getSetting, saveSetting, getShot, updateShot, getAllShots, getTodayManualLocationShots, updateLocationForShots, type Shot } from '@/lib/db';
 import { getSlopeDisplayName } from '@/lib/sensors/gyro';
 import { getWeather, getLocationName } from '@/lib/utils/weather';
+import { isSameLocalDay } from '@/lib/utils';
 import { toast } from 'react-hot-toast';
 
 const DEFAULT_CLUBS = ['DR', '3W', '5W', '7W', '4U', '5U', '5I', '6I', '7I', '8I', '9I', 'PW', '50', '52', '54', '56', '58'];
@@ -400,7 +401,7 @@ function RecordContent() {
           timestamp: number;
         }>('lastLocationData', null);
 
-        if (savedData) {
+        if (savedData && isSameLocalDay(savedData.timestamp, Date.now())) {
           // Use saved data
           updateCurrentShot('temperature', savedData.temperature);
           updateCurrentShot('golfCourse', savedData.golfCourse);
