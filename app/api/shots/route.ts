@@ -3,6 +3,7 @@ export const fetchCache = 'force-no-store';
 export const revalidate = 0;
 
 import { NextRequest, NextResponse } from 'next/server';
+import { Prisma, type Shot } from '@prisma/client';
 import { auth } from '@/auth';
 import { prisma } from '@/lib/db/prisma';
 
@@ -16,11 +17,16 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: '認証が必要です' }, { status: 401 });
     }
 
+    const userId = session.user.id;
+
     const body = await req.json();
     const {
       date,
       club,
       distance,
+      clientId,
+      roundId,
+      holeNumber,
       slope,
       lie,
       strength,
@@ -37,39 +43,87 @@ export async function POST(req: NextRequest) {
       manualLocation,
     } = body;
 
-    // 必須フィールドのバリデーション
-    if (!date || !club || distance === undefined || distance === null) {
+    // 必須フィールドのバリデーション（distance は任意・null 許容）
+    if (!date || !club) {
       return NextResponse.json(
-        { error: 'date, club, distance は必須です' },
+        { error: 'date, club は必須です' },
         { status: 400 }
       );
     }
 
-    // ショットデータを保存
-    const shot = await prisma.shot.create({
-      data: {
-        userId: session.user.id,
-        date: new Date(date),
-        club,
-        distance: parseInt(String(distance)),
-        slope: slope || null,
-        lie: lie || null,
-        strength: strength || null,
-        wind: wind || null,
-        temperature: temperature || null,
-        result: result || null,
-        feeling: feeling || null,
-        memo: memo || '',
-        golfCourse: golfCourse || null,
-        latitude: latitude ? parseFloat(String(latitude)) : null,
-        longitude: longitude ? parseFloat(String(longitude)) : null,
-        actualTemperature: actualTemperature ? parseFloat(String(actualTemperature)) : null,
-        missType: missType || null,
-        manualLocation: manualLocation || false,
-      },
-    });
+    // distance: null 許容 ＋ NaN ガード（空文字等で NaN を保存しない）
+    let distanceValue: number | null =
+      distance != null ? parseInt(String(distance)) : null;
+    if (distanceValue != null && Number.isNaN(distanceValue)) {
+      distanceValue = null;
+    }
 
-    console.log(`[Shots API] Created shot ${shot.id} for user ${session.user.id}`);
+    // holeNumber: Int 変換（来なければ null）
+    const holeNumberValue =
+      holeNumber != null ? parseInt(String(holeNumber)) : null;
+
+    // 保存フィールド（userId / clientId は含めない。両分岐で使い回す）
+    const fields = {
+      date: new Date(date),
+      club,
+      distance: distanceValue,
+      slope: slope || null,
+      lie: lie || null,
+      strength: strength || null,
+      wind: wind || null,
+      temperature: temperature || null,
+      result: result || null,
+      feeling: feeling || null,
+      memo: memo || '',
+      golfCourse: golfCourse || null,
+      latitude: latitude ? parseFloat(String(latitude)) : null,
+      longitude: longitude ? parseFloat(String(longitude)) : null,
+      actualTemperature: actualTemperature
+        ? parseFloat(String(actualTemperature))
+        : null,
+      missType: missType || null,
+      manualLocation: manualLocation || false,
+      roundId: roundId ?? null,
+      holeNumber: holeNumberValue,
+    };
+
+    // clientId があれば upsert（冪等）、なければ従来 create（旧クライアント互換）
+    let shot: Shot | null = null;
+    if (clientId) {
+      try {
+        shot = await prisma.shot.upsert({
+          where: { clientId },
+          create: { userId, clientId, ...fields },
+          // ★ update に userId / clientId を含めない（所有者不変・clientId は where キー）
+          update: { ...fields },
+        });
+      } catch (error) {
+        // P2002（同一 clientId の同時リクエスト等の unique 競合）は
+        // 500 にせず、既存行を findUnique で取得して返す（§5.4 risk）
+        if (
+          error instanceof Prisma.PrismaClientKnownRequestError &&
+          error.code === 'P2002'
+        ) {
+          shot = await prisma.shot.findUnique({ where: { clientId } });
+          if (!shot) {
+            throw error;
+          }
+        } else {
+          throw error;
+        }
+      }
+    } else {
+      // 旧クライアント互換（clientId 無し）
+      shot = await prisma.shot.create({
+        data: { userId, ...fields },
+      });
+    }
+
+    if (!shot) {
+      throw new Error('ショットの保存結果を取得できませんでした');
+    }
+
+    console.log(`[Shots API] Saved shot ${shot.id} for user ${userId}`);
 
     return NextResponse.json({
       success: true,
