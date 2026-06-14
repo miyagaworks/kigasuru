@@ -18,35 +18,36 @@ model User {
   name          String?
   email         String    @unique
   emailVerified DateTime?
-  password      String?   // メール認証の場合のみ使用
+  password      String? // メール認証の場合のみ使用
   image         String?
 
   // サブスクリプション情報
-  subscriptionStatus String @default("trial") // trial, active, canceled, permanent
+  subscriptionStatus String    @default("trial") // trial, active, canceled, permanent
   trialEndsAt        DateTime?
   subscriptionEndsAt DateTime?
 
   // Stripe情報
-  stripeCustomerId       String? @unique
-  stripeSubscriptionId   String? @unique
+  stripeCustomerId     String? @unique
+  stripeSubscriptionId String? @unique
 
   // 二要素認証（TOTP）
-  twoFactorEnabled Boolean  @default(false)
-  twoFactorSecret  String?  // encrypted secret
-  backupCodes      String?  // JSON array of encrypted backup codes
+  twoFactorEnabled Boolean @default(false)
+  twoFactorSecret  String? // encrypted secret
+  backupCodes      String? // JSON array of encrypted backup codes
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   // Relations
-  accounts                 Account[]
-  sessions                 Session[]
-  shots                    Shot[]
-  subscriptions            Subscription[]
-  payments                 Payment[]
-  emailVerificationToken   EmailVerificationToken?
-  cancellationRequests     CancellationRequest[]
-  userSettings             UserSettings?
+  accounts               Account[]
+  sessions               Session[]
+  shots                  Shot[]
+  rounds                 Round[]
+  subscriptions          Subscription[]
+  payments               Payment[]
+  emailVerificationToken EmailVerificationToken?
+  cancellationRequests   CancellationRequest[]
+  userSettings           UserSettings?
 
   @@index([email])
   @@index([stripeCustomerId])
@@ -139,13 +140,18 @@ model PasswordResetToken {
 // =====================================================
 
 model Shot {
-  id          String   @id @default(cuid())
-  userId      String
+  id     String @id @default(cuid())
+  userId String
 
   // ショット基本情報
-  date        DateTime
-  club        String
-  distance    Int
+  date     DateTime
+  club     String
+  distance Int?
+
+  // 同期・ラウンド関連（すべて nullable）
+  clientId   String? @unique // 冪等同期キー（UUID）。null 可・unique（複数NULL許容）
+  roundId    String? // Round 参照（Tier 1 では常に null）
+  holeNumber Int? // ホール番号（任意・将来用）
 
   // コンディション
   slope       String?
@@ -155,9 +161,9 @@ model Shot {
   temperature String?
 
   // 結果
-  result      Json?    // {x: number, y: number}
-  feeling     String?
-  memo        String?
+  result  Json? // {x: number, y: number}
+  feeling String?
+  memo    String?
 
   // 位置情報
   golfCourse        String?
@@ -172,19 +178,39 @@ model Shot {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user  User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  round Round? @relation(fields: [roundId], references: [id], onDelete: SetNull)
 
   @@index([userId])
   @@index([date])
   @@index([club])
+  @@index([roundId])
+}
+
+model Round {
+  id                String   @id @default(cuid())
+  userId            String
+  date              DateTime
+  golfCourse        String?
+  latitude          Float?
+  longitude         Float?
+  temperature       String? // summer / mid-season / winter（Shot.temperature と同じ語彙）
+  actualTemperature Float?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  user  User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  shots Shot[]
+
+  @@index([userId, date])
 }
 
 model Subscription {
-  id        String   @id @default(cuid())
-  userId    String
+  id     String @id @default(cuid())
+  userId String
 
-  plan      String   // trial, monthly, yearly, permanent_personal, permanent_premium
-  status    String   // active, canceled, expired
+  plan   String // trial, monthly, yearly, permanent_personal, permanent_premium
+  status String // active, canceled, expired
 
   startDate DateTime
   endDate   DateTime?
@@ -209,18 +235,18 @@ model Subscription {
 }
 
 model Payment {
-  id               String   @id @default(cuid())
-  userId           String
+  id     String @id @default(cuid())
+  userId String
 
-  amount           Int      // 金額（円）
-  currency         String   @default("jpy")
-  status           String   // succeeded, failed, pending
+  amount   Int // 金額（円）
+  currency String @default("jpy")
+  status   String // succeeded, failed, pending
 
   stripePaymentIntentId String? @unique
 
-  plan             String?  // どのプランの支払いか
+  plan String? // どのプランの支払いか
 
-  createdAt        DateTime @default(now())
+  createdAt DateTime @default(now())
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
@@ -229,15 +255,15 @@ model Payment {
 }
 
 model CancellationRequest {
-  id        String   @id @default(cuid())
-  userId    String
+  id     String @id @default(cuid())
+  userId String
 
-  reason    String?  // 解約理由
-  status    String   @default("pending") // pending, approved, rejected
+  reason String? // 解約理由
+  status String  @default("pending") // pending, approved, rejected
 
-  requestedAt DateTime @default(now())
+  requestedAt DateTime  @default(now())
   processedAt DateTime?
-  processedBy String?  // 処理した管理者のID
+  processedBy String? // 処理した管理者のID
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -249,22 +275,22 @@ model CancellationRequest {
 }
 
 model EmailCampaign {
-  id        String   @id @default(cuid())
+  id String @id @default(cuid())
 
-  title     String   // キャンペーンタイトル
-  subject   String   // メール件名
-  content   String   // メール本文（HTMLまたはテキスト）
+  title   String // キャンペーンタイトル
+  subject String // メール件名
+  content String // メール本文（HTMLまたはテキスト）
 
   // 配信対象
-  targetType String  // all, trial, active, permanent
+  targetType String // all, trial, active, permanent
 
   // 配信状態
-  status    String   @default("draft") // draft, scheduled, sending, sent, failed
+  status String @default("draft") // draft, scheduled, sending, sent, failed
 
   // 配信統計
-  totalRecipients Int     @default(0)
-  sentCount      Int     @default(0)
-  failedCount    Int     @default(0)
+  totalRecipients Int @default(0)
+  sentCount       Int @default(0)
+  failedCount     Int @default(0)
 
   // スケジュール
   scheduledAt DateTime?
@@ -281,7 +307,6 @@ model EmailCampaign {
   @@index([createdAt])
 }
 
-
 // =====================================================
 // Settings & Calibration
 // =====================================================
@@ -296,8 +321,8 @@ model UserSettings {
   flatThreshold  Float   @default(5.0)
 
   // 入力フィールド設定
-  inputLevel String @default("standard")
-  enabledFields Json  // {slope: true, lie: true, ...}
+  inputLevel    String @default("standard")
+  enabledFields Json // {slope: true, lie: true, ...}
 
   // クラブ設定
   clubs Json // ["DR", "3W", ...]
@@ -331,14 +356,14 @@ model LoginAttempt {
 
 // ログインイベント記録（メール通知用）
 model LoginEvent {
-  id            String   @id @default(cuid())
-  userId        String
-  ipAddress     String?
-  userAgent     String?
-  location      String?  // 国・都市情報
-  deviceInfo    String?  // デバイス情報
-  notified      Boolean  @default(false)
-  createdAt     DateTime @default(now())
+  id         String   @id @default(cuid())
+  userId     String
+  ipAddress  String?
+  userAgent  String?
+  location   String? // 国・都市情報
+  deviceInfo String? // デバイス情報
+  notified   Boolean  @default(false)
+  createdAt  DateTime @default(now())
 
   @@index([userId, createdAt])
   @@index([notified])
@@ -346,12 +371,12 @@ model LoginEvent {
 
 // IPアドレスブラックリスト
 model IpBlacklist {
-  id          String   @id @default(cuid())
-  ipAddress   String   @unique
-  reason      String?  // ブロック理由
-  blockedBy   String?  // ブロックした管理者
-  expiresAt   DateTime? // 期限付きブロックの場合
-  createdAt   DateTime @default(now())
+  id        String    @id @default(cuid())
+  ipAddress String    @unique
+  reason    String? // ブロック理由
+  blockedBy String? // ブロックした管理者
+  expiresAt DateTime? // 期限付きブロックの場合
+  createdAt DateTime  @default(now())
 
   @@index([ipAddress])
   @@index([expiresAt])
@@ -361,8 +386,8 @@ model IpBlacklist {
 model IpWhitelist {
   id          String   @id @default(cuid())
   ipAddress   String   @unique
-  description String?  // ホワイトリストの説明
-  addedBy     String?  // 追加した管理者
+  description String? // ホワイトリストの説明
+  addedBy     String? // 追加した管理者
   createdAt   DateTime @default(now())
 
   @@index([ipAddress])
@@ -370,13 +395,13 @@ model IpWhitelist {
 
 // 国別アクセス制限
 model CountryRestriction {
-  id            String   @id @default(cuid())
-  countryCode   String   @unique // ISO 3166-1 alpha-2
-  countryName   String
-  blocked       Boolean  @default(true)
-  reason        String?
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  id          String   @id @default(cuid())
+  countryCode String   @unique // ISO 3166-1 alpha-2
+  countryName String
+  blocked     Boolean  @default(true)
+  reason      String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 
   @@index([countryCode])
   @@index([blocked])
@@ -384,17 +409,17 @@ model CountryRestriction {
 
 // WebAuthn認証情報（パスキー・指紋認証）
 model WebAuthnCredential {
-  id                String   @id @default(cuid())
-  userId            String
-  credentialID      String   @unique // Base64URL encoded
-  publicKey         String   // Base64URL encoded
-  counter           BigInt   @default(0)
-  deviceType        String   // "platform" or "cross-platform"
-  backedUp          Boolean  @default(false)
-  transports        String?  // JSON array
-  name              String?  // User-friendly name for the credential
-  createdAt         DateTime @default(now())
-  lastUsedAt        DateTime @default(now())
+  id           String   @id @default(cuid())
+  userId       String
+  credentialID String   @unique // Base64URL encoded
+  publicKey    String // Base64URL encoded
+  counter      BigInt   @default(0)
+  deviceType   String // "platform" or "cross-platform"
+  backedUp     Boolean  @default(false)
+  transports   String? // JSON array
+  name         String? // User-friendly name for the credential
+  createdAt    DateTime @default(now())
+  lastUsedAt   DateTime @default(now())
 
   @@index([userId])
   @@index([credentialID])
@@ -402,12 +427,12 @@ model WebAuthnCredential {
 
 // WebAuthnチャレンジ（一時的な認証チャレンジ）
 model WebAuthnChallenge {
-  id         String   @id @default(cuid())
-  userId     String?  // nullの場合は登録前
-  challenge  String   @unique
-  type       String   // "registration" or "authentication"
-  expiresAt  DateTime
-  createdAt  DateTime @default(now())
+  id        String   @id @default(cuid())
+  userId    String? // nullの場合は登録前
+  challenge String   @unique
+  type      String // "registration" or "authentication"
+  expiresAt DateTime
+  createdAt DateTime @default(now())
 
   @@index([challenge])
   @@index([expiresAt])

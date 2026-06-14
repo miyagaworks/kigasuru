@@ -26,6 +26,20 @@ export interface Shot {
   missType: string | null;
   manualLocation: boolean;
   createdAt: number;
+  clientId?: string;        // UUID（v6 で全既存行に backfill）
+  roundId?: string | null;  // Tier1 は null 固定
+  holeNumber?: number | null;
+  dirty?: boolean;          // true=サーバー未反映の編集あり（オンライン時 PUT）
+}
+
+export interface Round {
+  id?: number;
+  serverId?: string | null;
+  clientId?: string;        // Tier2 の Round 冪等同期用に予約（Tier1 未使用）
+  date: string;
+  golfCourse: string | null;
+  // latitude/longitude/temperature/actualTemperature は Tier2 で追加（Tier1 は最小）
+  createdAt: number;
 }
 
 export interface Setting {
@@ -43,6 +57,7 @@ export interface Calibration {
 
 export class KigasuruDB extends Dexie {
   shots!: Table<Shot, number>;
+  rounds!: Table<Round, number>;
   settings!: Table<Setting, string>;
   calibration!: Table<Calibration, string>;
 
@@ -89,6 +104,20 @@ export class KigasuruDB extends Dexie {
     }).upgrade(tx => {
       return tx.table('shots').toCollection().modify(shot => {
         if (shot.serverId === undefined) shot.serverId = null;
+      });
+    });
+
+    // v6: 冪等同期キー（clientId）・ラウンド参照・ホール番号・dirty を追加。rounds ストア新設。
+    // ★ dirty(boolean) は IndexedDB の有効な index キーにできないため stores 文字列に含めない（interface 追加のみ）。
+    this.version(6).stores({
+      shots: '++id, serverId, clientId, roundId, holeNumber, date, slope, club, lie, strength, wind, temperature, result, distance, feeling, memo, createdAt, golfCourse, actualTemperature, latitude, longitude, missType, manualLocation',
+      rounds: '++id, serverId, clientId, date, golfCourse, createdAt',
+    }).upgrade(tx => {
+      return tx.table('shots').toCollection().modify(shot => {
+        if (!shot.clientId) shot.clientId = crypto.randomUUID();   // 既存ローカル行に冪等キーを後付け
+        if (shot.roundId === undefined) shot.roundId = null;
+        if (shot.holeNumber === undefined) shot.holeNumber = null;
+        if (shot.dirty === undefined) shot.dirty = false;          // item4 用
       });
     });
   }

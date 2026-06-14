@@ -132,7 +132,7 @@ export async function GET(request: Request) {
         totalDiff: number;
         diffCount: number;
         avgAccuracy: number;
-        shots: Array<{ distance: number; accuracy: number; date: Date }>;
+        shots: Array<{ distance: number | null; accuracy: number; date: Date }>;
       }> = {};
 
       allShots.forEach((shot) => {
