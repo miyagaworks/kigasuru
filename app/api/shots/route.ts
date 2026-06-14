@@ -87,29 +87,47 @@ export async function POST(req: NextRequest) {
       holeNumber: holeNumberValue,
     };
 
-    // clientId があれば upsert（冪等）、なければ従来 create（旧クライアント互換）
+    // clientId があれば userId スコープで find→update/create（冪等）、
+    // なければ従来 create（旧クライアント互換）
     let shot: Shot | null = null;
     if (clientId) {
-      try {
-        shot = await prisma.shot.upsert({
-          where: { clientId },
-          create: { userId, clientId, ...fields },
-          // ★ update に userId / clientId を含めない（所有者不変・clientId は where キー）
-          update: { ...fields },
+      // clientId は schema 上グローバル unique。必ず { clientId, userId } で
+      // 自分の行だけに限定し、他人の行へは触れない・返さない・上書きしない（IDOR 対策）
+      const mine = await prisma.shot.findFirst({ where: { clientId, userId } });
+      if (mine) {
+        // 既存の自分の行を id 指定で更新（clientId 単独 where を使わない）
+        shot = await prisma.shot.update({
+          where: { id: mine.id },
+          data: { ...fields },
         });
-      } catch (error) {
-        // P2002（同一 clientId の同時リクエスト等の unique 競合）は
-        // 500 にせず、既存行を findUnique で取得して返す（§5.4 risk）
-        if (
-          error instanceof Prisma.PrismaClientKnownRequestError &&
-          error.code === 'P2002'
-        ) {
-          shot = await prisma.shot.findUnique({ where: { clientId } });
-          if (!shot) {
+      } else {
+        try {
+          shot = await prisma.shot.create({
+            data: { userId, clientId, ...fields },
+          });
+        } catch (error) {
+          // clientId はグローバル unique のため、他者所有 / 自分の同時リクエストの
+          // 両方で P2002 が起こりうる。userId スコープで競合の正体を再確認する
+          if (
+            error instanceof Prisma.PrismaClientKnownRequestError &&
+            error.code === 'P2002'
+          ) {
+            const raced = await prisma.shot.findFirst({
+              where: { clientId, userId },
+            });
+            if (!raced) {
+              // 他ユーザーが同じ clientId を保有（他者所有 or UUID 衝突）
+              // → 他人の行は返さず 403
+              return NextResponse.json(
+                { error: '権限がありません' },
+                { status: 403 }
+              );
+            }
+            // 自分の同時リクエスト → 既存の自分の行を 200 で返す（冪等）
+            shot = raced;
+          } else {
             throw error;
           }
-        } else {
-          throw error;
         }
       }
     } else {
