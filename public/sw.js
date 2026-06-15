@@ -338,15 +338,3 @@ self.addEventListener('fetch', (event) => {
       })
   );
 });
-
-// バックグラウンド同期
-self.addEventListener('sync', (event) => {
-  if (event.tag === 'sync-shots') {
-    event.waitUntil(syncShots());
-  }
-});
-
-async function syncShots() {
-  // IndexedDBから未同期のショットを取得して同期
-  // この部分は後でクライアント側から呼び出される
-}
