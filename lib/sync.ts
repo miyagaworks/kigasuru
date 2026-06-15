@@ -107,7 +107,8 @@ export function setupAutoSync() {
  */
 export async function getPendingShotsCount(): Promise<number> {
   try {
-    return await db.shots.count();
+    // 未同期(serverId==null)のみを数える。#6aで同期後も削除しないため、count() では総数になる（§3 不変条件2）。
+    return await db.shots.filter((s) => !s.serverId).count();
   } catch (error) {
     console.error('Failed to get pending shots count:', error);
     return 0;
