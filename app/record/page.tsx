@@ -584,13 +584,17 @@ function RecordContent() {
         }, 500);
       } else {
         // Create new shot - Try to save to server first (if online)
+        // 一意キー(clientId)は online/offline 分岐の前に1回だけ生成し、
+        // POST 本文と全 addShot 経路で同一値を共有する（冪等同期キー / 設計書 §5.2）。
+        const shotData = { ...currentShot, clientId: crypto.randomUUID() };
+
         if (isOnline) {
           try {
             // Save to server
             const response = await fetch('/api/shots', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify(currentShot),
+              body: JSON.stringify(shotData),
             });
 
             if (!response.ok) {
@@ -602,18 +606,18 @@ function RecordContent() {
 
             // Also save to IndexedDB for offline access with serverId
             await addShot({
-              ...currentShot,
+              ...shotData,
               serverId: result.shotId, // Save server ID for future deletion
             } as Partial<Shot>);
           } catch (error) {
             console.error('[Record] Failed to save to server, saving to IndexedDB only:', error);
             // Fallback: Save to IndexedDB only (will sync later)
-            await addShot(currentShot as Partial<Shot>);
+            await addShot(shotData as Partial<Shot>);
           }
         } else {
           // Offline: Save to IndexedDB only (will sync when online)
           console.log('[Record] Offline - saving to IndexedDB only');
-          await addShot(currentShot as Partial<Shot>);
+          await addShot(shotData as Partial<Shot>);
         }
 
         // Show success toast
