@@ -1,4 +1,4 @@
-import { db } from './db';
+import { db, updateShot } from './db';
 
 /**
  * バックグラウンド同期の登録
@@ -11,83 +11,76 @@ export async function registerBackgroundSync() {
     } catch (error) {
       console.error('Background sync registration failed:', error);
       // フォールバック: 即座に同期を試みる
-      await syncShots();
+      await pushUnsyncedShots();
     }
   } else {
     // Background Sync API未対応の場合は即座に同期
-    await syncShots();
+    await pushUnsyncedShots();
   }
 }
 
 /**
- * ショットデータの同期
+ * 未同期ショットの push（冪等同期 / 設計書 §5.3・§5.1）
+ *
+ * - push 対象は serverId == null（未同期）のみ。clientId をサーバーへ送り upsert させる。
+ * - 成功時は serverId を書くだけ。ローカルは削除しない（IndexedDB が分析の単一ソース）。
+ * - 応答ロスト等で再送しても、同一 clientId がサーバー側で 1 行に収束する（冪等）。
  */
-export async function syncShots() {
-  try {
-    // IndexedDBから全てのショットを取得
-    const shots = await db.shots.toArray();
+export async function pushUnsyncedShots() {
+  // serverId == null は IndexedDB の index 対象にできないため filter スキャンで抽出する。
+  const unsynced = await db.shots.filter((s) => !s.serverId).toArray();
 
-    if (shots.length === 0) {
-      return;
+  if (unsynced.length === 0) {
+    return;
+  }
+
+  // 直列処理: 1 件が失敗しても全体を止めず、次回 online で再試行する。
+  for (const shot of unsynced) {
+    try {
+      const response = await fetch('/api/shots', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          date: shot.date,
+          slope: shot.slope,
+          club: shot.club,
+          lie: shot.lie,
+          strength: shot.strength,
+          wind: shot.wind,
+          temperature: shot.temperature,
+          result: shot.result,
+          distance: shot.distance,
+          feeling: shot.feeling,
+          memo: shot.memo,
+          golfCourse: shot.golfCourse,
+          actualTemperature: shot.actualTemperature,
+          latitude: shot.latitude,
+          longitude: shot.longitude,
+          missType: shot.missType,
+          manualLocation: shot.manualLocation,
+          clientId: shot.clientId, // 冪等同期キー（サーバーは clientId upsert）
+        }),
+      });
+
+      const result = await response.json().catch(() => null);
+
+      if (response.ok && result?.shotId) {
+        // 成功: serverId を書くだけ・削除しない。
+        await updateShot(shot.id!, { serverId: result.shotId });
+      } else {
+        console.error(
+          `Failed to push shot ${shot.id}:`,
+          response.status,
+          result
+        );
+        // 次回 online で再試行（全体は止めない）。
+      }
+    } catch (error) {
+      console.error(`Error pushing shot ${shot.id}:`, error);
+      // 例外でループ全体を止めない。
     }
-
-    // 各ショットをAPIに送信
-    const syncResults = await Promise.allSettled(
-      shots.map(async (shot) => {
-        const response = await fetch('/api/shots', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            date: shot.date,
-            slope: shot.slope,
-            club: shot.club,
-            lie: shot.lie,
-            strength: shot.strength,
-            wind: shot.wind,
-            temperature: shot.temperature,
-            result: shot.result,
-            distance: shot.distance,
-            feeling: shot.feeling,
-            memo: shot.memo,
-            golfCourse: shot.golfCourse,
-            actualTemperature: shot.actualTemperature,
-            latitude: shot.latitude,
-            longitude: shot.longitude,
-            missType: shot.missType,
-            manualLocation: shot.manualLocation,
-          }),
-        });
-
-        if (!response.ok) {
-          throw new Error(`Failed to sync shot ${shot.id}: ${response.statusText}`);
-        }
-
-        return shot.id;
-      })
-    );
-
-    // 成功したショットをIndexedDBから削除
-    const successfulIds = syncResults
-      .filter((result): result is PromiseFulfilledResult<number> =>
-        result.status === 'fulfilled' && result.value !== undefined
-      )
-      .map(result => result.value);
-
-    if (successfulIds.length > 0) {
-      await db.shots.bulkDelete(successfulIds);
-    }
-
-    // 失敗したショットのエラーをログ
-    const failures = syncResults.filter(result => result.status === 'rejected');
-    if (failures.length > 0) {
-      console.error('Some shots failed to sync:', failures);
-    }
-
-  } catch (error) {
-    console.error('Sync failed:', error);
-    throw error;
   }
 }
 
