@@ -8,7 +8,7 @@ import { NumberKeypad } from '@/components/NumberKeypad';
 import { useStore } from '@/lib/store';
 import { useGyro } from '@/hooks/useGyro';
 import { useLocation as useGeoLocation } from '@/hooks/useLocation';
-import { addShot, getSetting, saveSetting, getShot, updateShot, getAllShots, getTodayManualLocationShots, updateLocationForShots, type Shot } from '@/lib/db';
+import { addShot, getSetting, saveSetting, getShot, updateShot, getAllShots, getTodayManualLocationShots, updateLocationForShots, toEditableFields, type Shot } from '@/lib/db';
 import { getSlopeDisplayName } from '@/lib/sensors/gyro';
 import { getWeather, getLocationName } from '@/lib/utils/weather';
 import { isSameLocalDay } from '@/lib/utils';
@@ -187,6 +187,10 @@ function RecordContent() {
   const editId = searchParams.get('edit');
   const [step, setStep] = useState(1);
   const [isSaving, setIsSaving] = useState(false);
+  // 編集対象の serverId / ローカルID（§8.1）。setCurrentShot は serverId を落とすため、
+  // PUT 用に編集ロード時の shot から別途 state で確保する。
+  const [editServerId, setEditServerId] = useState<string | null>(null);
+  const [editLocalId, setEditLocalId] = useState<number | null>(null);
   const [clubs, setClubs] = useState(DEFAULT_CLUBS);
   const [enabledFields, setEnabledFields] = useState({
     slope: true,
@@ -302,6 +306,9 @@ function RecordContent() {
           const shot = await getShot(parseInt(editId));
           if (shot) {
             setCurrentShot(shot);
+            // serverId は setCurrentShot で脱落するため、PUT 用にロード時の shot から確保する（§8.1）。
+            setEditServerId(shot.serverId ?? null);
+            setEditLocalId(shot.id ?? null);
             // Start at result step (step 6) for editing
             setStep(6);
           }
@@ -561,10 +568,37 @@ function RecordContent() {
       }
 
       if (editId) {
-        // Update existing shot in IndexedDB
-        await updateShot(parseInt(editId), currentShot as Partial<Shot>);
+        // 編集可能17項目のみ抽出（id/serverId/clientId/dirty/createdAt は除外）。
+        // この fields を渡すことで updateShot の Dexie マージが serverId/clientId/dirty を温存する（§8.2）。
+        const fields = toEditableFields(currentShot);
 
-        // TODO: Update shot on server as well (requires PUT endpoint)
+        // ① ローカル更新（従来通り）。editLocalId は §8.1 で確保済み（URL の editId と同値）。
+        const localId = editLocalId ?? parseInt(editId);
+        await updateShot(localId, fields as Partial<Shot>);
+
+        // ② サーバー反映（§8.2）
+        if (isOnline && editServerId) {
+          // 同期済みショット: 直ちに PUT。失敗時は dirty=true で後続の自動同期に委ねる。
+          try {
+            const response = await fetch(`/api/shots/${editServerId}`, {
+              method: 'PUT',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(fields),
+            });
+            if (!response.ok) {
+              throw new Error(`PUT failed: ${response.status}`);
+            }
+            // 成功: dirty は付けない。
+          } catch (error) {
+            console.error('[Record] Failed to PUT edit, marking dirty:', error);
+            await updateShot(localId, { dirty: true }); // ③ 失敗 → オンライン復帰で再送
+          }
+        } else if (editServerId) {
+          // offline（serverId あり・!isOnline）: オンライン復帰時に PUT 反映するため dirty=true。
+          await updateShot(localId, { dirty: true }); // ③
+        }
+        // else: 未同期ショット（serverId 無し）。PUT 対象が無く、通常の push（create）が
+        // 編集後の値ごと拾うため dirty は付けない（§8.2）。
 
         // Show success toast
         toast.success('更新しました', {

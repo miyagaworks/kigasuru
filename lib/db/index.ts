@@ -384,6 +384,59 @@ export const getCalibration = async (): Promise<Calibration | undefined> => {
 };
 
 /**
+ * 編集可能フィールドの入力型（Shot / CurrentShot 双方を構造的に受けるための型）。
+ * slope/club 等は CurrentShot 側が string | null のため、広い型で受ける。
+ */
+export type EditableShotInput = {
+  date: string;
+  club: string | null;
+  distance: number | null;
+  slope: string | null;
+  lie: string | null;
+  strength: string | null;
+  wind: string | null;
+  temperature: string | null;
+  result: { x: number; y: number } | null;
+  feeling: string | null;
+  memo: string;
+  golfCourse: string | null;
+  latitude: number | null;
+  longitude: number | null;
+  actualTemperature: number | null;
+  missType: string | null;
+  manualLocation: boolean;
+};
+
+/**
+ * 編集可能な17項目だけを抜き出す共有ヘルパー（設計書 §8.2）。
+ *
+ * id / serverId / clientId / dirty / createdAt は意図的に除外する。
+ * これらを含めて updateShot に渡すと Dexie マージで serverId/clientId が
+ * 温存されず上書き消失する地雷があるため、PUT 本文・ローカル更新の双方で
+ * この17項目に限定する。record/page.tsx（CurrentShot）と lib/sync.ts（Shot）の
+ * 両方から import して使い、定義を二重化しない。
+ */
+export const toEditableFields = (shot: EditableShotInput): EditableShotInput => ({
+  date: shot.date,
+  club: shot.club,
+  distance: shot.distance,
+  slope: shot.slope,
+  lie: shot.lie,
+  strength: shot.strength,
+  wind: shot.wind,
+  temperature: shot.temperature,
+  result: shot.result,
+  feeling: shot.feeling,
+  memo: shot.memo,
+  golfCourse: shot.golfCourse,
+  latitude: shot.latitude,
+  longitude: shot.longitude,
+  actualTemperature: shot.actualTemperature,
+  missType: shot.missType,
+  manualLocation: shot.manualLocation,
+});
+
+/**
  * Update a shot record
  */
 export const updateShot = async (shotId: number, updates: Partial<Shot>): Promise<number> => {
