@@ -195,6 +195,7 @@ export const addShot = async (shotData: Partial<Shot>): Promise<number> => {
     missType: shotData.missType || null,
     manualLocation: shotData.manualLocation || false,
     createdAt: shotData.createdAt || Date.now(),
+    clientId: shotData.clientId, // 冪等同期キー（§3）。指定時のみ保持・未指定は undefined。段階2でclientId追加時の伝播漏れを解消。
   };
   const result = await getDB().shots.add(shot);
   invalidateShotsCache(); // Invalidate cache when adding shots
@@ -544,21 +545,33 @@ export const syncShotsFromServer = async (): Promise<{ success: boolean; synced:
     const serverShots = data.shots;
     console.log('[DB] Received', serverShots.length, 'shots from server');
 
-    // IndexedDBの既存データを取得
+    // IndexedDBの既存データを1回だけ取得し、clientId 索引・createdAt 索引を構築する。
+    // clientId を第一照合キー、createdAt を後方互換 fallback とする（設計書 §5.5）。
     const localShots = await getAllShots();
-    const localShotsMap = new Map(localShots.map(shot => [shot.createdAt, shot]));
+    const localShotsByClientId = new Map<string, Shot>();
+    const localShotsByCreatedAt = new Map<number, Shot>();
+    for (const shot of localShots) {
+      if (shot.clientId) localShotsByClientId.set(shot.clientId, shot);
+      localShotsByCreatedAt.set(shot.createdAt, shot); // 重複 createdAt は後勝ち（従来の Map 構築と同挙動）
+    }
 
-    // サーバーからのショットを処理（新規追加 or serverId更新）
+    // サーバーからのショットを処理（新規追加 or serverId/clientId 補完）
     let syncedCount = 0;
     let updatedCount = 0;
     for (const serverShot of serverShots) {
       // サーバーのcreatedAtをタイムスタンプに変換
       const serverCreatedAt = new Date(serverShot.createdAt).getTime();
 
-      const existingShot = localShotsMap.get(serverCreatedAt);
+      // 照合: clientId 優先 → 無ければ createdAt 一致で fallback（clientId=null の旧サーバー行向け / §5.5）
+      let local = serverShot.clientId
+        ? localShotsByClientId.get(serverShot.clientId)
+        : undefined;
+      if (!local) {
+        local = localShotsByCreatedAt.get(serverCreatedAt);
+      }
 
-      if (!existingShot) {
-        // ローカルに存在しない場合は新規追加
+      if (!local) {
+        // ローカルに存在しない場合は新規追加（clientId も保持して以後の clientId 照合を有効化）
         await addShot({
           serverId: serverShot.id, // Save server ID
           date: serverShot.date,
@@ -579,11 +592,16 @@ export const syncShotsFromServer = async (): Promise<{ success: boolean; synced:
           missType: serverShot.missType,
           manualLocation: serverShot.manualLocation,
           createdAt: serverCreatedAt,
+          clientId: serverShot.clientId ?? undefined, // ★ §5.5: null は undefined に正規化して保持
         });
         syncedCount++;
-      } else if (!existingShot.serverId && existingShot.id) {
-        // ローカルに存在するがserverIdがない場合は更新
-        await updateShot(existingShot.id, { serverId: serverShot.id });
+      } else if (!local.serverId && local.id) {
+        // ローカルに存在するが serverId 未設定 → serverId を補完。
+        // clientId は local が既に持っていればそれを優先、無ければサーバー値で補完（null は undefined 正規化）。
+        await updateShot(local.id, {
+          serverId: serverShot.id,
+          clientId: local.clientId ?? serverShot.clientId ?? undefined,
+        });
         updatedCount++;
       }
     }
