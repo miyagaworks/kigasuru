@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import { Layout } from '@/components/Layout';
 import { Icon } from '@/components/Icon';
-import { getAllShots, deleteShot, getShot, type Shot } from '@/lib/db';
+import { getAllShots, deleteShot, getShot, initDB, type Shot } from '@/lib/db';
 import { getSlopeDisplayName } from '@/lib/sensors/gyro';
 import { IoMdArrowRoundForward, IoMdArrowRoundBack } from 'react-icons/io';
 
@@ -35,8 +35,11 @@ export default function RoundHistoryPage() {
   }, [shots]);
 
   useEffect(() => {
-    loadShots();
-  }, []);
+    if (session?.user?.id) {
+      initDB(session.user.id);   // 冪等（同ユーザーは既存DBを返す）。履歴表示前にユーザーDBを保証
+      loadShots(true);           // 最新を IndexedDB から直接読む（30秒キャッシュをスキップ）
+    }
+  }, [session?.user?.id]);
 
   // Update selectedShots when shots or selectedDate changes
   useEffect(() => {
@@ -48,9 +51,9 @@ export default function RoundHistoryPage() {
     }
   }, [shots, selectedDate, getShotsForDate]);
 
-  const loadShots = async () => {
+  const loadShots = async (skipCache = false) => {
     try {
-      const allShots = await getAllShots();
+      const allShots = await getAllShots(skipCache);
       setShots(allShots);
 
       // Extract unique dates where shots were recorded

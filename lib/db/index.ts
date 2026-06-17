@@ -151,6 +151,7 @@ export const initDB = (userId: string): KigasuruDB => {
 
   // 新しいインスタンスを作成
   console.log('[DB] Creating new DB instance for user:', userId);
+  invalidateShotsCache(); // DB切替/新規作成時に古い（空の）キャッシュを捨てる
   currentUserId = userId;
   dbInstance = new KigasuruDB(userId);
   return dbInstance;
