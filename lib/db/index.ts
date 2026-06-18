@@ -599,12 +599,14 @@ export const syncShotsFromServer = async (): Promise<{ success: boolean; synced:
     const serverShots = data.shots;
     console.log('[DB] Received', serverShots.length, 'shots from server');
 
-    // IndexedDBの既存データを1回だけ取得し、clientId 索引・createdAt 索引を構築する。
-    // clientId を第一照合キー、createdAt を後方互換 fallback とする（設計書 §5.5）。
+    // IndexedDBの既存データを1回だけ取得し、serverId / clientId / createdAt の索引を構築する。
+    // 照合は serverId 最優先 → clientId → createdAt の順（2026-06-18 重複バグ修正 / 設計書 §5.5）。
     const localShots = await getAllShots();
+    const localShotsByServerId = new Map<string, Shot>();
     const localShotsByClientId = new Map<string, Shot>();
     const localShotsByCreatedAt = new Map<number, Shot>();
     for (const shot of localShots) {
+      if (shot.serverId) localShotsByServerId.set(shot.serverId, shot); // ★ serverId 最優先キー（再 pull 重複の恒久封鎖）
       if (shot.clientId) localShotsByClientId.set(shot.clientId, shot);
       localShotsByCreatedAt.set(shot.createdAt, shot); // 重複 createdAt は後勝ち（従来の Map 構築と同挙動）
     }
@@ -616,10 +618,16 @@ export const syncShotsFromServer = async (): Promise<{ success: boolean; synced:
       // サーバーのcreatedAtをタイムスタンプに変換
       const serverCreatedAt = new Date(serverShot.createdAt).getTime();
 
-      // 照合: clientId 優先 → 無ければ createdAt 一致で fallback（clientId=null の旧サーバー行向け / §5.5）
-      let local = serverShot.clientId
-        ? localShotsByClientId.get(serverShot.clientId)
+      // 照合: serverId 最優先 → clientId → createdAt fallback（2026-06-18 重複バグ修正 / §5.5）。
+      // 実データでは全ローカル行が serverId を持つのに従来は serverId を見ず、clientId/createdAt が
+      // 外れて pull のたびに同一サーバー行のローカルコピーが増殖していた。serverId 一致のローカル行が
+      // 既にあれば必ずそれに収束させ、絶対に addShot で新規追加しない（再 pull 重複の恒久停止）。
+      let local = serverShot.id
+        ? localShotsByServerId.get(serverShot.id)
         : undefined;
+      if (!local && serverShot.clientId) {
+        local = localShotsByClientId.get(serverShot.clientId);
+      }
       if (!local) {
         local = localShotsByCreatedAt.get(serverCreatedAt);
       }
@@ -649,14 +657,16 @@ export const syncShotsFromServer = async (): Promise<{ success: boolean; synced:
           clientId: serverShot.clientId ?? undefined, // ★ §5.5: null は undefined に正規化して保持
         });
         syncedCount++;
-      } else if (!local.serverId && local.id) {
-        // ローカルに存在するが serverId 未設定 → serverId を補完。
-        // clientId は local が既に持っていればそれを優先、無ければサーバー値で補完（null は undefined 正規化）。
-        await updateShot(local.id, {
-          serverId: serverShot.id,
-          clientId: local.clientId ?? serverShot.clientId ?? undefined,
-        });
-        updatedCount++;
+      } else if (local.id) {
+        // 既存ローカル行に収束（新規追加しない）。不足している同期キーのみ非破壊で補完する。
+        // ★ 17項目のデータフィールドは決して上書きしない（未 push の dirty 編集＝取り残したメモ等を保護）。
+        const patch: Partial<Shot> = {};
+        if (!local.serverId) patch.serverId = serverShot.id;                              // serverId 未設定なら補完
+        if (!local.clientId && serverShot.clientId) patch.clientId = serverShot.clientId; // clientId 未設定なら補完
+        if (Object.keys(patch).length > 0) {
+          await updateShot(local.id, patch);
+          updatedCount++;
+        }
       }
     }
 
