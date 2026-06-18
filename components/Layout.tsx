@@ -7,6 +7,7 @@ import Image from 'next/image';
 import { Navigation } from './Navigation';
 import { isAdmin } from '@/lib/admin';
 import { initDB, syncShotsFromServer, syncSettingsFromServer } from '@/lib/db';
+import { registerDedupConsoleHelper } from '@/lib/db/dedup';
 
 /**
  * Main layout component with bottom navigation
@@ -29,6 +30,9 @@ export const Layout: React.FC<LayoutProps> = ({ children, showNav = true }) => {
     if (session?.user?.id) {
       console.log('[Layout] Initializing DB for user:', session.user.id);
       initDB(session.user.id);
+
+      // 端末ローカルの重複掃除ツールを DevTools コンソールへ公開（initDB 後・ガード付き・冪等）。
+      registerDedupConsoleHelper();
 
       // サーバーからデータを同期（オンライン時のみ）
       if (typeof navigator !== 'undefined' && navigator.onLine) {
