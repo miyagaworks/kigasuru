@@ -220,6 +220,8 @@ function RecordContent() {
     loading: false,
     error: null,
   });
+  // autoCollect のエラー状態を online 復帰リスナから参照するための ref（リスナの再登録を避ける）。
+  const autoCollectErrorRef = useRef(false);
   const [showManualInput, setShowManualInput] = useState(false);
   const [golfCourseHistory, setGolfCourseHistory] = useState<string[]>([]);
   const [showUpdateConfirm, setShowUpdateConfirm] = useState(false);
@@ -441,6 +443,26 @@ function RecordContent() {
     };
 
     loadOrCollectData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [editId]);
+
+  // autoCollectStatus.error を ref に同期（online 復帰リスナが最新のエラー状態を参照するため）。
+  useEffect(() => {
+    autoCollectErrorRef.current = autoCollectStatus.error !== null;
+  }, [autoCollectStatus.error]);
+
+  // オンライン復帰時、編集中でなければ autoCollect を再実行して「自動取得に失敗しました」を解消する。
+  // record ページには従来 online リスナが無く、オフライン中に失敗したエラー表示が復帰後も残っていた。
+  // autoCollect() は冒頭で error:null をクリアし再取得するため、エラー状態のときだけ呼べば過剰発火しない。
+  useEffect(() => {
+    if (editId) return; // 編集中は自動取得しない（過剰発火防止）
+    const handleOnline = () => {
+      if (autoCollectErrorRef.current) {
+        void autoCollect();
+      }
+    };
+    window.addEventListener('online', handleOnline);
+    return () => window.removeEventListener('online', handleOnline);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [editId]);
 
