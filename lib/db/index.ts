@@ -169,9 +169,6 @@ export const getDB = (): KigasuruDB => {
   return dbInstance;
 };
 
-// 後方互換性のため、デフォルトのdbエクスポートを維持
-export const db = getDB();
-
 /**
  * Add a shot record
  */
@@ -681,5 +678,3 @@ export const syncShotsFromServer = async (): Promise<{ success: boolean; synced:
     };
   }
 };
-
-export default db;

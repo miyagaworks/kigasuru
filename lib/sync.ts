@@ -1,4 +1,4 @@
-import { db, updateShot, toEditableFields } from './db';
+import { getDB, updateShot, toEditableFields } from './db';
 
 /**
  * 未同期ショットの push（冪等同期 / 設計書 §5.3・§5.1）
@@ -9,7 +9,7 @@ import { db, updateShot, toEditableFields } from './db';
  */
 export async function pushUnsyncedShots() {
   // serverId == null は IndexedDB の index 対象にできないため filter スキャンで抽出する。
-  const unsynced = await db.shots.filter((s) => !s.serverId).toArray();
+  const unsynced = await getDB().shots.filter((s) => !s.serverId).toArray();
 
   if (unsynced.length === 0) {
     return;
@@ -75,7 +75,7 @@ export async function pushUnsyncedShots() {
  */
 export async function pushDirtyShots() {
   // serverId 無しは PUT 対象外（通常の create push が編集後の値ごと拾う / §8.2）。
-  const dirtyShots = await db.shots
+  const dirtyShots = await getDB().shots
     .filter((s) => s.dirty === true && !!s.serverId)
     .toArray();
 
@@ -180,7 +180,7 @@ export function setupAutoSync() {
 export async function getPendingShotsCount(): Promise<number> {
   try {
     // 未同期(serverId==null)のみを数える。#6aで同期後も削除しないため、count() では総数になる（§3 不変条件2）。
-    return await db.shots.filter((s) => !s.serverId).count();
+    return await getDB().shots.filter((s) => !s.serverId).count();
   } catch (error) {
     console.error('Failed to get pending shots count:', error);
     return 0;
